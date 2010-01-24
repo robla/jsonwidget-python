@@ -3,40 +3,40 @@
 import json
 
 class SchemaNode:
-    def __init__(this, key, data, parent=None):
+    def __init__(self, key, data, parent=None):
         # data loaded from the schema
-        this.data=data
+        self.data=data
         # key for the parent
-        this.parent=parent
+        self.parent=parent
         # global index for the node
-        this.key=key
-        if this.parent==None:
-            this.depth=0
+        self.key=key
+        if self.parent==None:
+            self.depth=0
         else:
-            this.depth=this.parent.getDepth()+1
+            self.depth=self.parent.getDepth()+1
 
-    def showNode(this):
-        if(this.data['type']=='map'):
-            print this.getTitle() + ":"
-            for subkey, subnode in this.data['mapping'].items():
-                schemaobj=SchemaNode(subkey, subnode, parent=this)
+    def showNode(self):
+        if(self.data['type']=='map'):
+            print self.getTitle() + ":"
+            for subkey, subnode in self.data['mapping'].items():
+                schemaobj=SchemaNode(subkey, subnode, parent=self)
                 schemaobj.showNode()
-        if(this.data['type']=='str'):
-            print this.indent(),
-            print this.getTitle(),
+        if(self.data['type']=='str'):
+            print self.indent(),
+            print self.getTitle(),
             print ": "
 
-    def getDepth(this):
-        return this.depth
+    def getDepth(self):
+        return self.depth
 
-    def indent(this, indentstr="    "):
-        return indentstr * this.depth    
+    def indent(self, indentstr="    "):
+        return indentstr * self.depth    
     
-    def getTitle(this):
-        if this.data.has_key('title'):
-            return this.data['title']
+    def getTitle(self):
+        if self.data.has_key('title'):
+            return self.data['title']
         else:
-            return this.key
+            return self.key
 
 
 def show_form(schema):
