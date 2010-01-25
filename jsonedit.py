@@ -4,6 +4,10 @@ import json
 import urwid.curses_display
 import urwid
 
+# Force monochrome for now.  Will probably revisit when 0.9.9 is widely 
+# deployed
+urwid.curses_display.curses.has_colors = lambda : False
+
 class SchemaNode:
     def __init__(self, key, data, parent=None):
         # data loaded from the schema
@@ -51,8 +55,9 @@ class EntryForm:
     def __init__(self, schema):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette( [ ('default', 'default', 'default'), 
-                                    ('editfield', 'light gray', 'dark blue'),
-                                    ('editfieldfocus', 'white', 'dark red') ] )
+                                    ('editfield', 'light gray', 'dark blue', 'underline'),
+                                    ('editfieldfocus', 'white', 'dark red', 'underline') ] )
+        #('editfield', 'light gray', 'dark blue', 'underline')
         self.schema = schema
 
     def getFormArray(self, schemaNode=None):
