@@ -16,17 +16,18 @@ class SchemaNode:
             self.depth=0
         else:
             self.depth=self.parent.getDepth()+1
+        if(self.data['type']=='map'):
+            self.children = []
+            for subkey, subnode in self.data['mapping'].items():
+                self.children.append( SchemaNode(subkey, subnode, parent=self) )
 
     def showNode(self):
-        if(self.data['type']=='map'):
+        if(self.getType()=='map'):
             print self.getTitle() + ":"
-            for subkey, subnode in self.data['mapping'].items():
-                schemaobj=SchemaNode(subkey, subnode, parent=self)
-                schemaobj.showNode()
-        if(self.data['type']=='str'):
-            print self.indent(),
-            print self.getTitle(),
-            print ": "
+            for child in self.getChildren():
+                child.showNode()
+        if(self.getType()=='str'):
+            print self.indent() + self.getTitle() + ":"
 
     def getDepth(self):
         return self.depth
@@ -40,9 +41,13 @@ class SchemaNode:
         else:
             return self.key
 
+    def getType(self):
+        return self.data['type']
+        
+    def getChildren(self):
+        return self.children
 
 class EntryForm:
-	
     def __init__(self):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette( [ ('default', 'default', 'default'), 
@@ -82,8 +87,8 @@ def show_form(schema):
     # a full schema is just a node
     schemaobj=SchemaNode('root', schema)
     schemaobj.showNode()
-    form=EntryForm()
-    form.run()
+    #form=EntryForm()
+    #form.run()
 
 def main():
     # load the schema
