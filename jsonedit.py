@@ -65,15 +65,21 @@ class EntryForm:
             schemaNode=self.schema
         formarray=[]
         if(schemaNode.getType()=='map'):
-            formarray.append(urwid.Text( schemaNode.getTitle() + ": " ))
+            maparray=[]
+            maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
+            leftmargin = urwid.Text( "" )
+            pilearray=[]
             for child in schemaNode.getChildren():                
-                formarray.extend(self.getFormArray(child))
+                pilearray.extend(self.getFormArray(child))
+            mapfields = urwid.Pile( pilearray )
+            maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
+            formarray.append(urwid.Pile(maparray))
         if(schemaNode.getType()=='str'):
             editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
  
             editfieldwidget = urwid.Edit( "", "" )
             editfield = urwid.AttrWrap( editfieldwidget, 'editfield', 'editfieldfocus')
-            editpair = urwid.Columns ( [ editcaption, editfield ] )
+            editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
             formarray.append( editpair )
         return formarray
 
