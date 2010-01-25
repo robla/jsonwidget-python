@@ -25,19 +25,8 @@ class SchemaNode:
             for subkey, subnode in self.data['mapping'].items():
                 self.children.append( SchemaNode(subkey, subnode, parent=self) )
 
-    def showNode(self):
-        if(self.getType()=='map'):
-            print self.getTitle() + ":"
-            for child in self.getChildren():
-                child.showNode()
-        if(self.getType()=='str'):
-            print self.indent() + self.getTitle() + ":"
-
     def getDepth(self):
         return self.depth
-
-    def indent(self, indentstr="    "):
-        return indentstr * self.depth    
     
     def getTitle(self):
         if self.data.has_key('title'):
@@ -113,7 +102,6 @@ class EntryForm:
 def show_form(schema):
     # a full schema is just a node
     schemaobj=SchemaNode('root', schema)
-    schemaobj.showNode()
     form=EntryForm(schemaobj)
     form.run()
 
