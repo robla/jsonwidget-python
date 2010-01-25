@@ -48,17 +48,29 @@ class SchemaNode:
         return self.children
 
 class EntryForm:
-    def __init__(self):
+    def __init__(self, schema):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette( [ ('default', 'default', 'default'), 
-                                    ('editfield', 'light gray', 'black'),
-                                    ('editfieldfocus', 'white', 'black') ] )
+                                    ('editfield', 'light gray', 'dark blue'),
+                                    ('editfieldfocus', 'white', 'dark red') ] )
+        self.schema = schema
+
+    def getFormArray(self, schemaNode=None):
+        if(schemaNode==None):
+            schemaNode=self.schema
+        formarray=[]
+        if(schemaNode.getType()=='map'):
+            formarray.append(urwid.Text( schemaNode.getTitle() + ": " ))
+            for child in schemaNode.getChildren():                
+                formarray.extend(self.getFormArray(child))
+        if(schemaNode.getType()=='str'):
+            editfield = urwid.Edit( ('default', schemaNode.getTitle() + ": "), "" )
+            formarray.append( urwid.AttrWrap( editfield, 'editfield', 'editfieldfocus') )
+        return formarray
 
     def run(self):
-        editfield1 = urwid.Edit( ('default', "Edit me: "), "blah blah blah" )
-        editfield2 = urwid.Edit( ('default', "Edit me2: "), "blah blah blah2" )
-        formarray = [ urwid.AttrWrap( editfield1, 'editfield', 'editfieldfocus'),
-                      urwid.AttrWrap( editfield2, 'editfield', 'editfieldfocus') ]
+        formarray = self.getFormArray()
+        print formarray
         walker = urwid.SimpleListWalker( formarray )
         listbox = urwid.ListBox( walker )
         self.view = urwid.Frame( listbox )
@@ -87,8 +99,8 @@ def show_form(schema):
     # a full schema is just a node
     schemaobj=SchemaNode('root', schema)
     schemaobj.showNode()
-    #form=EntryForm()
-    #form.run()
+    form=EntryForm(schemaobj)
+    form.run()
 
 def main():
     # load the schema
