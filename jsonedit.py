@@ -40,6 +40,18 @@ class SchemaNode:
     def getChildren(self):
         return self.children
 
+class MapEditWidget( urwid.WidgetWrap ):
+    def __init__(self, schemaNode, form):
+        maparray=[]
+        maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
+        leftmargin = urwid.Text( "" )
+        pilearray=[]
+        for child in schemaNode.getChildren():                
+            pilearray.extend(form.getFormArray(child))
+        mapfields = urwid.Pile( pilearray )
+        maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
+        urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
+				
 class EntryForm:
     def __init__(self, schema):
         self.ui = urwid.curses_display.Screen()
@@ -54,15 +66,7 @@ class EntryForm:
             schemaNode=self.schema
         formarray=[]
         if(schemaNode.getType()=='map'):
-            maparray=[]
-            maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
-            leftmargin = urwid.Text( "" )
-            pilearray=[]
-            for child in schemaNode.getChildren():                
-                pilearray.extend(self.getFormArray(child))
-            mapfields = urwid.Pile( pilearray )
-            maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
-            formarray.append(urwid.Pile(maparray))
+            formarray.append(MapEditWidget(schemaNode,self))
         if(schemaNode.getType()=='str'):
             editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
  
