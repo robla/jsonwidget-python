@@ -69,8 +69,12 @@ class EntryForm:
             for child in schemaNode.getChildren():                
                 formarray.extend(self.getFormArray(child))
         if(schemaNode.getType()=='str'):
-            editfield = urwid.Edit( ('default', schemaNode.getTitle() + ": "), "" )
-            formarray.append( urwid.AttrWrap( editfield, 'editfield', 'editfieldfocus') )
+            editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
+ 
+            editfieldwidget = urwid.Edit( "", "" )
+            editfield = urwid.AttrWrap( editfieldwidget, 'editfield', 'editfieldfocus')
+            editpair = urwid.Columns ( [ editcaption, editfield ] )
+            formarray.append( editpair )
         return formarray
 
     def run(self):
