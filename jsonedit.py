@@ -3,6 +3,7 @@
 import json
 import urwid.curses_display
 import urwid
+import optparse
 
 # Force monochrome for now.  Will probably revisit when 0.9.9 is widely 
 # deployed
@@ -109,8 +110,18 @@ def show_form(schema):
     form.run()
 
 def main():
-    # load the schema
-    schema = json.load(open('simpleaddr-schema.json'))
+    usage = "usage: %prog [options] arg"
+    parser = optparse.OptionParser(usage)
+    parser.add_option("-s", "--schema", dest="schema",
+                      default="simpleaddr-schema.json",
+                      help="use this schema to build the form")
+    (options, args) = parser.parse_args()
+    if len(args) != 0:
+        parser.error("No arguments please.  Arguments are down the hall, to the right.")
+    schema = json.load(open(options.schema))
     show_form(schema)
 
-main()
+if __name__ == "__main__":
+    main()
+
+
