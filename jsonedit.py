@@ -40,18 +40,33 @@ class SchemaNode:
     def getChildren(self):
         return self.children
 
+def get_schema_widget( schemaNode ):
+    if(schemaNode.getType()=='map'):
+        return MapEditWidget(schemaNode)
+    if(schemaNode.getType()=='str'):
+        return StrEditWidget(schemaNode)
+    
 class MapEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemaNode, form):
+    def __init__(self, schemaNode):
         maparray=[]
         maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
         pilearray=[]
         for child in schemaNode.getChildren():                
-            pilearray.extend(form.getFormArray(child))
+            pilearray.append(get_schema_widget(child))
         mapfields = urwid.Pile( pilearray )
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
-				
+
+class StrEditWidget( urwid.WidgetWrap ):
+    def __init__(self, schemaNode):
+        editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
+
+        editfieldwidget = urwid.Edit( "", "" )
+        editfield = urwid.AttrWrap( editfieldwidget, 'editfield', 'editfieldfocus')
+        editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
+        urwid.WidgetWrap.__init__(self, editpair)
+
 class EntryForm:
     def __init__(self, schema):
         self.ui = urwid.curses_display.Screen()
@@ -61,25 +76,9 @@ class EntryForm:
         #('editfield', 'light gray', 'dark blue', 'underline')
         self.schema = schema
 
-    def getFormArray(self, schemaNode=None):
-        if(schemaNode==None):
-            schemaNode=self.schema
-        formarray=[]
-        if(schemaNode.getType()=='map'):
-            formarray.append(MapEditWidget(schemaNode,self))
-        if(schemaNode.getType()=='str'):
-            editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
- 
-            editfieldwidget = urwid.Edit( "", "" )
-            editfield = urwid.AttrWrap( editfieldwidget, 'editfield', 'editfieldfocus')
-            editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
-            formarray.append( editpair )
-        return formarray
-
     def run(self):
-        formarray = self.getFormArray()
-        print formarray
-        walker = urwid.SimpleListWalker( formarray )
+        widget = get_schema_widget(self.schema)
+        walker = urwid.SimpleListWalker( [ widget ] )
         listbox = urwid.ListBox( walker )
         self.view = urwid.Frame( listbox )
 
