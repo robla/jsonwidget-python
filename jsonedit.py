@@ -25,6 +25,8 @@ class SchemaNode:
             self.children = []
             for subkey, subnode in self.data['mapping'].items():
                 self.children.append( SchemaNode(subkey, subnode, parent=self) )
+        elif(self.data['type']=='seq'):
+            self.children = [ SchemaNode('0', self.data['sequence'][0], parent=self) ]
 
     def getDepth(self):
         return self.depth
@@ -40,13 +42,31 @@ class SchemaNode:
         
     def getChildren(self):
         return self.children
+    
+    def isEnum(self):
+        return self.data.has_key('enum')
+        
+    def enumOptions(self):
+        return self.data['enum']
 
 def get_schema_widget( schemaNode ):
     if(schemaNode.getType()=='map'):
         return MapEditWidget(schemaNode)
-    if(schemaNode.getType()=='str'):
-        return StrEditWidget(schemaNode)
-    
+    elif(schemaNode.getType()=='seq'):
+        return SeqEditWidget(schemaNode)
+    elif(schemaNode.getType()=='str'):
+        if(schemaNode.isEnum()):
+            return EnumEditWidget(schemaNode)
+        else:
+            return GenericEditWidget(schemaNode)
+    elif(schemaNode.getType()=='int'):
+        return IntEditWidget(schemaNode)
+    elif(schemaNode.getType()=='bool'):
+        return BoolEditWidget(schemaNode)
+    else:
+        return GenericEditWidget(schemaNode)
+
+
 class MapEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemaNode):
         maparray=[]
@@ -59,14 +79,53 @@ class MapEditWidget( urwid.WidgetWrap ):
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
-class StrEditWidget( urwid.WidgetWrap ):
+class SeqEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemaNode):
-        editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
+        maparray=[]
+        maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
+        leftmargin = urwid.Text( "" )
+        pilearray=[]
+        for child in schemaNode.getChildren():                
+            pilearray.append(get_schema_widget(child))
+        mapfields = urwid.Pile( pilearray )
+        maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
+        urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
-        editfieldwidget = urwid.Edit( "", "" )
-        editfield = urwid.AttrWrap( editfieldwidget, 'editfield', 'editfieldfocus')
+class GenericEditWidget( urwid.WidgetWrap ):
+    def __init__(self, schemaNode):
+        self.schema = schemaNode
+        editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
+        editfieldwidget = self.getEditFieldWidget()
+        editfield = self.wrapEditFieldWidget(editfieldwidget)
         editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
         urwid.WidgetWrap.__init__(self, editpair)
+
+    def getEditFieldWidget(self):
+        return urwid.Edit()
+        
+    def wrapEditFieldWidget(self, fieldwidget):
+        return urwid.AttrWrap(fieldwidget, 'editfield', 'editfieldfocus')
+
+class IntEditWidget( GenericEditWidget ):
+    def getEditFieldWidget(self):
+        return urwid.IntEdit()
+
+class BoolEditWidget( GenericEditWidget ):
+    def getEditFieldWidget(self):
+        return urwid.CheckBox("")
+    def wrapEditFieldWidget(self, fieldwidget):
+        return fieldwidget
+        
+class EnumEditWidget( GenericEditWidget ):
+    def getEditFieldWidget(self):
+        options=[]
+        self.radiolist = []
+        for option in self.schema.enumOptions():
+            options.append(urwid.RadioButton(self.radiolist, option))
+        return urwid.GridFlow( options, 13,3,1, 'left')
+    def wrapEditFieldWidget(self, fieldwidget):
+        return fieldwidget
+
 
 class EntryForm:
     def __init__(self, schema):
