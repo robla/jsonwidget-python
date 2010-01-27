@@ -5,6 +5,9 @@ import urwid.curses_display
 import urwid
 import optparse
 
+class Error(RuntimeError):
+    pass
+
 # Force monochrome for now.  Will probably revisit when 0.9.9 is widely 
 # deployed
 urwid.curses_display.curses.has_colors = lambda : False
@@ -13,24 +16,109 @@ class SchemaNode:
     def __init__(self, key, data, parent=None):
         # data loaded from the schema
         self.data=data
-        # key for the parent
+        # object ref for the parent
         self.parent=parent
-        # global index for the node
+        # local index for the node
         self.key=key
         if self.parent==None:
             self.depth=0
+            self.rootschema=self
         else:
             self.depth=self.parent.getDepth()+1
+            self.rootschema=self.parent.getRootSchema()
         if(self.data['type']=='map'):
             self.children = []
             for subkey, subnode in self.data['mapping'].items():
                 self.children.append( SchemaNode(subkey, subnode, parent=self) )
         elif(self.data['type']=='seq'):
-            self.children = [ SchemaNode('0', self.data['sequence'][0], parent=self) ]
+            self.children = [ SchemaNode( 0, self.data['sequence'][0], parent=self) ]
 
     def getDepth(self):
         return self.depth
     
+    def getRootSchema(self):
+        return self.rootschema
+
+    def getTitle(self):
+        if self.data.has_key('title'):
+            return self.data['title']
+        else:
+            return str(self.key)
+
+    def getType(self):
+        return self.data['type']
+        
+    def getChildren(self):
+        return self.children
+        
+    # TODO: fix up self.children to be a map rather than a plain sequence
+    def getChild(self, key):
+        if(self.getType()=='map'):
+            for item in self.children:
+                if(item.getKey()==key):
+                    return item
+        elif(self.getType()=='seq'):
+            return self.children[key]
+        else:
+            return None
+    
+    # getChildSeqSchema: Return the schema node for a child sequence 
+    # (Simple detail, but abstracting because it may not be true for future
+    # JSON schemas)
+    def getChildSeqSchema(self):
+        # first element in sequence is the schema
+        return self.getChild(0)
+    
+    def getKey(self):
+        return self.key
+
+    def isEnum(self):
+        return self.data.has_key('enum')
+        
+    def enumOptions(self):
+        return self.data['enum']
+
+
+class JsonNode:
+    def __init__(self, key, data, parent=None, schemanode=None):
+        # local index for the node
+        self.key=key
+        # data loaded from the schema
+        self.data=data
+        # object ref for the parent
+        self.parent=parent
+        if self.parent==None:
+            self.depth=0
+        else:
+            self.depth=self.parent.getDepth()+1
+        self.attachSchemaNode(schemanode)
+
+    def attachSchemaNode(self, schemanode):
+        jsontype=self.getType()
+        schematype=schemanode.getType()
+        
+        # is the json type appropriate for the expected schema type?
+        isTypeMatch = schematype=='any' or schematype==jsontype or jsontype=='none'
+
+        if isTypeMatch:
+            self.schemanode=schemanode
+            if jsontype=='map':
+                for subkey, subnode in self.data.items():
+                    subschemanode=self.schemanode.getChild(subkey)
+                    self.children={}
+                    if subschemanode==None:
+                        raise("Validation error: %s not a valid key in %s" % (subkey, self.schemanode.getKey()))
+                    self.children[subkey]=JsonNode(subkey, subnode, parent=self, schemanode=subschemanode)
+            elif jsontype=='seq':
+                i=0
+                for subnode in self.data:
+                    self.children=[]
+                    subschemanode=self.schemanode.getChildSeqSchema()
+                    self.children.append( JsonNode(i, subnode, parent=self, schemanode=subschemanode) )
+                    i+=1
+        else:
+            raise Error("Validation error: type mismatch")
+
     def getTitle(self):
         if self.data.has_key('title'):
             return self.data['title']
@@ -38,7 +126,22 @@ class SchemaNode:
             return self.key
 
     def getType(self):
-        return self.data['type']
+        if(isinstance(self.data, basestring)):
+            return 'str'
+        elif(isinstance(self.data, int)):
+            return 'int'
+        elif(isinstance(self.data, float)):
+            return 'num'
+        elif(isinstance(self.data, dict)):
+            return 'map'
+        elif(isinstance(self.data, bool)):
+            return 'bool'
+        elif(isinstance(self.data, list)):
+            return 'seq'
+        elif(self.data==None):
+            return 'none'
+        else: 
+            raise Error("unknown type: %s" % type(self.data).__name__)
         
     def getChildren(self):
         return self.children
@@ -48,6 +151,9 @@ class SchemaNode:
         
     def enumOptions(self):
         return self.data['enum']
+
+    def getDepth(self):
+        return self.depth
 
 def get_schema_widget( schemaNode ):
     if(schemaNode.getType()=='map'):
@@ -128,7 +234,7 @@ class EnumEditWidget( GenericEditWidget ):
 
 
 class EntryForm:
-    def __init__(self, schema):
+    def __init__(self, json, schema):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette( [ ('default', 'default', 'default'), 
                                     ('editfield', 'light gray', 'dark blue', 'underline'),
@@ -162,10 +268,11 @@ class EntryForm:
 					self.view.keypress( size, key )
 
 
-def show_form(schema):
+def show_form(schema, jsondata=None):
     # a full schema is just a node
     schemaobj=SchemaNode('root', schema)
-    form=EntryForm(schemaobj)
+    jsonobj=JsonNode('root', jsondata, schemanode=schemaobj)
+    form=EntryForm(jsonobj, schemaobj)
     form.run()
 
 def main():
@@ -175,10 +282,14 @@ def main():
                       default="simpleaddr-schema.json",
                       help="use this schema to build the form")
     (options, args) = parser.parse_args()
-    if len(args) != 0:
-        parser.error("No arguments please.  Arguments are down the hall, to the right.")
+    if len(args) > 1:
+        parser.error("Too many arguments.  Just one .json file at a time, please.")
     schema = json.load(open(options.schema))
-    show_form(schema)
+    if len(args)==1:
+        jsondata = json.load(open(args[0]))
+    else:
+        jsondata = None
+    show_form(schema, jsondata=jsondata)
 
 if __name__ == "__main__":
     main()
