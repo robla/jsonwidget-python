@@ -163,39 +163,39 @@ class JsonNode:
 # returns the appropriate UI widget
 def get_schema_widget( node ):
     if(isinstance(node, JsonNode)):
-        schemaNode=node.getSchemaNode()
+        schemanode=node.getSchemaNode()
         jsonnode=node
     elif(isinstance(node, SchemaNode)):
-        schemaNode=node
+        schemanode=node
         jsonnode=None
     else:
         raise Error("Type error: %s" % type(node).__name__) 
           
-    if(schemaNode.getType()=='map'):
-        return MapEditWidget(schemaNode, jsonnode=jsonnode)
-    elif(schemaNode.getType()=='seq'):
-        return SeqEditWidget(schemaNode, jsonnode=jsonnode)
-    elif(schemaNode.getType()=='str'):
-        if(schemaNode.isEnum()):
-            return EnumEditWidget(schemaNode, jsonnode=jsonnode)
+    if(schemanode.getType()=='map'):
+        return MapEditWidget(schemanode, jsonnode=jsonnode)
+    elif(schemanode.getType()=='seq'):
+        return SeqEditWidget(schemanode, jsonnode=jsonnode)
+    elif(schemanode.getType()=='str'):
+        if(schemanode.isEnum()):
+            return EnumEditWidget(schemanode, jsonnode=jsonnode)
         else:
-            return GenericEditWidget(schemaNode, jsonnode=jsonnode)
-    elif(schemaNode.getType()=='int'):
-        return IntEditWidget(schemaNode, jsonnode=jsonnode)
-    elif(schemaNode.getType()=='bool'):
-        return BoolEditWidget(schemaNode, jsonnode=jsonnode)
+            return GenericEditWidget(schemanode, jsonnode=jsonnode)
+    elif(schemanode.getType()=='int'):
+        return IntEditWidget(schemanode, jsonnode=jsonnode)
+    elif(schemanode.getType()=='bool'):
+        return BoolEditWidget(schemanode, jsonnode=jsonnode)
     else:
-        return GenericEditWidget(schemaNode, jsonnode=jsonnode)
+        return GenericEditWidget(schemanode, jsonnode=jsonnode)
 
 
 class MapEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemaNode, jsonnode=None):
+    def __init__(self, schemanode, jsonnode=None):
         maparray=[]
-        maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
+        maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
         pilearray=[]
         if(jsonnode==None):
-            for child in schemaNode.getChildren():                
+            for child in schemanode.getChildren():                
                 pilearray.append(get_schema_widget(child))
         else:
             for child in jsonnode.getChildren():             
@@ -205,21 +205,21 @@ class MapEditWidget( urwid.WidgetWrap ):
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
 class SeqEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemaNode, jsonnode=None):
+    def __init__(self, schemanode, jsonnode=None):
         maparray=[]
-        maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
+        maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
         pilearray=[]
-        for child in schemaNode.getChildren():                
+        for child in schemanode.getChildren():                
             pilearray.append(get_schema_widget(child))
         mapfields = urwid.Pile( pilearray )
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
 class GenericEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemaNode, jsonnode=None):
-        self.schema = schemaNode
-        editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
+    def __init__(self, schemanode, jsonnode=None):
+        self.schema = schemanode
+        editcaption = urwid.Text( ('default', schemanode.getTitle() + ": ") )
         editfieldwidget = self.getEditFieldWidget()
         editfield = self.wrapEditFieldWidget(editfieldwidget)
         editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
