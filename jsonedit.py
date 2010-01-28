@@ -78,7 +78,6 @@ class SchemaNode:
     def enumOptions(self):
         return self.data['enum']
 
-
 class JsonNode:
     def __init__(self, key, data, parent=None, schemanode=None):
         # local index for the node
@@ -103,16 +102,16 @@ class JsonNode:
         if isTypeMatch:
             self.schemanode=schemanode
             if jsontype=='map':
+                self.children={}
                 for subkey, subnode in self.data.items():
                     subschemanode=self.schemanode.getChild(subkey)
-                    self.children={}
                     if subschemanode==None:
                         raise("Validation error: %s not a valid key in %s" % (subkey, self.schemanode.getKey()))
                     self.children[subkey]=JsonNode(subkey, subnode, parent=self, schemanode=subschemanode)
             elif jsontype=='seq':
                 i=0
+                self.children=[]
                 for subnode in self.data:
-                    self.children=[]
                     subschemanode=self.schemanode.getChildSeqSchema()
                     self.children.append( JsonNode(i, subnode, parent=self, schemanode=subschemanode) )
                     i+=1
@@ -121,12 +120,6 @@ class JsonNode:
 
     def getSchemaNode(self):
         return self.schemanode
-
-    def getTitle(self):
-        if self.data.has_key('title'):
-            return self.data['title']
-        else:
-            return self.key
 
     def getType(self):
         if(isinstance(self.data, basestring)):
@@ -146,8 +139,16 @@ class JsonNode:
         else: 
             raise Error("unknown type: %s" % type(self.data).__name__)
         
+    def getData(self):
+        return self.data
+
     def getChildren(self):
-        return self.children
+        if(isinstance(self.children, dict)):
+            return self.children.values()
+        elif(isinstance(self.data, list)):
+            return self.children
+        else:
+            return None
     
     def isEnum(self):
         return self.data.has_key('enum')
@@ -157,6 +158,17 @@ class JsonNode:
 
     def getDepth(self):
         return self.depth
+    
+    # debugging function
+    def printTree(self):
+        jsontype=self.getType()
+        if jsontype=='map' or jsontype=='seq':
+            print self.schemanode.getTitle()
+            for child in self.getChildren():
+                child.printTree()
+        else:
+            print self.schemanode.getTitle() + ": " + self.getData()
+        
 
 # Class factory for UI widgets.
 # node: either a SchemaNode or JsonNode
@@ -165,12 +177,9 @@ def get_schema_widget( node ):
     if(isinstance(node, JsonNode)):
         schemanode=node.getSchemaNode()
         jsonnode=node
-    elif(isinstance(node, SchemaNode)):
-        schemanode=node
-        jsonnode=None
     else:
         raise Error("Type error: %s" % type(node).__name__) 
-          
+
     if(schemanode.getType()=='map'):
         return MapEditWidget(schemanode, jsonnode=jsonnode)
     elif(schemanode.getType()=='seq'):
@@ -194,12 +203,12 @@ class MapEditWidget( urwid.WidgetWrap ):
         maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
         pilearray=[]
+
         if(jsonnode==None):
-            for child in schemanode.getChildren():                
-                pilearray.append(get_schema_widget(child))
-        else:
-            for child in jsonnode.getChildren():             
-                pilearray.append(get_schema_widget(child))
+            raise Error("jsonnode not really optional")
+        for child in jsonnode.getChildren():
+            print child
+            pilearray.append(get_schema_widget(child))
         mapfields = urwid.Pile( pilearray )
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
@@ -210,7 +219,9 @@ class SeqEditWidget( urwid.WidgetWrap ):
         maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
         pilearray=[]
-        for child in schemanode.getChildren():                
+        if(jsonnode==None):
+            raise Error("jsonnode not really optional")
+        for child in jsonnode.getChildren():                
             pilearray.append(get_schema_widget(child))
         mapfields = urwid.Pile( pilearray )
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
@@ -219,6 +230,7 @@ class SeqEditWidget( urwid.WidgetWrap ):
 class GenericEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemanode, jsonnode=None):
         self.schema = schemanode
+        self.json = jsonnode
         editcaption = urwid.Text( ('default', schemanode.getTitle() + ": ") )
         editfieldwidget = self.getEditFieldWidget()
         editfield = self.wrapEditFieldWidget(editfieldwidget)
@@ -226,7 +238,7 @@ class GenericEditWidget( urwid.WidgetWrap ):
         urwid.WidgetWrap.__init__(self, editpair)
 
     def getEditFieldWidget(self):
-        return urwid.Edit()
+        return urwid.Edit("", self.json.getData())
         
     def wrapEditFieldWidget(self, fieldwidget):
         return urwid.AttrWrap(fieldwidget, 'editfield', 'editfieldfocus')
@@ -291,6 +303,7 @@ def show_form(schema, jsondata=None):
     # a full schema is just a node
     schemaobj=SchemaNode('root', schema)
     jsonobj=JsonNode('root', jsondata, schemanode=schemaobj)
+    #jsonobj.printTree()
     form=EntryForm(jsonobj)
     form.run()
 
