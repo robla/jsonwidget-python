@@ -141,6 +141,10 @@ class JsonNode:
         
     def getData(self):
         return self.data
+    
+    def setData(self, data):
+        self.data=data
+        self.parent.setChildData(self.key, data)
 
     def getChildren(self):
         if(isinstance(self.children, dict)):
@@ -149,7 +153,10 @@ class JsonNode:
             return self.children
         else:
             return None
-    
+
+    def setChildData(self, key, data):
+        self.data[key]=data
+
     def isEnum(self):
         return self.data.has_key('enum')
         
@@ -207,7 +214,6 @@ class MapEditWidget( urwid.WidgetWrap ):
         if(jsonnode==None):
             raise Error("jsonnode not really optional")
         for child in jsonnode.getChildren():
-            print child
             pilearray.append(get_schema_widget(child))
         mapfields = urwid.Pile( pilearray )
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
@@ -238,7 +244,12 @@ class GenericEditWidget( urwid.WidgetWrap ):
         urwid.WidgetWrap.__init__(self, editpair)
 
     def getEditFieldWidget(self):
-        return urwid.Edit("", str(self.json.getData()))
+        thiswidget=self
+        class CallbackEdit(urwid.Edit):
+            def set_edit_text(self, text):
+                urwid.Edit.set_edit_text(self, text)
+                thiswidget.json.setData(text)
+        return CallbackEdit("", str(self.json.getData()))
         
     def wrapEditFieldWidget(self, fieldwidget):
         return urwid.AttrWrap(fieldwidget, 'editfield', 'editfieldfocus')
@@ -279,8 +290,8 @@ class EntryForm:
 
     def run(self):
         widget = get_schema_widget(self.json)
-        walker = urwid.SimpleListWalker( [ widget ] )
-        listbox = urwid.ListBox( walker )
+        self.walker = urwid.SimpleListWalker( [ widget ] )
+        listbox = urwid.ListBox( self.walker )
         self.view = urwid.Frame( listbox )
 
         self.ui.run_wrapper( self.runLoop )
