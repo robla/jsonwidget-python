@@ -5,6 +5,9 @@ import json
 class Error(RuntimeError):
     pass
 
+# Each SchemaNode instance represents one node in the data tree.  Each element 
+# of a child sequence (i.e. list in Python) and child map (i.e. dict in Python)
+# gets its own child SchemaNode.
 class SchemaNode:
     def __init__(self, key, data, parent=None):
         # data loaded from the schema
@@ -134,7 +137,10 @@ class JsonNode:
         
     def getData(self):
         return self.data
-    
+
+    # Set raw data
+    # TODO: move to storing child data exclusively in children, because current
+    # method has n log n memory footprint.
     def setData(self, data):
         self.data=data
         self.parent.setChildData(self.key, data)
@@ -156,6 +162,7 @@ class JsonNode:
     def enumOptions(self):
         return self.data['enum']
 
+    # how deep is this in the tree
     def getDepth(self):
         return self.depth
     
@@ -168,4 +175,4 @@ class JsonNode:
                 child.printTree()
         else:
             print self.schemanode.getTitle() + ": " + self.getData()
-        
+
