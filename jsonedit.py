@@ -252,14 +252,14 @@ class EnumEditWidget( GenericEditWidget ):
         return fieldwidget
 
 class EntryForm:
-    def __init__(self, json, schema):
+    def __init__(self, json):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette( [ ('default', 'default', 'default'), 
                                     ('editfield', 'light gray', 'dark blue', 'underline'),
                                     ('editfieldfocus', 'white', 'dark red', 'underline') ] )
         #('editfield', 'light gray', 'dark blue', 'underline')
-        self.schema = schema
         self.json = json
+        self.schema = json.getSchemaNode()
 
     def run(self):
         widget = get_schema_widget(self.json)
@@ -291,7 +291,7 @@ def show_form(schema, jsondata=None):
     # a full schema is just a node
     schemaobj=SchemaNode('root', schema)
     jsonobj=JsonNode('root', jsondata, schemanode=schemaobj)
-    form=EntryForm(jsonobj, schemaobj)
+    form=EntryForm(jsonobj)
     form.run()
 
 def main():
