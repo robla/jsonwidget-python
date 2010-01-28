@@ -74,6 +74,8 @@ class SchemaNode:
     def enumOptions(self):
         return self.data['enum']
 
+# JsonNode is a class to store the data associated with a schema.  Each node
+# of the tree gets tied to a SchemaNode
 class JsonNode:
     def __init__(self, key, data, parent=None, schemanode=None):
         # local index for the node
@@ -88,6 +90,7 @@ class JsonNode:
             self.depth=self.parent.getDepth()+1
         self.attachSchemaNode(schemanode)
 
+    # pair this data node to the corresponding part of the schema
     def attachSchemaNode(self, schemanode):
         jsontype=self.getType()
         schematype=schemanode.getType()
@@ -117,6 +120,7 @@ class JsonNode:
     def getSchemaNode(self):
         return self.schemanode
 
+    # get type string as defined by the schema language
     def getType(self):
         if(isinstance(self.data, basestring)):
             return 'str'
@@ -134,7 +138,7 @@ class JsonNode:
             return 'none'
         else: 
             raise Error("unknown type: %s" % type(self.data).__name__)
-        
+
     def getData(self):
         return self.data
 
@@ -145,6 +149,10 @@ class JsonNode:
         self.data=data
         self.parent.setChildData(self.key, data)
 
+    # get a list of children, possibly ordered
+    # Note that even though the JSON spec says maps are unordered, it's pretty
+    # rude to muck with someone else's content ordering in a text file, and ad 
+    # hoc forms benefit greatly from being able to control the order of elements
     def getChildren(self):
         if(isinstance(self.children, dict)):
             return self.children.values()
@@ -162,7 +170,7 @@ class JsonNode:
     def enumOptions(self):
         return self.data['enum']
 
-    # how deep is this in the tree
+    # how deep is this node in the tree?
     def getDepth(self):
         return self.depth
     

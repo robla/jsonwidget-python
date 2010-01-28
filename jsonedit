@@ -12,10 +12,10 @@ from jsonforms_urwid import *
 urwid.curses_display.curses.has_colors = lambda : False
 
 def show_form(schema, jsondata=None):
-    # a full schema is just a node
+    # a full schema object is the root node of a tree of SchemaNodes
     schemaobj=SchemaNode('root', schema)
+    # a full json object is the root node of a tree of JsonNodes
     jsonobj=JsonNode('root', jsondata, schemanode=schemaobj)
-    #jsonobj.printTree()
     form=EntryForm(jsonobj)
     form.run()
 

@@ -37,12 +37,15 @@ def get_schema_widget( node ):
     else:
         return GenericEditWidget(schemanode, jsonnode=jsonnode)
 
+# Series of editing widgets follows, each appropriate to a datatype or two
 
+# Map/dict edit widget/container
 class MapEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemanode, jsonnode=None):
         maparray=[]
         maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
+        # build a vertically stacked array of widgets
         pilearray=[]
 
         if(jsonnode==None):
@@ -53,11 +56,13 @@ class MapEditWidget( urwid.WidgetWrap ):
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
+# Seq/list edit widget/container
 class SeqEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemanode, jsonnode=None):
         maparray=[]
         maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
+        # build a vertically stacked array of widgets
         pilearray=[]
         if(jsonnode==None):
             raise Error("jsonnode not really optional")
@@ -67,6 +72,7 @@ class SeqEditWidget( urwid.WidgetWrap ):
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
+# generic widget used for free text entry (e.g. strings)
 class GenericEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemanode, jsonnode=None):
         self.schema = schemanode
@@ -79,25 +85,33 @@ class GenericEditWidget( urwid.WidgetWrap ):
 
     def getEditFieldWidget(self):
         thiswidget=self
+        # closure which effectively gives this object a callback when the 
+        # text of the widget changes.  This was in lieu of figuring out how to
+        # properly use Signals, which may need to wait until I upgrade to using
+        # urwid 0.99. 
         class CallbackEdit(urwid.Edit):
             def set_edit_text(self, text):
                 urwid.Edit.set_edit_text(self, text)
                 thiswidget.json.setData(text)
         return CallbackEdit("", str(self.json.getData()))
-        
+
+    # TODO: remove this rather useless abstraction
     def wrapEditFieldWidget(self, fieldwidget):
         return urwid.AttrWrap(fieldwidget, 'editfield', 'editfieldfocus')
 
+# Integer edit widget
 class IntEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
         return urwid.IntEdit("", self.json.getData())
 
+# Boolean edit widget
 class BoolEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
         return urwid.CheckBox("", self.json.getData())
     def wrapEditFieldWidget(self, fieldwidget):
         return fieldwidget
-        
+
+# Enumerated string edit widget
 class EnumEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
         options=[]
@@ -112,13 +126,15 @@ class EnumEditWidget( GenericEditWidget ):
     def wrapEditFieldWidget(self, fieldwidget):
         return fieldwidget
 
+# the top-level form where all of the widgets get placed.
+# I'm guessing this should get replaced with a MainLoop when this moves to urwid
+# 0.99.
 class EntryForm:
     def __init__(self, json):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette( [ ('default', 'default', 'default'), 
                                     ('editfield', 'light gray', 'dark blue', 'underline'),
                                     ('editfieldfocus', 'white', 'dark red', 'underline') ] )
-        #('editfield', 'light gray', 'dark blue', 'underline')
         self.json = json
         self.schema = json.getSchemaNode()
 
@@ -137,6 +153,8 @@ class EntryForm:
             self.ui.draw_screen( size, canvas )
             keys = None
             while(keys == None):
+                # self.ui.get_input() blocks for max_wait time, default 0.5 sec
+                # use self.ui.set_input_timeouts() to change the default
                 keys = self.ui.get_input()
             for key in keys:
                 if key == 'window resize':
