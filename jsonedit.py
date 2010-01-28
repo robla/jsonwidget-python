@@ -119,6 +119,9 @@ class JsonNode:
         else:
             raise Error("Validation error: type mismatch")
 
+    def getSchemaNode(self):
+        return self.schemanode
+
     def getTitle(self):
         if self.data.has_key('title'):
             return self.data['title']
@@ -155,38 +158,54 @@ class JsonNode:
     def getDepth(self):
         return self.depth
 
-def get_schema_widget( schemaNode ):
+# Class factory for UI widgets.
+# node: either a SchemaNode or JsonNode
+# returns the appropriate UI widget
+def get_schema_widget( node ):
+    if(isinstance(node, JsonNode)):
+        schemaNode=node.getSchemaNode()
+        jsonnode=node
+    elif(isinstance(node, SchemaNode)):
+        schemaNode=node
+        jsonnode=None
+    else:
+        raise Error("Type error: %s" % type(node).__name__) 
+          
     if(schemaNode.getType()=='map'):
-        return MapEditWidget(schemaNode)
+        return MapEditWidget(schemaNode, jsonnode=jsonnode)
     elif(schemaNode.getType()=='seq'):
-        return SeqEditWidget(schemaNode)
+        return SeqEditWidget(schemaNode, jsonnode=jsonnode)
     elif(schemaNode.getType()=='str'):
         if(schemaNode.isEnum()):
-            return EnumEditWidget(schemaNode)
+            return EnumEditWidget(schemaNode, jsonnode=jsonnode)
         else:
-            return GenericEditWidget(schemaNode)
+            return GenericEditWidget(schemaNode, jsonnode=jsonnode)
     elif(schemaNode.getType()=='int'):
-        return IntEditWidget(schemaNode)
+        return IntEditWidget(schemaNode, jsonnode=jsonnode)
     elif(schemaNode.getType()=='bool'):
-        return BoolEditWidget(schemaNode)
+        return BoolEditWidget(schemaNode, jsonnode=jsonnode)
     else:
-        return GenericEditWidget(schemaNode)
+        return GenericEditWidget(schemaNode, jsonnode=jsonnode)
 
 
 class MapEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemaNode):
+    def __init__(self, schemaNode, jsonnode=None):
         maparray=[]
         maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
         pilearray=[]
-        for child in schemaNode.getChildren():                
-            pilearray.append(get_schema_widget(child))
+        if(jsonnode==None):
+            for child in schemaNode.getChildren():                
+                pilearray.append(get_schema_widget(child))
+        else:
+            for child in jsonnode.getChildren():             
+                pilearray.append(get_schema_widget(child))
         mapfields = urwid.Pile( pilearray )
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
 class SeqEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemaNode):
+    def __init__(self, schemaNode, jsonnode=None):
         maparray=[]
         maparray.append(urwid.Text( schemaNode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
@@ -198,7 +217,7 @@ class SeqEditWidget( urwid.WidgetWrap ):
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
 class GenericEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemaNode):
+    def __init__(self, schemaNode, jsonnode=None):
         self.schema = schemaNode
         editcaption = urwid.Text( ('default', schemaNode.getTitle() + ": ") )
         editfieldwidget = self.getEditFieldWidget()
@@ -232,7 +251,6 @@ class EnumEditWidget( GenericEditWidget ):
     def wrapEditFieldWidget(self, fieldwidget):
         return fieldwidget
 
-
 class EntryForm:
     def __init__(self, json, schema):
         self.ui = urwid.curses_display.Screen()
@@ -241,9 +259,10 @@ class EntryForm:
                                     ('editfieldfocus', 'white', 'dark red', 'underline') ] )
         #('editfield', 'light gray', 'dark blue', 'underline')
         self.schema = schema
+        self.json = json
 
     def run(self):
-        widget = get_schema_widget(self.schema)
+        widget = get_schema_widget(self.json)
         walker = urwid.SimpleListWalker( [ widget ] )
         listbox = urwid.ListBox( walker )
         self.view = urwid.Frame( listbox )
