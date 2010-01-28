@@ -84,6 +84,8 @@ class JsonNode:
         self.data=data
         # object ref for the parent
         self.parent=parent
+        # self.children will get set in attachSchemaNode if there are any
+        self.children=[]
         if self.parent==None:
             self.depth=0
         else:
@@ -156,10 +158,10 @@ class JsonNode:
     def getChildren(self):
         if(isinstance(self.children, dict)):
             return self.children.values()
-        elif(isinstance(self.data, list)):
+        elif(isinstance(self.children, list)):
             return self.children
         else:
-            return None
+            raise Error("self.children has invalid type %s" % type(self.children).__name__)
 
     def setChildData(self, key, data):
         self.data[key]=data
