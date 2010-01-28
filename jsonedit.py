@@ -116,7 +116,7 @@ class JsonNode:
                     self.children.append( JsonNode(i, subnode, parent=self, schemanode=subschemanode) )
                     i+=1
         else:
-            raise Error("Validation error: type mismatch")
+            raise Error("Validation error: type mismatch - key: %s data: %s jsontype: %s schematype: %s" % (self.key, str(self.data), jsontype, schematype) )
 
     def getSchemaNode(self):
         return self.schemanode
@@ -124,14 +124,14 @@ class JsonNode:
     def getType(self):
         if(isinstance(self.data, basestring)):
             return 'str'
+        elif(isinstance(self.data, bool)):
+            return 'bool'
         elif(isinstance(self.data, int)):
             return 'int'
         elif(isinstance(self.data, float)):
-            return 'num'
+            return 'number'
         elif(isinstance(self.data, dict)):
             return 'map'
-        elif(isinstance(self.data, bool)):
-            return 'bool'
         elif(isinstance(self.data, list)):
             return 'seq'
         elif(self.data==None):
@@ -238,18 +238,18 @@ class GenericEditWidget( urwid.WidgetWrap ):
         urwid.WidgetWrap.__init__(self, editpair)
 
     def getEditFieldWidget(self):
-        return urwid.Edit("", self.json.getData())
+        return urwid.Edit("", str(self.json.getData()))
         
     def wrapEditFieldWidget(self, fieldwidget):
         return urwid.AttrWrap(fieldwidget, 'editfield', 'editfieldfocus')
 
 class IntEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
-        return urwid.IntEdit()
+        return urwid.IntEdit("", self.json.getData())
 
 class BoolEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
-        return urwid.CheckBox("")
+        return urwid.CheckBox("", self.json.getData())
     def wrapEditFieldWidget(self, fieldwidget):
         return fieldwidget
         
@@ -258,7 +258,11 @@ class EnumEditWidget( GenericEditWidget ):
         options=[]
         self.radiolist = []
         for option in self.schema.enumOptions():
-            options.append(urwid.RadioButton(self.radiolist, option))
+            if(self.json.getData()==option):
+                state=True
+            else:
+                state=False
+            options.append(urwid.RadioButton(self.radiolist, option, state=state))
         return urwid.GridFlow( options, 13,3,1, 'left')
     def wrapEditFieldWidget(self, fieldwidget):
         return fieldwidget
@@ -282,21 +286,21 @@ class EntryForm:
         self.ui.run_wrapper( self.runLoop )
 
     def runLoop(self):
-		size = self.ui.get_cols_rows()
-		while(True):
-			canvas = self.view.render( size, focus=1 )
-			self.ui.draw_screen( size, canvas )
-			keys = None
-			while(keys == None): 
-				keys = self.ui.get_input()
-			for key in keys:
-				if key == 'window resize':
-					size = self.ui.get_cols_rows()
-				elif key == 'ctrl x':
-				    print "Exiting by ctrl-x"
-				    return
-				else:
-					self.view.keypress( size, key )
+        size = self.ui.get_cols_rows()
+        while(True):
+            canvas = self.view.render( size, focus=1 )
+            self.ui.draw_screen( size, canvas )
+            keys = None
+            while(keys == None):
+                keys = self.ui.get_input()
+            for key in keys:
+                if key == 'window resize':
+                    size = self.ui.get_cols_rows()
+                elif key == 'ctrl x':
+                    print "Exiting by ctrl-x"
+                    return
+                else:
+                    self.view.keypress( size, key )
 
 
 def show_form(schema, jsondata=None):
