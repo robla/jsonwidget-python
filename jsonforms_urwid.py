@@ -59,6 +59,12 @@ class MapEditWidget( urwid.WidgetWrap ):
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
 
+    def addNode(self, schemanode):
+        newnode=JsonNode(schemanode.getKey(), "", parent=self.json, schemanode=schemanode)
+        newwidget=get_schema_widget(newnode)
+        # This doesn't work
+        #self.w.widget_list.append(newwidget)
+
 # Seq/list edit widget/container
 class SeqEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemanode, jsonnode=None):
@@ -136,8 +142,14 @@ class FieldAddButtons( urwid.WidgetWrap ):
 
     def getButtons(self):
         #TODO: wire this up
+        parentwidget=self.parentwidget
+        #TODO: fix this
+        if(len(self.nodelist)>0):
+            node=self.nodelist[0]
+        else:
+            node=None
         def foo(stuff):
-            pass
+            parentwidget.addNode(node)
 
         buttons=[]
         for node in self.nodelist:
