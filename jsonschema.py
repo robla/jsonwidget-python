@@ -23,9 +23,9 @@ class SchemaNode:
             self.depth=self.parent.getDepth()+1
             self.rootschema=self.parent.getRootSchema()
         if(self.data['type']=='map'):
-            self.children = []
+            self.children = {}
             for subkey, subnode in self.data['mapping'].items():
-                self.children.append( SchemaNode(subkey, subnode, parent=self) )
+                self.children[subkey]=SchemaNode(subkey, subnode, parent=self)
         elif(self.data['type']=='seq'):
             self.children = [ SchemaNode( 0, self.data['sequence'][0], parent=self) ]
 
@@ -44,19 +44,20 @@ class SchemaNode:
     def getType(self):
         return self.data['type']
         
+    # get a list of children, possibly ordered
+    # Note that even though the JSON spec says maps are unordered, it's pretty
+    # rude to muck with someone else's content ordering in a text file, and ad 
+    # hoc forms benefit greatly from being able to control the order of elements
     def getChildren(self):
-        return self.children
-        
-    # TODO: fix up self.children to be a map rather than a plain sequence
-    def getChild(self, key):
-        if(self.getType()=='map'):
-            for item in self.children:
-                if(item.getKey()==key):
-                    return item
-        elif(self.getType()=='seq'):
-            return self.children[key]
+        if(isinstance(self.children, dict)):
+            return self.children.values()
+        elif(isinstance(self.children, list)):
+            return self.children
         else:
-            return None
+            raise Error("self.children has invalid type %s" % type(self.children).__name__)
+        
+    def getChild(self, key):
+        return self.children[key]
     
     # getChildSeqSchema: Return the schema node for a child sequence 
     # (Simple detail, but abstracting because it may not be true for future
