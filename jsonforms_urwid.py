@@ -172,12 +172,7 @@ class EntryForm:
 
     def run(self):
         widget = get_schema_widget(self.json)
-        def foo(stuff):
-            pass
-        editcaption = urwid.Text( ('default', "") )
-        morebutton = urwid.Button("more and bigger and stuff",foo)
-        morebuttonpair = urwid.Columns ( [ ('fixed', 20, editcaption), morebutton ] )
-        self.walker = urwid.SimpleListWalker( [ widget,morebutton ] )
+        self.walker = urwid.SimpleListWalker( [ widget ] )
         listbox = urwid.ListBox( self.walker )
         self.view = urwid.Frame( listbox )
 
