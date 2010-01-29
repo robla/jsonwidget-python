@@ -58,6 +58,9 @@ class SchemaNode:
         
     def getChild(self, key):
         return self.children[key]
+        
+    def getChildKeys(self):
+        return self.children.keys()
     
     # getChildSeqSchema: Return the schema node for a child sequence 
     # (Simple detail, but abstracting because it may not be true for future
@@ -163,6 +166,9 @@ class JsonNode:
             return self.children
         else:
             raise Error("self.children has invalid type %s" % type(self.children).__name__)
+
+    def getChildKeys(self):
+        return self.children.keys()
 
     def setChildData(self, key, data):
         self.data[key]=data
