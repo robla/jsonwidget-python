@@ -42,6 +42,8 @@ def get_schema_widget( node ):
 # Map/dict edit widget/container
 class MapEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemanode, jsonnode=None):
+        self.schema = schemanode
+        self.json = jsonnode
         maparray=[]
         maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
@@ -52,6 +54,7 @@ class MapEditWidget( urwid.WidgetWrap ):
             raise Error("jsonnode not really optional")
         for child in jsonnode.getChildren():
             pilearray.append(get_schema_widget(child))
+        pilearray.append(FieldAddButtons(self, self.json.getUnusedSchemaNodes()))
         mapfields = urwid.Pile( pilearray )
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
@@ -59,6 +62,8 @@ class MapEditWidget( urwid.WidgetWrap ):
 # Seq/list edit widget/container
 class SeqEditWidget( urwid.WidgetWrap ):
     def __init__(self, schemanode, jsonnode=None):
+        self.schema = schemanode
+        self.json = jsonnode
         maparray=[]
         maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
@@ -87,7 +92,7 @@ class GenericEditWidget( urwid.WidgetWrap ):
         # closure which effectively gives this object a callback when the 
         # text of the widget changes.  This was in lieu of figuring out how to
         # properly use Signals, which may need to wait until I upgrade to using
-        # urwid 0.99. 
+        # urwid 0.99.
         class CallbackEdit(urwid.Edit):
             def set_edit_text(self, text):
                 urwid.Edit.set_edit_text(self, text)
@@ -119,6 +124,28 @@ class EnumEditWidget( GenericEditWidget ):
             options.append(urwid.RadioButton(self.radiolist, option, state=state))
         return urwid.GridFlow( options, 13,3,1, 'left')
 
+# Add a button
+class FieldAddButtons( urwid.WidgetWrap ):
+    def __init__(self, parentwidget, nodelist):
+        self.parentwidget = parentwidget
+        self.nodelist = nodelist
+        caption = urwid.Text( ('default', "Add fields: ") )
+        buttonfield = self.getButtons()
+        editpair = urwid.Columns ( [ ('fixed', 20, caption), buttonfield ] )
+        urwid.WidgetWrap.__init__(self, editpair)
+
+    def getButtons(self):
+        #TODO: wire this up
+        def foo(stuff):
+            pass
+
+        buttons=[]
+        for node in self.nodelist:
+            fieldname = node.getTitle()
+            buttons.append(urwid.Button(fieldname,foo))
+        #TODO: remove hard coded widths
+        return urwid.GridFlow( buttons, 13,3,1, 'left')
+
 # the top-level form where all of the widgets get placed.
 # I'm guessing this should get replaced with a MainLoop when this moves to urwid
 # 0.99.
@@ -133,7 +160,12 @@ class EntryForm:
 
     def run(self):
         widget = get_schema_widget(self.json)
-        self.walker = urwid.SimpleListWalker( [ widget ] )
+        def foo(stuff):
+            pass
+        editcaption = urwid.Text( ('default', "") )
+        morebutton = urwid.Button("more and bigger and stuff",foo)
+        morebuttonpair = urwid.Columns ( [ ('fixed', 20, editcaption), morebutton ] )
+        self.walker = urwid.SimpleListWalker( [ widget,morebutton ] )
         listbox = urwid.ListBox( self.walker )
         self.view = urwid.Frame( listbox )
 

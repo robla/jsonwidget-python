@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import json
+# sets deprecated in Python 2.6
+import sets
 
 class Error(RuntimeError):
     pass
@@ -169,6 +171,16 @@ class JsonNode:
 
     def getChildKeys(self):
         return self.children.keys()
+    
+    # this function returns the list of schema nodes that don't yet have 
+    # associated json child nodes associated with them
+    def getUnusedSchemaNodes(self):
+        schemakeys=sets.Set(self.schemanode.getChildKeys())
+        jsonkeys=sets.Set(self.getChildKeys())
+        unusedkeys=schemakeys.difference(jsonkeys)
+        # list comprehension to pull all of the associated schema nodes
+        unusednodes=[self.schemanode.getChild(key) for key in unusedkeys]
+        return unusednodes
 
     def setChildData(self, key, data):
         self.data[key]=data
