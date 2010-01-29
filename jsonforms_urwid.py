@@ -78,8 +78,7 @@ class GenericEditWidget( urwid.WidgetWrap ):
         self.schema = schemanode
         self.json = jsonnode
         editcaption = urwid.Text( ('default', schemanode.getTitle() + ": ") )
-        editfieldwidget = self.getEditFieldWidget()
-        editfield = self.wrapEditFieldWidget(editfieldwidget)
+        editfield = self.getEditFieldWidget()
         editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
         urwid.WidgetWrap.__init__(self, editpair)
 
@@ -93,23 +92,19 @@ class GenericEditWidget( urwid.WidgetWrap ):
             def set_edit_text(self, text):
                 urwid.Edit.set_edit_text(self, text)
                 thiswidget.json.setData(text)
-        return CallbackEdit("", str(self.json.getData()))
-
-    # TODO: remove this rather useless abstraction
-    def wrapEditFieldWidget(self, fieldwidget):
-        return urwid.AttrWrap(fieldwidget, 'editfield', 'editfieldfocus')
+        innerwidget=CallbackEdit("", str(self.json.getData()))
+        return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
 
 # Integer edit widget
 class IntEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
-        return urwid.IntEdit("", self.json.getData())
+        innerwidget=urwid.IntEdit("", self.json.getData())
+        return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
 
 # Boolean edit widget
 class BoolEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
         return urwid.CheckBox("", self.json.getData())
-    def wrapEditFieldWidget(self, fieldwidget):
-        return fieldwidget
 
 # Enumerated string edit widget
 class EnumEditWidget( GenericEditWidget ):
@@ -123,8 +118,6 @@ class EnumEditWidget( GenericEditWidget ):
                 state=False
             options.append(urwid.RadioButton(self.radiolist, option, state=state))
         return urwid.GridFlow( options, 13,3,1, 'left')
-    def wrapEditFieldWidget(self, fieldwidget):
-        return fieldwidget
 
 # the top-level form where all of the widgets get placed.
 # I'm guessing this should get replaced with a MainLoop when this moves to urwid
