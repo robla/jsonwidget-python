@@ -1,0 +1,37 @@
+Things to get done before version 0.1
+
+On deck:
+*  Implement ability to add child nodes
+
+To do:
+*  Implement ability to delete child nodes
+*  Saving json files
+*  Fix deep mod problem 
+
+    def setChildData(self, key, data):
+        self.data[key]=data
+        # add this line:
+        self.parent.setChildData(self.key, self.data)
+   This will probably bomb out at the top level....figure out how to mitigate
+   that.
+*  Look up proper doc format for python comments, and start using it.
+*  Implement support for optional/required elements
+*  Figure out why running with no params fails
+*  change API of GenericEditWidget to only initialize with a valid JsonNode
+*  Implement title bar at top
+*  Implement help panel on bottom
+*  Implement "save"
+*  Respect key order in json and schema files
+*  Remove hardcoded 20 character label column
+
+Done:
+*  Basic editor
+*  Change schemaNode to schemanode
+*  Make jsonedit populate the data
+*  Break up jsonedit.py into jsonedit, jsonforms-urwid.py and jsonschema.py
+*  get rid of wrapEditFieldWidget (roll into getEditFieldWidget)
+*  Fix up the schema data structure
+*  Create function to get the unused fields
+*  Put valid field names on buttons
+*  Make the button display a list
+
