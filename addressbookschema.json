@@ -1,0 +1,91 @@
+{
+  "type":"seq",
+  "title":"Address Book",
+  "sequence":
+  [
+    {
+      "type":"map",
+      "title":"Address Book Entry",
+      "mapping":
+      {
+        "firstName":
+        {
+          "type":"str",
+          "title":"First Name",
+          "required":true
+        },
+        "lastName":
+        {
+          "type":"str",
+          "title":"Last Name",
+          "required":true
+        },
+        "address":
+        {
+          "type":"map",
+          "title":"Address",
+          "mapping":
+          {
+            "streetAddress":
+            {
+              "type":"str",
+              "title":"Street Address",
+              "required":true
+            },
+            "city":
+            {
+              "type":"str",
+              "title":"City",
+              "required":true
+            },
+            "state":
+            {
+              "type":"str",
+              "title":"State",
+              "required":true
+            },
+            "postalCode":
+            {
+              "type":"str",
+              "title":"Postal (Zip) Code",
+              "required":true
+            }
+          }
+        },
+        "phoneNumbers":
+        {
+          "type":"seq",
+          "title":"Phone number(s)",
+          "sequence":
+          [
+            {
+              "type":"map",
+              "mapping":
+              {
+                "workhomeother":
+                {
+                  "type":"str",
+                  "required":true,
+                  "enum":
+                  [
+                    "Work",
+                    "Home",
+                    "Mobile",
+                    "Fax",
+                    "Other"
+                  ],
+                  "title":"Work/Home/Other"
+                },
+                "Number":
+                {
+                  "type":"str",
+                  "required":true
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

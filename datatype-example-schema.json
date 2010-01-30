@@ -1,0 +1,66 @@
+{
+  "type":"map",
+  "title":"Datatype Example",
+  "desc":"Example with all datatypes in one place",
+  "mapping":
+  {
+    "map_example":
+    {
+      "type":"map",
+      "title":"Map (map)",
+      "mapping":
+      {
+        "field1":
+        {
+          "type":"str"
+        },
+        "field2":
+        {
+          "type":"str"
+        }
+      }
+    },
+    "seq_example":
+    {
+      "type":"seq",
+      "title":"Sequence (seq)",
+      "sequence":
+      [
+        {
+          "type":"str"
+        }
+      ]
+    },
+    "num_example":
+    {
+      "title":"Number (num)",
+      "type":"number"
+    },
+    "int_example":
+    {
+      "title":"Integer (int)",
+      "type":"int"
+    },
+    "str_example":
+    {
+      "title":"String (str)",
+      "type":"str"
+    },
+    "bool_example":
+    {
+      "title":"Boolean (bool)",
+      "type":"bool"
+    },
+    "str_enum_example":
+    {
+      "title":"String Enumeration (str + enum)",
+      "type":"str",
+      "enum":
+      [
+        "value1",
+        "value2",
+        "value3"
+      ]
+    }
+  }
+}
