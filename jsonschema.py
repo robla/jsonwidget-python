@@ -185,13 +185,18 @@ class JsonNode:
     
     # this function returns the list of schema nodes that don't yet have 
     # associated json child nodes associated with them
-    def getUnusedSchemaNodes(self):
-        schemakeys=sets.Set(self.schemanode.getChildKeys())
-        jsonkeys=sets.Set(self.getChildKeys())
-        unusedkeys=schemakeys.difference(jsonkeys)
-        # list comprehension to pull all of the associated schema nodes
-        unusednodes=[self.schemanode.getChild(key) for key in unusedkeys]
-        return unusednodes
+    def getAvailableSchemaNodes(self):
+        if(self.schemanode.getType()=='map'):
+            schemakeys=sets.Set(self.schemanode.getChildKeys())
+            jsonkeys=sets.Set(self.getChildKeys())
+            unusedkeys=schemakeys.difference(jsonkeys)
+            # list comprehension to pull all of the associated schema nodes
+            unusednodes=[self.schemanode.getChild(key) for key in unusedkeys]
+            return unusednodes
+        elif(self.schemanode.getType()=='seq'):
+            return [ self.schemanode.getChild(0) ]
+        else:
+            raise Error("type %s not implemented" % self.getType())
 
     def setChildData(self, key, data):
         if(self.data==None):
@@ -226,4 +231,12 @@ class JsonNode:
                 child.printTree()
         else:
             print self.schemanode.getTitle() + ": " + self.getData()
+            
+    def getTitle(self):
+        schematitle=self.schemanode.getTitle()
+        if(self.depth>0 and self.parent.schemanode.getType()=='seq'):
+            title="%s[%i]" % (schematitle, self.getKey())
+        else:
+            title=schematitle
+        return title
 

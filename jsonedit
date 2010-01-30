@@ -19,9 +19,9 @@ urwid.curses_display.curses.has_colors = lambda : False
 
 def show_form(schema, jsondata=None):
     # a full schema object is the root node of a tree of SchemaNodes
-    schemaobj=SchemaNode('root', schema)
+    schemaobj=SchemaNode(None, schema)
     # a full json object is the root node of a tree of JsonNodes
-    jsonobj=JsonNode('root', jsondata, schemanode=schemaobj)
+    jsonobj=JsonNode(None, jsondata, schemanode=schemaobj)
     form=EntryForm(jsonobj)
     form.run()
 

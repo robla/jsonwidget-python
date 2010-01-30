@@ -28,9 +28,9 @@ def get_schema_widget( node ):
     schemanode=jsonnode.getSchemaNode()
 
     if(schemanode.getType()=='map'):
-        return MapEditWidget(jsonnode)
+        return ArrayEditWidget(jsonnode)
     elif(schemanode.getType()=='seq'):
-        return SeqEditWidget(jsonnode)
+        return ArrayEditWidget(jsonnode)
     elif(schemanode.getType()=='str'):
         if(schemanode.isEnum()):
             return EnumEditWidget(jsonnode)
@@ -45,13 +45,13 @@ def get_schema_widget( node ):
 
 # Series of editing widgets follows, each appropriate to a datatype or two
 
-# Map/dict edit widget/container
-class MapEditWidget( urwid.WidgetWrap ):
+# Map and Seq edit widget and container
+class ArrayEditWidget( urwid.WidgetWrap ):
     def __init__(self, jsonnode):
         self.json = jsonnode
         self.schema = jsonnode.getSchemaNode()
         maparray=[]
-        maparray.append(urwid.Text( self.schema.getTitle() + ": " ))
+        maparray.append(urwid.Text( self.json.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
 
         mapfields = self.buildPile()
@@ -71,30 +71,7 @@ class MapEditWidget( urwid.WidgetWrap ):
 
         for child in self.json.getChildren():
             pilearray.append(get_schema_widget(child))
-        pilearray.append(FieldAddButtons(self, self.json.getUnusedSchemaNodes()))
-
-        return urwid.Pile( pilearray )
-
-# Seq/list edit widget/container
-# TODO: create base class for SeqEditWidget and MapEditWidget
-class SeqEditWidget( urwid.WidgetWrap ):
-    def __init__(self, jsonnode):
-        self.schema = jsonnode.getSchemaNode()
-        self.json = jsonnode
-        maparray=[]
-        maparray.append(urwid.Text( self.schema.getTitle() + ": " ))
-        leftmargin = urwid.Text( "" )
-        mapfields = self.buildPile()
-
-        maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
-        urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
-
-    # build a vertically stacked array of widgets
-    def buildPile(self):
-        # build a vertically stacked array of widgets
-        pilearray=[]
-        for child in self.json.getChildren():                
-            pilearray.append(get_schema_widget(child))
+        pilearray.append(FieldAddButtons(self, self.json.getAvailableSchemaNodes()))
 
         return urwid.Pile( pilearray )
 
@@ -103,7 +80,7 @@ class GenericEditWidget( urwid.WidgetWrap ):
     def __init__(self, jsonnode):
         self.schema = jsonnode.getSchemaNode()
         self.json = jsonnode
-        editcaption = urwid.Text( ('default', self.schema.getTitle() + ": ") )
+        editcaption = urwid.Text( ('default', self.json.getTitle() + ": ") )
         editfield = self.getEditFieldWidget()
         editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
         urwid.WidgetWrap.__init__(self, editpair)
