@@ -19,36 +19,35 @@ import urwid
 # returns the appropriate UI widget
 def get_schema_widget( node ):
     if(isinstance(node, JsonNode)):
-        schemanode=node.getSchemaNode()
         jsonnode=node
     else:
         raise Error("Type error: %s" % type(node).__name__) 
 
-    if(schemanode.getType()=='map'):
-        return MapEditWidget(schemanode, jsonnode=jsonnode)
-    elif(schemanode.getType()=='seq'):
-        return SeqEditWidget(schemanode, jsonnode=jsonnode)
-    elif(schemanode.getType()=='str'):
-        if(schemanode.isEnum()):
-            return EnumEditWidget(schemanode, jsonnode=jsonnode)
+    if(jsonnode.getType()=='map'):
+        return MapEditWidget(jsonnode)
+    elif(jsonnode.getType()=='seq'):
+        return SeqEditWidget(jsonnode)
+    elif(jsonnode.getType()=='str'):
+        if(jsonnode.getSchemaNode().isEnum()):
+            return EnumEditWidget(jsonnode)
         else:
-            return GenericEditWidget(schemanode, jsonnode=jsonnode)
-    elif(schemanode.getType()=='int'):
-        return IntEditWidget(schemanode, jsonnode=jsonnode)
-    elif(schemanode.getType()=='bool'):
-        return BoolEditWidget(schemanode, jsonnode=jsonnode)
+            return GenericEditWidget(jsonnode)
+    elif(jsonnode.getType()=='int'):
+        return IntEditWidget(jsonnode)
+    elif(jsonnode.getType()=='bool'):
+        return BoolEditWidget(jsonnode)
     else:
-        return GenericEditWidget(schemanode, jsonnode=jsonnode)
+        return GenericEditWidget(jsonnode)
 
 # Series of editing widgets follows, each appropriate to a datatype or two
 
 # Map/dict edit widget/container
 class MapEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemanode, jsonnode=None):
-        self.schema = schemanode
+    def __init__(self, jsonnode):
         self.json = jsonnode
+        self.schema = jsonnode.getSchemaNode()
         maparray=[]
-        maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
+        maparray.append(urwid.Text( self.schema.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
         if(jsonnode==None):
             raise Error("jsonnode not really optional")
@@ -77,11 +76,11 @@ class MapEditWidget( urwid.WidgetWrap ):
 
 # Seq/list edit widget/container
 class SeqEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemanode, jsonnode=None):
-        self.schema = schemanode
+    def __init__(self, jsonnode):
+        self.schema = jsonnode.getSchemaNode()
         self.json = jsonnode
         maparray=[]
-        maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
+        maparray.append(urwid.Text( self.schema.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
         # build a vertically stacked array of widgets
         pilearray=[]
@@ -95,10 +94,10 @@ class SeqEditWidget( urwid.WidgetWrap ):
 
 # generic widget used for free text entry (e.g. strings)
 class GenericEditWidget( urwid.WidgetWrap ):
-    def __init__(self, schemanode, jsonnode=None):
-        self.schema = schemanode
+    def __init__(self, jsonnode):
+        self.schema = jsonnode.getSchemaNode()
         self.json = jsonnode
-        editcaption = urwid.Text( ('default', schemanode.getTitle() + ": ") )
+        editcaption = urwid.Text( ('default', self.schema.getTitle() + ": ") )
         editfield = self.getEditFieldWidget()
         editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
         urwid.WidgetWrap.__init__(self, editpair)
