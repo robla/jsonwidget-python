@@ -47,26 +47,35 @@ class MapEditWidget( urwid.WidgetWrap ):
         maparray=[]
         maparray.append(urwid.Text( schemanode.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
-        # build a vertically stacked array of widgets
-        pilearray=[]
-
         if(jsonnode==None):
             raise Error("jsonnode not really optional")
-        for child in jsonnode.getChildren():
-            pilearray.append(get_schema_widget(child))
-        pilearray.append(FieldAddButtons(self, self.json.getUnusedSchemaNodes()))
 
-        mapfields = urwid.Pile( pilearray )
-        indentedmap = urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] )
-        maparray.append(indentedmap)
+        mapfields = self.buildPile()
+        self.indentedmap = urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] )
+        maparray.append(self.indentedmap)
         mappile=urwid.Pile(maparray)
         return urwid.WidgetWrap.__init__(self, mappile)
 
     def addNode(self, schemanode):
         newnode=JsonNode(schemanode.getKey(), "", parent=self.json, schemanode=schemanode)
-        newwidget=get_schema_widget(newnode)
-        self.w.widget_list.append(newwidget)
-        self.w.item_types.append(('flow', None)) 
+        self.json.addChild(newnode)
+        self.indentedmap.widget_list[1]=self.buildPile()
+        #self.indentedmap.widget_list[1]=urwid.Edit( ('default', "Edit me2: "), "blah blah blah2" )
+        #newwidget=get_schema_widget(newnode)
+        #self.w.widget_list.append(newwidget)
+        #self.w.item_types.append(('flow', None)) 
+
+        # build a vertically stacked array of widgets
+
+    def buildPile(self):
+        pilearray=[]
+
+        for child in self.json.getChildren():
+            pilearray.append(get_schema_widget(child))
+        pilearray.append(FieldAddButtons(self, self.json.getUnusedSchemaNodes()))
+
+        mapfields = urwid.Pile( pilearray )
+        return urwid.Pile( pilearray )
 
 # Seq/list edit widget/container
 class SeqEditWidget( urwid.WidgetWrap ):

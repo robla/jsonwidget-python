@@ -149,6 +149,9 @@ class JsonNode:
         else: 
             raise Error("unknown type: %s" % type(self.data).__name__)
 
+    def getKey(self):
+        return self.key
+
     def getData(self):
         return self.data
 
@@ -185,7 +188,18 @@ class JsonNode:
         return unusednodes
 
     def setChildData(self, key, data):
+        if(self.data==None):
+            type=self.schemanode.getType()
+            if(type=='map'):
+                self.data={}
+            elif(type=='seq'):
+                self.data=[]
         self.data[key]=data
+
+    def addChild(self, node):
+        key=node.getKey()
+        self.setChildData(key, node.getData())
+        self.children[key]=node
 
     def isEnum(self):
         return self.data.has_key('enum')
