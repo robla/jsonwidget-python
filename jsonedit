@@ -1,4 +1,10 @@
 #!/usr/bin/python
+# jsonedit - urwid-based JSON editor
+#
+# Copyright (c) 2010, Rob Lanphier
+# All rights reserved.  
+# Licensed under BSD-style license.  See LICENSE.txt for details.
+
 import json
 import urwid.curses_display
 import urwid

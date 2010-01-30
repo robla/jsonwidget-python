@@ -1,6 +1,9 @@
 #!/usr/bin/python
-
 # Library for building urwid-based forms from JSON schemas
+#
+# Copyright (c) 2010, Rob Lanphier
+# All rights reserved.  
+# Licensed under BSD-style license.  See LICENSE.txt for details.
 
 from jsonschema import *
 

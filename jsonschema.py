@@ -1,4 +1,9 @@
 #!/usr/bin/python
+# Library for reading JSON files according to given JSON Schema
+#
+# Copyright (c) 2010, Rob Lanphier
+# All rights reserved.  
+# Licensed under BSD-style license.  See LICENSE.txt for details.
 
 import json
 # sets deprecated in Python 2.6
