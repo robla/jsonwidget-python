@@ -165,7 +165,8 @@ class JsonNode:
     # method has n log n memory footprint.
     def setData(self, data):
         self.data=data
-        self.parent.setChildData(self.key, data)
+        if(self.depth>0):
+            self.parent.setChildData(self.key, data)
 
     # get a list of children, possibly ordered
     # Note that even though the JSON spec says maps are unordered, it's pretty

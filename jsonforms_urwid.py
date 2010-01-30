@@ -23,18 +23,22 @@ def get_schema_widget( node ):
     else:
         raise Error("Type error: %s" % type(node).__name__) 
 
-    if(jsonnode.getType()=='map'):
+    # we want to make sure that we use a schema-appropriate edit widget, so
+    # don't use jsonnode.getType() directly.
+    schemanode=jsonnode.getSchemaNode()
+
+    if(schemanode.getType()=='map'):
         return MapEditWidget(jsonnode)
-    elif(jsonnode.getType()=='seq'):
+    elif(schemanode.getType()=='seq'):
         return SeqEditWidget(jsonnode)
-    elif(jsonnode.getType()=='str'):
-        if(jsonnode.getSchemaNode().isEnum()):
+    elif(schemanode.getType()=='str'):
+        if(schemanode.isEnum()):
             return EnumEditWidget(jsonnode)
         else:
             return GenericEditWidget(jsonnode)
-    elif(jsonnode.getType()=='int'):
+    elif(schemanode.getType()=='int'):
         return IntEditWidget(jsonnode)
-    elif(jsonnode.getType()=='bool'):
+    elif(schemanode.getType()=='bool'):
         return BoolEditWidget(jsonnode)
     else:
         return GenericEditWidget(jsonnode)
