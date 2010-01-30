@@ -53,8 +53,6 @@ class MapEditWidget( urwid.WidgetWrap ):
         maparray=[]
         maparray.append(urwid.Text( self.schema.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
-        if(jsonnode==None):
-            raise Error("jsonnode not really optional")
 
         mapfields = self.buildPile()
         self.indentedmap = urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] )
@@ -88,8 +86,6 @@ class SeqEditWidget( urwid.WidgetWrap ):
         leftmargin = urwid.Text( "" )
         # build a vertically stacked array of widgets
         pilearray=[]
-        if(jsonnode==None):
-            raise Error("jsonnode not really optional")
         for child in jsonnode.getChildren():                
             pilearray.append(get_schema_widget(child))
         mapfields = urwid.Pile( pilearray )
