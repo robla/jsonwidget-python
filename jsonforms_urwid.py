@@ -73,10 +73,10 @@ class MapEditWidget( urwid.WidgetWrap ):
             pilearray.append(get_schema_widget(child))
         pilearray.append(FieldAddButtons(self, self.json.getUnusedSchemaNodes()))
 
-        mapfields = urwid.Pile( pilearray )
         return urwid.Pile( pilearray )
 
 # Seq/list edit widget/container
+# TODO: create base class for SeqEditWidget and MapEditWidget
 class SeqEditWidget( urwid.WidgetWrap ):
     def __init__(self, jsonnode):
         self.schema = jsonnode.getSchemaNode()
@@ -84,13 +84,19 @@ class SeqEditWidget( urwid.WidgetWrap ):
         maparray=[]
         maparray.append(urwid.Text( self.schema.getTitle() + ": " ))
         leftmargin = urwid.Text( "" )
-        # build a vertically stacked array of widgets
-        pilearray=[]
-        for child in jsonnode.getChildren():                
-            pilearray.append(get_schema_widget(child))
-        mapfields = urwid.Pile( pilearray )
+        mapfields = self.buildPile()
+
         maparray.append(urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] ))
         urwid.WidgetWrap.__init__(self, urwid.Pile(maparray))
+
+    # build a vertically stacked array of widgets
+    def buildPile(self):
+        # build a vertically stacked array of widgets
+        pilearray=[]
+        for child in self.json.getChildren():                
+            pilearray.append(get_schema_widget(child))
+
+        return urwid.Pile( pilearray )
 
 # generic widget used for free text entry (e.g. strings)
 class GenericEditWidget( urwid.WidgetWrap ):
