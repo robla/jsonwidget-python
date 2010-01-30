@@ -46,7 +46,10 @@ class SchemaNode:
         if self.data.has_key('title'):
             return self.data['title']
         else:
-            return str(self.key)
+            if self.depth>0 and self.parent.getType()=='seq':
+                return self.parent.getTitle()
+            else:
+                return str(self.key)
 
     def getType(self):
         return self.data['type']
@@ -235,7 +238,7 @@ class JsonNode:
     def getTitle(self):
         schematitle=self.schemanode.getTitle()
         if(self.depth>0 and self.parent.schemanode.getType()=='seq'):
-            title="%s[%i]" % (schematitle, self.getKey())
+            title="%s #%i" % (schematitle, self.getKey()+1)
         else:
             title=schematitle
         return title
