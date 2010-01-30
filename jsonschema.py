@@ -108,8 +108,11 @@ class JsonNode:
 
         if isTypeMatch:
             self.schemanode=schemanode
-            if jsontype=='map':
+            if schematype=='map':
                 self.children={}
+            elif schematype=='seq':
+                self.children=[]
+            if jsontype=='map':
                 for subkey, subnode in self.data.items():
                     subschemanode=self.schemanode.getChild(subkey)
                     if subschemanode==None:
@@ -117,7 +120,6 @@ class JsonNode:
                     self.children[subkey]=JsonNode(subkey, subnode, parent=self, schemanode=subschemanode)
             elif jsontype=='seq':
                 i=0
-                self.children=[]
                 for subnode in self.data:
                     subschemanode=self.schemanode.getChildSeqSchema()
                     self.children.append( JsonNode(i, subnode, parent=self, schemanode=subschemanode) )
