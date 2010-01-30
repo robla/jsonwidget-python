@@ -63,13 +63,8 @@ class MapEditWidget( urwid.WidgetWrap ):
         newnode=JsonNode(schemanode.getKey(), "", parent=self.json, schemanode=schemanode)
         self.json.addChild(newnode)
         self.indentedmap.widget_list[1]=self.buildPile()
-        #self.indentedmap.widget_list[1]=urwid.Edit( ('default', "Edit me2: "), "blah blah blah2" )
-        #newwidget=get_schema_widget(newnode)
-        #self.w.widget_list.append(newwidget)
-        #self.w.item_types.append(('flow', None)) 
 
-        # build a vertically stacked array of widgets
-
+    # build a vertically stacked array of widgets
     def buildPile(self):
         pilearray=[]
 
@@ -156,20 +151,13 @@ class FieldAddButtons( urwid.WidgetWrap ):
         urwid.WidgetWrap.__init__(self, editpair)
 
     def getButtons(self):
-        #TODO: wire this up
         parentwidget=self.parentwidget
-        #TODO: fix this
-        if(len(self.nodelist)>0):
-            node=self.nodelist[0]
-        else:
-            node=None
-        def onSelect(stuff):
-            parentwidget.addNode(node)
-
         buttons=[]
+        def on_press(button, user_data=None):
+            parentwidget.addNode(user_data['node'])
         for node in self.nodelist:
             fieldname = node.getTitle()
-            buttons.append(urwid.Button(fieldname,onSelect))
+            buttons.append(urwid.Button(fieldname,on_press,{'node':node}))
         #TODO: remove hard coded widths
         return urwid.GridFlow( buttons, 13,3,1, 'left')
 
