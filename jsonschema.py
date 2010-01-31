@@ -120,36 +120,43 @@ class JsonNode:
             self.depth=0
         else:
             self.depth=self.parent.getDepth()+1
-        self.attachSchemaNode(schemanode)
+        if not self.isTypeMatch(schemanode):
+            raise Error("Validation error: type mismatch - key: %s data: %s jsontype: %s schematype: %s" % (self.key, str(self.data), jsontype, schematype) )
+        else:
+            self.attachSchemaNode(schemanode)
 
     # pair this data node to the corresponding part of the schema
-    def attachSchemaNode(self, schemanode):
+    def isTypeMatch(self, schemanode):
         jsontype=self.getType()
         schematype=schemanode.getType()
-        
+
         # is the json type appropriate for the expected schema type?
         isTypeMatch = schematype=='any' or schematype==jsontype or jsontype=='none'
 
-        if isTypeMatch:
-            self.schemanode=schemanode
-            if schematype=='map':
-                self.children={}
-            elif schematype=='seq':
-                self.children=[]
-            if jsontype=='map':
-                for subkey, subnode in self.data.items():
-                    subschemanode=self.schemanode.getChild(subkey)
-                    if subschemanode==None:
-                        raise("Validation error: %s not a valid key in %s" % (subkey, self.schemanode.getKey()))
-                    self.children[subkey]=JsonNode(subkey, subnode, parent=self, schemanode=subschemanode)
-            elif jsontype=='seq':
-                i=0
-                for subnode in self.data:
-                    subschemanode=self.schemanode.getChild(i)
-                    self.children.append( JsonNode(i, subnode, parent=self, schemanode=subschemanode) )
-                    i+=1
-        else:
-            raise Error("Validation error: type mismatch - key: %s data: %s jsontype: %s schematype: %s" % (self.key, str(self.data), jsontype, schematype) )
+        return isTypeMatch
+
+    # pair this data node to the corresponding part of the schema
+    def attachSchemaNode(self, schemanode):
+        self.schemanode=schemanode
+
+        jsontype=self.getType()
+        schematype=schemanode.getType()
+        if schematype=='map':
+            self.children={}
+        elif schematype=='seq':
+            self.children=[]
+        if jsontype=='map':
+            for subkey, subnode in self.data.items():
+                subschemanode=self.schemanode.getChild(subkey)
+                if subschemanode==None:
+                    raise("Validation error: %s not a valid key in %s" % (subkey, self.schemanode.getKey()))
+                self.children[subkey]=JsonNode(subkey, subnode, parent=self, schemanode=subschemanode)
+        elif jsontype=='seq':
+            i=0
+            for subnode in self.data:
+                subschemanode=self.schemanode.getChild(i)
+                self.children.append( JsonNode(i, subnode, parent=self, schemanode=subschemanode) )
+                i+=1
 
     def getSchemaNode(self):
         return self.schemanode
@@ -227,7 +234,7 @@ class JsonNode:
     def addChild(self, key=None):
         schemanode=self.schemanode.getChild(key)
         newnode=JsonNode(key, schemanode.getBlankValue(), parent=self, schemanode=schemanode)
-        #self.setChildData(key, newnode.getData())
+        self.setChildData(key, newnode.getData())
         if(self.getType()=='seq'):
             self.children.insert(key, newnode)
         else:
