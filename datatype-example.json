@@ -1,16 +1,18 @@
-{
-  "map_example":
+[
   {
-    "field1":"",
-    "field2":""
-  },
-  "seq_example":
-  [
-    ""
-  ],
-  "num_example":1.1,
-  "int_example":0,
-  "str_example":"test",
-  "bool_example":true,
-  "str_enum_example":"value3"
-}
+    "map_example":
+    {
+      "field1":"",
+      "field2":""
+    },
+    "seq_example":
+    [
+      ""
+    ],
+    "num_example":1.1,
+    "int_example":0,
+    "str_example":"test",
+    "bool_example":true,
+    "str_enum_example":"value3"
+  }
+]
