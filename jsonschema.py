@@ -67,17 +67,16 @@ class SchemaNode:
             raise Error("self.children has invalid type %s" % type(self.children).__name__)
         
     def getChild(self, key):
-        return self.children[key]
-        
+        type=self.getType()
+        if(type=='map'):
+            return self.children[key]
+        elif(type=='seq'):
+            return self.children[0]
+        else:
+            raise Error("self.children has invalid type %s" % type)
+
     def getChildKeys(self):
         return self.children.keys()
-    
-    # getChildSeqSchema: Return the schema node for a child sequence 
-    # (Simple detail, but abstracting because it may not be true for future
-    # JSON schemas)
-    def getChildSeqSchema(self):
-        # first element in sequence is the schema
-        return self.getChild(0)
     
     def getKey(self):
         return self.key
@@ -87,6 +86,23 @@ class SchemaNode:
         
     def enumOptions(self):
         return self.data['enum']
+
+    def getBlankValue(self):
+        type=self.getType()
+        if(type=='map'):
+            retval={}
+        elif(type=='seq'):
+            retval=[]
+        elif(type=='int' or type=='number'):
+            retval=0
+        elif(type=='bool'):
+            retval=False
+        elif(type=='str'):
+            retval=""
+        else:
+            retval=None
+        return retval
+
 
 # JsonNode is a class to store the data associated with a schema.  Each node
 # of the tree gets tied to a SchemaNode
@@ -129,7 +145,7 @@ class JsonNode:
             elif jsontype=='seq':
                 i=0
                 for subnode in self.data:
-                    subschemanode=self.schemanode.getChildSeqSchema()
+                    subschemanode=self.schemanode.getChild(i)
                     self.children.append( JsonNode(i, subnode, parent=self, schemanode=subschemanode) )
                     i+=1
         else:
@@ -186,45 +202,47 @@ class JsonNode:
     def getChildKeys(self):
         return self.children.keys()
     
-    # this function returns the list of schema nodes that don't yet have 
+    # this function returns the list of keys that don't yet have 
     # associated json child nodes associated with them
-    def getAvailableSchemaNodes(self):
+    def getAvailableKeys(self):
         if(self.schemanode.getType()=='map'):
             schemakeys=sets.Set(self.schemanode.getChildKeys())
             jsonkeys=sets.Set(self.getChildKeys())
             unusedkeys=schemakeys.difference(jsonkeys)
-            # list comprehension to pull all of the associated schema nodes
-            unusednodes=[self.schemanode.getChild(key) for key in unusedkeys]
-            return unusednodes
+            return list(unusedkeys)
         elif(self.schemanode.getType()=='seq'):
-            return [ self.schemanode.getChild(0) ]
+            return [ len(self.children) ]
         else:
             raise Error("type %s not implemented" % self.getType())
 
     def setChildData(self, key, data):
         if(self.data==None):
             type=self.schemanode.getType()
-            if(type=='map'):
-                self.data={}
-            elif(type=='seq'):
-                self.data=[]
-        self.data[key]=data
+            self.data=self.schemanode.getBlankValue()
+        if(self.getType()=='seq' and key==len(self.data)):
+            self.data.append(data)
+        else:
+            self.data[key]=data
 
-    def addChild(self, node):
-        key=node.getKey()
-        self.setChildData(key, node.getData())
-        self.children[key]=node
+    def addChild(self, key=None):
+        schemanode=self.schemanode.getChild(key)
+        newnode=JsonNode(key, schemanode.getBlankValue(), parent=self, schemanode=schemanode)
+        #self.setChildData(key, newnode.getData())
+        if(self.getType()=='seq'):
+            self.children.insert(key, newnode)
+        else:
+            self.children[key]=newnode
 
     def isEnum(self):
         return self.data.has_key('enum')
-        
+
     def enumOptions(self):
         return self.data['enum']
 
     # how deep is this node in the tree?
     def getDepth(self):
         return self.depth
-    
+
     # debugging function
     def printTree(self):
         jsontype=self.getType()
@@ -234,7 +252,7 @@ class JsonNode:
                 child.printTree()
         else:
             print self.schemanode.getTitle() + ": " + self.getData()
-            
+
     def getTitle(self):
         schematitle=self.schemanode.getTitle()
         if(self.depth>0 and self.parent.schemanode.getType()=='seq'):
@@ -242,4 +260,14 @@ class JsonNode:
         else:
             title=schematitle
         return title
+        
+    def getChildTitle(self, key):
+        childschema=self.schemanode.getChild(key)
+        schematitle=childschema.getTitle()
+        if(self.schemanode.getType()=='seq'):
+            title="%s #%i" % (schematitle, key+1)
+        else:
+            title=schematitle
+        return title
+
 

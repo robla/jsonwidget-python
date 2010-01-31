@@ -60,9 +60,8 @@ class ArrayEditWidget( urwid.WidgetWrap ):
         mappile=urwid.Pile(maparray)
         return urwid.WidgetWrap.__init__(self, mappile)
 
-    def addNode(self, schemanode):
-        newnode=JsonNode(schemanode.getKey(), "", parent=self.json, schemanode=schemanode)
-        self.json.addChild(newnode)
+    def addNode(self, key):
+        self.json.addChild(key)
         self.indentedmap.widget_list[1]=self.buildPile()
 
     # build a vertically stacked array of widgets
@@ -71,7 +70,7 @@ class ArrayEditWidget( urwid.WidgetWrap ):
 
         for child in self.json.getChildren():
             pilearray.append(get_schema_widget(child))
-        pilearray.append(FieldAddButtons(self, self.json.getAvailableSchemaNodes()))
+        pilearray.append(FieldAddButtons(self,self.json))
 
         return urwid.Pile( pilearray )
 
@@ -124,9 +123,9 @@ class EnumEditWidget( GenericEditWidget ):
 
 # Add a button
 class FieldAddButtons( urwid.WidgetWrap ):
-    def __init__(self, parentwidget, nodelist):
+    def __init__(self, parentwidget, json):
         self.parentwidget = parentwidget
-        self.nodelist = nodelist
+        self.json = json
         caption = urwid.Text( ('default', "Add fields: ") )
         buttonfield = self.getButtons()
         editpair = urwid.Columns ( [ ('fixed', 20, caption), buttonfield ] )
@@ -136,10 +135,10 @@ class FieldAddButtons( urwid.WidgetWrap ):
         parentwidget=self.parentwidget
         buttons=[]
         def on_press(button, user_data=None):
-            parentwidget.addNode(user_data['node'])
-        for node in self.nodelist:
-            fieldname = node.getTitle()
-            buttons.append(urwid.Button(fieldname,on_press,{'node':node}))
+            parentwidget.addNode(user_data['key'])
+        for key in self.json.getAvailableKeys():
+            fieldname = self.json.getChildTitle(key)
+            buttons.append(urwid.Button(fieldname,on_press,{'key':key}))
         #TODO: remove hard coded widths
         return urwid.GridFlow( buttons, 13,3,1, 'left')
 
