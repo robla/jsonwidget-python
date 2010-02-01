@@ -13,6 +13,7 @@ class Error(RuntimeError):
 import json
 import urwid.curses_display
 import urwid
+from floatedit import FloatEdit
 
 # Class factory for UI widgets.
 # node: either a SchemaNode or JsonNode
@@ -38,6 +39,8 @@ def get_schema_widget( node ):
             return GenericEditWidget(jsonnode)
     elif(schemanode.getType()=='int'):
         return IntEditWidget(jsonnode)
+    elif(schemanode.getType()=='number'):
+        return NumberEditWidget(jsonnode)
     elif(schemanode.getType()=='bool'):
         return BoolEditWidget(jsonnode)
     else:
@@ -101,6 +104,12 @@ class GenericEditWidget( urwid.WidgetWrap ):
 class IntEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
         innerwidget=urwid.IntEdit("", self.json.getData())
+        return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
+
+# Number edit widget
+class NumberEditWidget( GenericEditWidget ):
+    def getEditFieldWidget(self):
+        innerwidget=FloatEdit("", self.json.getData())
         return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
 
 # Boolean edit widget
