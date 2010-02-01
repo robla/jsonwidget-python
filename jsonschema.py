@@ -160,7 +160,11 @@ class JsonNode:
         schematype=schemanode.getType()
 
         # is the json type appropriate for the expected schema type?
-        isTypeMatch = schematype=='any' or schematype==jsontype or jsontype=='none'
+        isTypeMatch = (schematype=='any' or 
+                       schematype==jsontype or 
+                       jsontype=='none' or
+                       (jsontype=='int' and schematype=='number'))
+
 
         return isTypeMatch
 
