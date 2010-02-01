@@ -22,7 +22,6 @@
 
 from urwid import *
 import re
-from urwid_statuspile import *
 
 class FloatEdit(Edit):
     """Edit widget for float values"""
@@ -55,21 +54,6 @@ class FloatEdit(Edit):
         """
         
         future_result=self.test_result(ch)
-        status="self.edit_pos: "
-        status+=str(self.edit_pos)
-        status+="\n"
-        status+="self.edit_text: "
-        status+=self.edit_text
-        status+="\n"
-        status+="ch: "
-        status+=ch
-        status+="\n"
-        status+="future_result: "
-        status+=future_result
-        status+="\n"
-        status+=str(dir(self))
-        status+="\n"
-        STATUS_AREA.setStatus(status)
 
         if not self.valid_charkey(ch):
             return False
