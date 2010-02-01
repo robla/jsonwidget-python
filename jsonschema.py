@@ -6,9 +6,15 @@
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
 import json
+
+import warnings
+
+# ignoring deprecation warning for sets
+warnings.simplefilter("ignore",DeprecationWarning)
+
 # sets deprecated in Python 2.6
 import sets
-
+    
 class Error(RuntimeError):
     pass
 
