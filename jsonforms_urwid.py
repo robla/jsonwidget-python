@@ -153,6 +153,7 @@ class EntryForm:
                                     ('editfieldfocus', 'white', 'dark red', 'underline') ] )
         self.json = json
         self.schema = json.getSchemaNode()
+        self.statusmessage = ""
 
     def run(self):
         widget = get_schema_widget(self.json)
@@ -161,6 +162,7 @@ class EntryForm:
         self.view = urwid.Frame( listbox )
 
         self.ui.run_wrapper( self.runLoop )
+        print self.statusmessage,
 
     def runLoop(self):
         size = self.ui.get_cols_rows()
@@ -176,8 +178,17 @@ class EntryForm:
                 if key == 'window resize':
                     size = self.ui.get_cols_rows()
                 elif key == 'ctrl x':
-                    print "Exiting by ctrl-x"
+                    self.appendStatusMessage("Exiting by ctrl-x\n")
+                    self.json.saveToFile()
+                    self.appendStatusMessage("Saved "+self.json.getFilename() + "\n")
                     return
                 else:
                     self.view.keypress( size, key )
+                    
+    def appendStatusMessage(self, status):
+        self.statusmessage += status
+        
+    def getStatusMessage(self):
+        return self.statusmessage
+        
 

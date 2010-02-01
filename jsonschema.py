@@ -53,7 +53,7 @@ class SchemaNode:
         if filename is not None:
             self.filename=file
         self.data=json.load(open(self.filename))
-
+        
     def getDepth(self):
         return self.depth
     
@@ -127,12 +127,12 @@ class SchemaNode:
 class JsonNode:
     def __init__(self, key=None, parent=None, filename=None, data=None,
                  schemanode=None, schemadata=None, schemafile=None):
-        if filename is not None:
-            self.filename=filename
+        self.filename=filename
+        if self.filename is not None:
             if data is None:
                 self.loadFromFile()
         else:
-            self.data=data           
+            self.data=data
 
         if schemanode is not None:
             self.schemanode=schemanode
@@ -151,7 +151,7 @@ class JsonNode:
         else:
             self.depth=self.parent.getDepth()+1
         if not self.isTypeMatch(schemanode):
-            raise Error("Validation error: type mismatch - key: %s data: %s jsontype: %s schematype: %s" % (self.key, str(self.data), jsontype, schematype) )
+            raise Error("Validation error: type mismatch - key: %s data: %s jsontype: %s schematype: %s" % (self.key, str(self.data), self.getType(), schemanode.getType()) )
         else:
             self.attachSchemaNode(schemanode)
 
@@ -159,6 +159,20 @@ class JsonNode:
         if filename is not None:
             self.filename=filename
         self.data=json.load(open(self.filename))
+
+    def saveToFile(self, filename=None):
+        if filename is not None:
+            self.filename=filename
+        if self.filename is None:
+            import tempfile
+            fd=tempfile.NamedTemporaryFile(delete=False, suffix='.json')
+            self.filename=fd.name
+        else:
+            fd=open(self.filename, 'w+')
+        json.dump(self.getData(), fd, indent=4)
+        
+    def getFilename(self):
+        return self.filename
 
     # pair this data node to the corresponding part of the schema
     def isTypeMatch(self, schemanode):
