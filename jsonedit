@@ -9,6 +9,7 @@ import json
 import urwid.curses_display
 import urwid
 import optparse
+import sys
 
 from jsonschema import *
 from jsonforms_urwid import *
@@ -17,29 +18,35 @@ from jsonforms_urwid import *
 # deployed
 urwid.curses_display.curses.has_colors = lambda : False
 
-def show_form(schema, jsondata=None):
-    # a full schema object is the root node of a tree of SchemaNodes
-    schemaobj=SchemaNode(None, schema)
+# Create a JsonNode, then pass it to the EntryNode.  EntryNode takes over at 
+# this point, saving the json file as appropriate
+def show_form(schemafile, jsonfile):
     # a full json object is the root node of a tree of JsonNodes
-    jsonobj=JsonNode(None, jsondata, schemanode=schemaobj)
+    jsonobj=JsonNode(filename=jsonfile, schemafile=schemafile)
     form=EntryForm(jsonobj)
     form.run()
 
+# standard option parsing stuff here
 def main():
     usage = "usage: %prog [options] arg"
     parser = optparse.OptionParser(usage)
     parser.add_option("-s", "--schema", dest="schema",
                       default="simpleaddr-schema.json",
                       help="use this schema to build the form")
+    parser.add_option("--tracebacks", dest="tracebacks",
+                      default=False,
+                      help="See full tracebacks")
     (options, args) = parser.parse_args()
+    if not options.tracebacks:
+        sys.tracebacklimit=1000
+
     if len(args) > 1:
         parser.error("Too many arguments.  Just one .json file at a time, please.")
-    schema = json.load(open(options.schema))
     if len(args)==1:
-        jsondata = json.load(open(args[0]))
+        jsonfile = args[0]
     else:
-        jsondata = None
-    show_form(schema, jsondata=jsondata)
+        jsonfile = None
+    show_form(options.schema, jsonfile)
 
 if __name__ == "__main__":
     main()

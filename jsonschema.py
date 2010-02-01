@@ -16,9 +16,14 @@ class Error(RuntimeError):
 # of a child sequence (i.e. list in Python) and child map (i.e. dict in Python)
 # gets its own child SchemaNode.
 class SchemaNode:
-    def __init__(self, key, data, parent=None):
-        # data loaded from the schema
-        self.data=data
+    def __init__(self, key=None, data=None, filename=None, parent=None):
+        if filename is not None:
+            self.filename=filename
+            if data is None:
+                self.loadFromFile()
+        else:
+            self.data=data           
+
         # object ref for the parent
         self.parent=parent
         # local index for the node
@@ -31,10 +36,17 @@ class SchemaNode:
             self.rootschema=self.parent.getRootSchema()
         if(self.data['type']=='map'):
             self.children = {}
-            for subkey, subnode in self.data['mapping'].items():
-                self.children[subkey]=SchemaNode(subkey, subnode, parent=self)
+            for subkey, subdata in self.data['mapping'].items():
+                self.children[subkey]=SchemaNode(key=subkey, data=subdata, 
+                                                 parent=self)
         elif(self.data['type']=='seq'):
-            self.children = [ SchemaNode( 0, self.data['sequence'][0], parent=self) ]
+            self.children = [ SchemaNode(key=0, data=self.data['sequence'][0], 
+                                         parent=self) ]
+
+    def loadFromFile(self, filename=None):
+        if filename is not None:
+            self.filename=file
+        self.data=json.load(open(self.filename))
 
     def getDepth(self):
         return self.depth
@@ -107,11 +119,23 @@ class SchemaNode:
 # JsonNode is a class to store the data associated with a schema.  Each node
 # of the tree gets tied to a SchemaNode
 class JsonNode:
-    def __init__(self, key, data, parent=None, schemanode=None):
+    def __init__(self, key=None, parent=None, filename=None, data=None,
+                 schemanode=None, schemadata=None, schemafile=None):
+        if filename is not None:
+            self.filename=filename
+            if data is None:
+                self.loadFromFile()
+        else:
+            self.data=data           
+
+        if schemanode is not None:
+            self.schemanode=schemanode
+        else:
+            schemanode=SchemaNode(key=key, data=schemadata, 
+                                  filename=schemafile)
+
         # local index for the node
         self.key=key
-        # data loaded from the schema
-        self.data=data
         # object ref for the parent
         self.parent=parent
         # self.children will get set in attachSchemaNode if there are any
@@ -124,6 +148,11 @@ class JsonNode:
             raise Error("Validation error: type mismatch - key: %s data: %s jsontype: %s schematype: %s" % (self.key, str(self.data), jsontype, schematype) )
         else:
             self.attachSchemaNode(schemanode)
+
+    def loadFromFile(self, filename=None):
+        if filename is not None:
+            self.filename=filename
+        self.data=json.load(open(self.filename))
 
     # pair this data node to the corresponding part of the schema
     def isTypeMatch(self, schemanode):
@@ -146,16 +175,18 @@ class JsonNode:
         elif schematype=='seq':
             self.children=[]
         if jsontype=='map':
-            for subkey, subnode in self.data.items():
+            for subkey, subdata in self.data.items():
                 subschemanode=self.schemanode.getChild(subkey)
                 if subschemanode==None:
                     raise("Validation error: %s not a valid key in %s" % (subkey, self.schemanode.getKey()))
-                self.children[subkey]=JsonNode(subkey, subnode, parent=self, schemanode=subschemanode)
+                self.children[subkey]=JsonNode(key=subkey, data=subdata, 
+                                               parent=self, schemanode=subschemanode)
         elif jsontype=='seq':
             i=0
-            for subnode in self.data:
+            for subdata in self.data:
                 subschemanode=self.schemanode.getChild(i)
-                self.children.append( JsonNode(i, subnode, parent=self, schemanode=subschemanode) )
+                self.children.append(JsonNode(key=i, data=subdata, parent=self, 
+                                              schemanode=subschemanode))
                 i+=1
 
     def getSchemaNode(self):
@@ -233,7 +264,8 @@ class JsonNode:
 
     def addChild(self, key=None):
         schemanode=self.schemanode.getChild(key)
-        newnode=JsonNode(key, schemanode.getBlankValue(), parent=self, schemanode=schemanode)
+        newnode=JsonNode(key=key, data=schemanode.getBlankValue(), parent=self, 
+                         schemanode=schemanode)
         self.setChildData(key, newnode.getData())
         if(self.getType()=='seq'):
             self.children.insert(key, newnode)
