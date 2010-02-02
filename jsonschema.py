@@ -18,10 +18,22 @@ import sets
 class Error(RuntimeError):
     pass
 
+
+# abstract base class for SchemaNode and JsonNode
+class JsonBaseNode:
+    def getFilename(self):
+        return self.filename
+
+    def getFilenameText(self):
+        if self.filename is None:
+            return "(new file)"
+        else:
+            return self.filename
+
 # Each SchemaNode instance represents one node in the data tree.  Each element 
 # of a child sequence (i.e. list in Python) and child map (i.e. dict in Python)
 # gets its own child SchemaNode.
-class SchemaNode:
+class SchemaNode(JsonBaseNode):
     def __init__(self, key=None, data=None, filename=None, parent=None):
         if filename is not None:
             self.filename=filename
@@ -124,7 +136,7 @@ class SchemaNode:
 
 # JsonNode is a class to store the data associated with a schema.  Each node
 # of the tree gets tied to a SchemaNode
-class JsonNode:
+class JsonNode(JsonBaseNode):
     def __init__(self, key=None, parent=None, filename=None, data=None,
                  schemanode=None, schemadata=None, schemafile=None):
         self.filename=filename
@@ -170,15 +182,6 @@ class JsonNode:
         else:
             fd=open(self.filename, 'w+')
         json.dump(self.getData(), fd, indent=4)
-        
-    def getFilename(self):
-        return self.filename
-
-    def getFilenameText(self):
-        if self.filename is None:
-            return "(new file)"
-        else:
-            return self.filename
 
     # pair this data node to the corresponding part of the schema
     def isTypeMatch(self, schemanode):

@@ -177,7 +177,7 @@ class EntryForm:
         listbox = urwid.ListBox( self.walker )
         self.headerleft = urwid.Text( self.progname, align='left' )
         self.headercenter = urwid.Text( self.json.getFilenameText(), align='center' )
-        self.headerright = urwid.Text( "", align='right' )
+        self.headerright = urwid.Text( "schema: "+self.schema.getFilenameText(), align='right' )
 
         self.header = urwid.AttrWrap( urwid.Columns( [ self.headerleft, self.headercenter, self.headerright ] ) , "header")
         self.footerstatus = urwid.AttrWrap( urwid.Text( "" ), "footerstatusdormant")
