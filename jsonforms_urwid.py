@@ -186,12 +186,18 @@ class EntryForm:
         self.footer = urwid.Pile( [self.footerhelp] )
         self.view = urwid.Frame( listbox, header=self.header, footer=self.footer )
 			
-        self.ui.run_wrapper( self.runLoop )
+        try:
+            self.ui.run_wrapper( self.runLoop )
+        except KeyboardInterrupt:
+            self.appendEndStatusMessage("Aborting by ctrl-c\n")
+            self.appendEndStatusMessage("No changes saved\n")
+            
         print self.endstatusmessage,
 
     def getFooterHelpWidgets(self):
         retval=[]
-        retval.append(urwid.Text([('footerkeys','^X')," Exit"]))
+        retval.append(urwid.Text([('footerkeys','^X')," Save/Exit"]))
+        retval.append(urwid.Text([('footerkeys','^C')," Abort"]))
         # here's what I'd like to implement...may have to wait for 0.9.9 to get
         # everything I want
         #retval.append(urwid.Text([('footerkeys','^Q')," Quit"]))
