@@ -27,9 +27,11 @@ class FloatEdit(Edit):
     """Edit widget for float values"""
 
     def test_result(self, ch):
-        # simulate what would have happened had this character been inserted
+        '''
+        Simulate what would happen should the given character be inserted
+        '''
 
-        # delete highlighted
+        # if there's highlighted text, it'll get replaced by this character
         if self.highlight:
             start, stop = self.highlight
             btext, etext = self.edit_text[:start], self.edit_text[stop:]
@@ -46,11 +48,16 @@ class FloatEdit(Edit):
         return test_text
     
     def valid_charkey(self, ch): 
+        """
+        Return true for valid float characters, regardless of position
+        """
+
         return len(ch)==1 and ch in "0123456789.-+eE"
 
     def valid_char(self, ch):
         """
-        Return true for decimal digits, decimal point, exponent, and +/-
+        Return true if the result would be a valid string representing a float,
+        or at least a partial representation of a float
         """
         
         future_result=self.test_result(ch)
@@ -117,12 +124,6 @@ class FloatEdit(Edit):
     def value(self):
         """
         Return the numeric value of self.edit_text.
-        
-        >>> e, size = FloatEdit(), (10,)
-        >>> e.keypress(size, '5')
-        >>> e.keypress(size, '1')
-        >>> e.value() == 51
-        True
         """
         if self.edit_text:
             return float(self.edit_text)
@@ -130,11 +131,10 @@ class FloatEdit(Edit):
             return 0
 
     def on_blur(self):
+        """
+        Called when the widget loses focus
+        """
         newtext=self.edit_text
-        
-        # if the result is a fully valid float, don't munge
-        #if re.match(r'-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$', newtext):
-        #    return
 
         # Nuke partial exponent
         newtext=re.sub(r'[eE][\+\-]?$', '', newtext)
