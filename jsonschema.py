@@ -174,6 +174,12 @@ class JsonNode:
     def getFilename(self):
         return self.filename
 
+    def getFilenameText(self):
+        if self.filename is None:
+            return "(new file)"
+        else:
+            return self.filename
+
     # pair this data node to the corresponding part of the schema
     def isTypeMatch(self, schemanode):
         jsontype=self.getType()

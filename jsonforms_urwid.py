@@ -13,6 +13,7 @@ class Error(RuntimeError):
 import json
 import urwid.curses_display
 import urwid
+
 from floatedit import FloatEdit
 
 # Class factory for UI widgets.
@@ -155,23 +156,50 @@ class FieldAddButtons( urwid.WidgetWrap ):
 # I'm guessing this should get replaced with a MainLoop when this moves to urwid
 # 0.99.
 class EntryForm:
-    def __init__(self, json):
+    def __init__(self, json, program_name="JsonWidget"):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette( [ ('default', 'default', 'default'), 
                                     ('editfield', 'light gray', 'dark blue', 'underline'),
-                                    ('editfieldfocus', 'white', 'dark red', 'underline') ] )
+                                    ('editfieldfocus', 'white', 'dark red', 'underline'),
+                                    ('header', 'light gray', 'dark red', 'standout'),
+                                    ('footerstatusdormant', 'light gray', 'dark blue'),
+                                    ('footerstatusactive', 'light gray', 'dark blue', 'standout'),
+                                    ('footerkeys', 'light gray', 'dark blue', 'standout'),
+                                    ('footerhelp', 'light gray', 'dark blue') ] )
         self.json = json
         self.schema = json.getSchemaNode()
-        self.statusmessage = ""
+        self.endstatusmessage = ""
+        self.progname = program_name
 
     def run(self):
         widget = get_schema_widget(self.json)
         self.walker = urwid.SimpleListWalker( [ widget ] )
         listbox = urwid.ListBox( self.walker )
-        self.view = urwid.Frame( listbox )
+        self.headerleft = urwid.Text( self.progname, align='left' )
+        self.headercenter = urwid.Text( self.json.getFilenameText(), align='center' )
+        self.headerright = urwid.Text( "", align='right' )
 
+        self.header = urwid.AttrWrap( urwid.Columns( [ self.headerleft, self.headercenter, self.headerright ] ) , "header")
+        self.footerstatus = urwid.AttrWrap( urwid.Text( "" ), "footerstatusdormant")
+        self.footerhelp = urwid.GridFlow( self.getFooterHelpWidgets(), 12, 1, 0, 'left')
+        #self.footer = urwid.Pile( [self.footerstatus, self.footerhelp] )
+        self.footer = urwid.Pile( [self.footerhelp] )
+        self.view = urwid.Frame( listbox, header=self.header, footer=self.footer )
+			
         self.ui.run_wrapper( self.runLoop )
-        print self.statusmessage,
+        print self.endstatusmessage,
+
+    def getFooterHelpWidgets(self):
+        retval=[]
+        retval.append(urwid.Text([('footerkeys','^X')," Exit"]))
+        # here's what I'd like to implement...may have to wait for 0.9.9 to get
+        # everything I want
+        #retval.append(urwid.Text([('footerkeys','^Q')," Quit"]))
+        #retval.append(urwid.Text([('footerkeys','^S')," Save"]))
+        #retval.append(urwid.Text([('footerkeys','^X')," Cut"]))
+        #retval.append(urwid.Text([('footerkeys','^C')," Cut"]))
+        #retval.append(urwid.Text([('footerkeys','^V')," Paste"]))
+        return retval
 
     def runLoop(self):
         size = self.ui.get_cols_rows()
@@ -187,17 +215,21 @@ class EntryForm:
                 if key == 'window resize':
                     size = self.ui.get_cols_rows()
                 elif key == 'ctrl x':
-                    self.appendStatusMessage("Exiting by ctrl-x\n")
+                    self.appendEndStatusMessage("Exiting by ctrl-x\n")
                     self.json.saveToFile()
-                    self.appendStatusMessage("Saved "+self.json.getFilename() + "\n")
+                    self.appendEndStatusMessage("Saved "+self.json.getFilename() + "\n")
+                    return
+                elif key == 'ctrl s':
+                    # this isn't functional yet...need to trap ctrl s first
+                    self.json.saveToFile()
                     return
                 else:
                     self.view.keypress( size, key )
                     
-    def appendStatusMessage(self, status):
-        self.statusmessage += status
+    def appendEndStatusMessage(self, status):
+        self.endstatusmessage += status
         
-    def getStatusMessage(self):
-        return self.statusmessage
+    def getEndStatusMessage(self):
+        return self.endstatusmessage
         
 

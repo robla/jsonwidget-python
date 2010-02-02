@@ -23,7 +23,7 @@ urwid.curses_display.curses.has_colors = lambda : False
 def show_form(schemafile, jsonfile):
     # a full json object is the root node of a tree of JsonNodes
     jsonobj=JsonNode(filename=jsonfile, schemafile=schemafile)
-    form=EntryForm(jsonobj)
+    form=EntryForm(jsonobj, program_name="jsonedit 0.1pre")
     form.run()
 
 # standard option parsing stuff here
