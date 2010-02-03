@@ -198,14 +198,13 @@ class EntryForm:
 
         self.view = urwid.Frame( listbox, header=self.header, footer=self.footer )
 
-        self.exitnow = False
-
         try:
             self.ui.run_wrapper( self.runLoop )
         except JsonWidgetExit:
             pass
             
-        print self.endstatusmessage,
+        if not self.endstatusmessage=="":
+            print self.endstatusmessage,
 
     def getFooterStatusWidget(self, widget=None, active=False): 
         if widget is None:
@@ -251,8 +250,6 @@ class EntryForm:
                     keys = self.ui.get_input()
                 except KeyboardInterrupt:
                     pass
-                if(self.exitnow):
-                    return
             for key in keys:
                 if key == 'window resize':
                     size = self.ui.get_cols_rows()
@@ -304,6 +301,7 @@ class EntryForm:
         footerstatus = self.getFooterStatusWidget()
         footerhelp = self.getFooterHelpWidget()
         self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
+        self.ui.clear()
 
     def appendEndStatusMessage(self, status):
         self.endstatusmessage += status
