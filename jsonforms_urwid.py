@@ -152,6 +152,9 @@ class FieldAddButtons( urwid.WidgetWrap ):
         #TODO: remove hard coded widths
         return urwid.GridFlow( buttons, 13,3,1, 'left')
 
+class JsonWidgetExit(Exception):
+    pass
+
 # the top-level form where all of the widgets get placed.
 # I'm guessing this should get replaced with a MainLoop when this moves to urwid
 # 0.99.
@@ -164,6 +167,7 @@ class EntryForm:
                                     ('header', 'light gray', 'dark red', 'standout'),
                                     ('footerstatusdormant', 'light gray', 'dark blue'),
                                     ('footerstatusactive', 'light gray', 'dark blue', 'standout'),
+                                    ('footerstatusedit', 'light gray', 'dark blue'),
                                     ('footerkeys', 'light gray', 'dark blue', 'standout'),
                                     ('footerhelp', 'light gray', 'dark blue') ] )
         self.json = json
@@ -187,44 +191,52 @@ class EntryForm:
         self.header1 = urwid.AttrWrap(header1padded , "header")
         self.header2 = urwid.Text("")
         self.header = urwid.Pile([self.header1, self.header2])
-        self.footerstatus = urwid.AttrWrap( urwid.Text( "" ), "footerstatusdormant")
+
+        self.footerstatus = self.getFooterStatusWidget()
         self.footerhelp = self.getFooterHelpWidget()
         self.footer = urwid.Pile( [self.footerstatus, self.footerhelp] )
+
         self.view = urwid.Frame( listbox, header=self.header, footer=self.footer )
-			
+
+        self.exitnow = False
+
         try:
             self.ui.run_wrapper( self.runLoop )
-        except KeyboardInterrupt:
-            self.appendEndStatusMessage("Aborting by ctrl-c\n")
-            self.appendEndStatusMessage("No changes saved\n")
+        except JsonWidgetExit:
+            pass
             
         print self.endstatusmessage,
 
-    def getFooterHelpWidget(self):
-        helpitems1=[]
-        helpitems1.append(urwid.Text([('footerkeys','^X')," Save/Exit"]))
-        helpitems1.append(urwid.Text(""))
-        helpitems1.append(urwid.Text(""))
-        helpitems1.append(urwid.Text(""))
-        helpitems1.append(urwid.Text(""))
+    def getFooterStatusWidget(self, widget=None, active=False): 
+        if widget is None:
+            widget=urwid.Text("")
 
-        helpitems2=[]
-        helpitems2.append(urwid.Text([('footerkeys','^C')," Abort"]))
-        helpitems2.append(urwid.Text(""))
-        helpitems2.append(urwid.Text(""))
-        helpitems2.append(urwid.Text(""))
-        helpitems2.append(urwid.Text(""))
-        # here's what I'd like to implement...may have to wait for 0.9.9 to get
-        # everything I want
-        #helpitems.append(urwid.Text([('footerkeys','^Q')," Quit"]))
-        #helpitems.append(urwid.Text([('footerkeys','^S')," Save"]))
-        #helpitems.append(urwid.Text([('footerkeys','^X')," Cut"]))
-        #helpitems.append(urwid.Text([('footerkeys','^C')," Cut"]))
-        #helpitems.append(urwid.Text([('footerkeys','^V')," Paste"]))
-        
-        helpwidget1=urwid.Columns(helpitems1)
-        helpwidget2=urwid.Columns(helpitems2)
-        return urwid.Pile([helpwidget1, helpwidget2])
+        if(active):
+            wrapped=urwid.AttrWrap(widget, "footerstatusactive")
+        else:
+            wrapped=urwid.AttrWrap(widget, "footerstatusdormant")
+        return urwid.Pile([wrapped])
+
+    def getFooterHelpWidget(self, helptext=None, rows=2):
+        if(helptext is None):
+            helptext =  [("^W","Write/Save"),("^X","Exit")]
+        numcols=(len(helptext)+1)/rows
+        helpcolumns=[]
+        for i in range(numcols):
+            helpcolumns.append([])
+
+        # populate the rows top to bottom, then left to right
+        i=0; col=0
+        for item in helptext:
+            textitem=urwid.Text([('footerkeys', item[0]), " ", item[1]])
+            helpcolumns[col].append(textitem)
+            i+=1; col=i/rows
+
+        # now stuff everything into column widgets
+        helpwidgets=[]
+        for helpcol in helpcolumns:
+            helpwidgets.append(urwid.Pile(helpcol))
+        return urwid.Columns(helpwidgets)
 
     def runLoop(self):
         size = self.ui.get_cols_rows()
@@ -235,22 +247,64 @@ class EntryForm:
             while(keys == None):
                 # self.ui.get_input() blocks for max_wait time, default 0.5 sec
                 # use self.ui.set_input_timeouts() to change the default
-                keys = self.ui.get_input()
+                try:
+                    keys = self.ui.get_input()
+                except KeyboardInterrupt:
+                    pass
+                if(self.exitnow):
+                    return
             for key in keys:
                 if key == 'window resize':
                     size = self.ui.get_cols_rows()
                 elif key == 'ctrl x':
-                    self.appendEndStatusMessage("Exiting by ctrl-x\n")
-                    self.json.saveToFile()
-                    self.appendEndStatusMessage("Saved "+self.json.getFilename() + "\n")
-                    return
+                    self.handleExitRequest()
                 elif key == 'ctrl s':
                     # this isn't functional yet...need to trap ctrl s first
+                    self.handleSave()
                     self.json.saveToFile()
                     return
+                elif key == 'ctrl w':
+                    self.json.saveToFile()
+                    msg = "  Saved \""+self.json.getFilename()+"\"  "
+                    msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
+                    footerstatus = self.getFooterStatusWidget(msgwidget)
+                    footerhelp = self.getFooterHelpWidget()
+                    self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
                 else:
                     self.view.keypress( size, key )
                     
+    def handleExitRequest(self):
+        entryform=self
+        class CallbackEdit(urwid.Edit):
+            def keypress(self,(maxcol,),key):
+                if key == 'y':
+                    entryform.handleSave()
+                    msg = "Saved "+entryform.json.getFilename() + "\n"
+                    entryform.appendEndStatusMessage(msg)
+                    entryform.handleExit()
+                elif key == 'n':
+                    entryform.handleExit()
+                elif key == 'esc':
+                    entryform.cleanupExitRequest()
+        prompt=CallbackEdit('Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ', "")
+        self.view.set_focus("footer")
+        helptext =  [("Y","Yes"),("N","No"),("ESC","Cancel")]
+        footerstatus = self.getFooterStatusWidget(prompt, active=True)
+        footerhelp = self.getFooterHelpWidget(helptext=helptext)
+        self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
+
+    def handleSave(self):
+        self.json.saveToFile()
+
+    def handleExit(self):
+        raise JsonWidgetExit()
+
+    def cleanupExitRequest(self):
+        self.view.set_focus("body")
+        footerstatus = self.getFooterStatusWidget()
+        footerhelp = self.getFooterHelpWidget()
+        self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
+
     def appendEndStatusMessage(self, status):
         self.endstatusmessage += status
         
