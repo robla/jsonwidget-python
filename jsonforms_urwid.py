@@ -179,11 +179,17 @@ class EntryForm:
         self.headercenter = urwid.Text( self.json.getFilenameText(), align='center' )
         self.headerright = urwid.Text( "schema: "+self.schema.getFilenameText(), align='right' )
 
-        self.header = urwid.AttrWrap( urwid.Columns( [ self.headerleft, self.headercenter, self.headerright ] ) , "header")
+        header1columns = urwid.Columns([self.headerleft, 
+                                        self.headercenter, 
+                                        self.headerright])
+        header1padded = urwid.Padding (header1columns, ('fixed left',2), 
+                                       ('fixed right',2), 20 )
+        self.header1 = urwid.AttrWrap(header1padded , "header")
+        self.header2 = urwid.Text("")
+        self.header = urwid.Pile([self.header1, self.header2])
         self.footerstatus = urwid.AttrWrap( urwid.Text( "" ), "footerstatusdormant")
-        self.footerhelp = urwid.GridFlow( self.getFooterHelpWidgets(), 12, 1, 0, 'left')
-        #self.footer = urwid.Pile( [self.footerstatus, self.footerhelp] )
-        self.footer = urwid.Pile( [self.footerhelp] )
+        self.footerhelp = self.getFooterHelpWidget()
+        self.footer = urwid.Pile( [self.footerstatus, self.footerhelp] )
         self.view = urwid.Frame( listbox, header=self.header, footer=self.footer )
 			
         try:
@@ -194,18 +200,31 @@ class EntryForm:
             
         print self.endstatusmessage,
 
-    def getFooterHelpWidgets(self):
-        retval=[]
-        retval.append(urwid.Text([('footerkeys','^X')," Save/Exit"]))
-        retval.append(urwid.Text([('footerkeys','^C')," Abort"]))
+    def getFooterHelpWidget(self):
+        helpitems1=[]
+        helpitems1.append(urwid.Text([('footerkeys','^X')," Save/Exit"]))
+        helpitems1.append(urwid.Text(""))
+        helpitems1.append(urwid.Text(""))
+        helpitems1.append(urwid.Text(""))
+        helpitems1.append(urwid.Text(""))
+
+        helpitems2=[]
+        helpitems2.append(urwid.Text([('footerkeys','^C')," Abort"]))
+        helpitems2.append(urwid.Text(""))
+        helpitems2.append(urwid.Text(""))
+        helpitems2.append(urwid.Text(""))
+        helpitems2.append(urwid.Text(""))
         # here's what I'd like to implement...may have to wait for 0.9.9 to get
         # everything I want
-        #retval.append(urwid.Text([('footerkeys','^Q')," Quit"]))
-        #retval.append(urwid.Text([('footerkeys','^S')," Save"]))
-        #retval.append(urwid.Text([('footerkeys','^X')," Cut"]))
-        #retval.append(urwid.Text([('footerkeys','^C')," Cut"]))
-        #retval.append(urwid.Text([('footerkeys','^V')," Paste"]))
-        return retval
+        #helpitems.append(urwid.Text([('footerkeys','^Q')," Quit"]))
+        #helpitems.append(urwid.Text([('footerkeys','^S')," Save"]))
+        #helpitems.append(urwid.Text([('footerkeys','^X')," Cut"]))
+        #helpitems.append(urwid.Text([('footerkeys','^C')," Cut"]))
+        #helpitems.append(urwid.Text([('footerkeys','^V')," Paste"]))
+        
+        helpwidget1=urwid.Columns(helpitems1)
+        helpwidget2=urwid.Columns(helpitems2)
+        return urwid.Pile([helpwidget1, helpwidget2])
 
     def runLoop(self):
         size = self.ui.get_cols_rows()
