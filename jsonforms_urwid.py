@@ -13,6 +13,7 @@ class Error(RuntimeError):
 import json
 import urwid.curses_display
 import urwid
+import threading
 
 from floatedit import FloatEdit
 
@@ -174,6 +175,7 @@ class EntryForm:
         self.schema = json.getSchemaNode()
         self.endstatusmessage = ""
         self.progname = program_name
+        self.footertimer = None
 
     def run(self):
         widget = get_schema_widget(self.json)
@@ -205,6 +207,24 @@ class EntryForm:
             
         if not self.endstatusmessage=="":
             print self.endstatusmessage,
+
+    def setFooter(self, widgets):
+        self.clearFooterStatusTimer()
+        self.view.set_footer(urwid.Pile( widgets ))
+
+    def setFooterStatusTimer(self, time):
+        self.footertimer = threading.Timer(time, self.setDefaultFooter)
+        self.footertimer.start()
+
+    def setDefaultFooter(self):
+        footerstatus = self.getFooterStatusWidget()
+        footerhelp = self.getFooterHelpWidget()
+        self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
+        self.ui.clear()
+
+    def clearFooterStatusTimer(self):
+        if self.footertimer is not None:
+            self.footertimer.cancel()
 
     def getFooterStatusWidget(self, widget=None, active=False): 
         if widget is None:
@@ -266,10 +286,11 @@ class EntryForm:
                     msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
                     footerstatus = self.getFooterStatusWidget(msgwidget)
                     footerhelp = self.getFooterHelpWidget()
-                    self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
+                    self.setFooter( [footerstatus, footerhelp] )
+                    self.setFooterStatusTimer(5.0)
                 else:
                     self.view.keypress( size, key )
-                    
+     
     def handleExitRequest(self):
         entryform=self
         class CallbackEdit(urwid.Edit):
@@ -288,7 +309,7 @@ class EntryForm:
         helptext =  [("Y","Yes"),("N","No"),("ESC","Cancel")]
         footerstatus = self.getFooterStatusWidget(prompt, active=True)
         footerhelp = self.getFooterHelpWidget(helptext=helptext)
-        self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
+        self.setFooter( [footerstatus, footerhelp] )
 
     def handleSave(self):
         self.json.saveToFile()
@@ -298,10 +319,7 @@ class EntryForm:
 
     def cleanupExitRequest(self):
         self.view.set_focus("body")
-        footerstatus = self.getFooterStatusWidget()
-        footerhelp = self.getFooterHelpWidget()
-        self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
-        self.ui.clear()
+        self.setDefaultFooter()
 
     def appendEndStatusMessage(self, status):
         self.endstatusmessage += status
