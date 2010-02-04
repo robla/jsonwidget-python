@@ -30,6 +30,10 @@ class JsonBaseNode:
         else:
             return self.filename
 
+    def setFilename(self, filename):
+        self.filename=filename
+        self.savededitcount=0
+
 # Each SchemaNode instance represents one node in the data tree.  Each element 
 # of a child sequence (i.e. list in Python) and child map (i.e. dict in Python)
 # gets its own child SchemaNode.
@@ -182,8 +186,9 @@ class JsonNode(JsonBaseNode):
     def loadFromFile(self, filename=None):
         if filename is not None:
             self.filename=filename
-        self.setData(json.load(open(self.filename)))
-        self.savededitcount=self.editcount
+        self.data=json.load(open(self.filename))
+        self.savededitcount=0
+        self.editcount=0
 
     def saveToFile(self, filename=None):
         if filename is not None:

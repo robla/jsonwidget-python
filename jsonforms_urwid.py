@@ -211,6 +211,10 @@ class EntryForm:
         header2 = urwid.Text("")
         return urwid.Pile([header1, header2])
 
+    def setHeader(self):
+        header = self.getHeader()
+        self.view.set_header(header)
+        
     def setFooter(self, widgets):
         self.clearFooterStatusTimer()
         self.view.set_footer(urwid.Pile( widgets ))
@@ -281,19 +285,8 @@ class EntryForm:
                         self.handleExit()
                     else:
                         self.handleExitRequest()
-                elif key == 'ctrl s':
-                    # this isn't functional yet...need to trap ctrl s first
-                    self.handleSave()
-                    self.json.saveToFile()
-                    return
                 elif key == 'ctrl w':
-                    self.json.saveToFile()
-                    msg = "  Saved \""+self.json.getFilename()+"\"  "
-                    msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
-                    footerstatus = self.getFooterStatusWidget(msgwidget)
-                    footerhelp = self.getFooterHelpWidget()
-                    self.setFooter( [footerstatus, footerhelp] )
-                    self.setFooterStatusTimer(5.0)
+                    self.handleWriteToRequest()
                 else:
                     self.view.keypress( size, key )
      
@@ -309,7 +302,7 @@ class EntryForm:
                 elif key == 'n':
                     entryform.handleExit()
                 elif key == 'esc':
-                    entryform.cleanupExitRequest()
+                    entryform.cleanupUserQuestion()
         prompt=CallbackEdit('Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ', "")
         self.view.set_focus("footer")
         helptext =  [("Y","Yes"),("N","No"),("ESC","Cancel")]
@@ -317,13 +310,48 @@ class EntryForm:
         footerhelp = self.getFooterHelpWidget(helptext=helptext)
         self.setFooter( [footerstatus, footerhelp] )
 
+    def handleWriteToRequest(self):
+        entryform=self
+        class CallbackEdit(urwid.Edit):
+            def keypress(self,(maxcol,),key):
+                urwid.Edit.keypress(self,(maxcol,),key)
+                if key == 'enter':
+                    entryform.json.setFilename(self.get_edit_text())
+                    try:
+                        entryform.handleSave()
+                        msg = "Saved "+entryform.json.getFilename()
+                    except:
+                        msg = "FAILED TO WRITE "+entryform.json.getFilename()
+                    entryform.handleSaveStatus(msg)
+                elif key == 'esc':
+                    entryform.cleanupUserQuestion()
+        filename = entryform.json.getFilename()
+        if filename is None:
+            filename = ""
+        prompt=CallbackEdit('File name to write to? ', filename)
+        self.view.set_focus("footer")
+        helptext =  [("Enter","Confirm"),("ESC","Cancel")]
+        footerstatus = self.getFooterStatusWidget(prompt, active=True)
+        footerhelp = self.getFooterHelpWidget(helptext=helptext)
+        self.setFooter( [footerstatus, footerhelp] )
+
     def handleSave(self):
         self.json.saveToFile()
+
+    def handleSaveStatus(self,msg):
+        self.setHeader()
+        self.view.set_focus("body")
+        msg = "  " + msg + "  "
+        msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
+        footerstatus = self.getFooterStatusWidget(msgwidget)
+        footerhelp = self.getFooterHelpWidget()
+        self.setFooter( [footerstatus, footerhelp] )
+        self.setFooterStatusTimer(5.0)
 
     def handleExit(self):
         raise JsonWidgetExit()
 
-    def cleanupExitRequest(self):
+    def cleanupUserQuestion(self):
         self.view.set_focus("body")
         self.setDefaultFooter()
 
