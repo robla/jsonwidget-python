@@ -181,32 +181,35 @@ class EntryForm:
         widget = get_schema_widget(self.json)
         self.walker = urwid.SimpleListWalker( [ widget ] )
         listbox = urwid.ListBox( self.walker )
-        self.headerleft = urwid.Text( self.progname, align='left' )
-        self.headercenter = urwid.Text( self.json.getFilenameText(), align='center' )
-        self.headerright = urwid.Text( "schema: "+self.schema.getFilenameText(), align='right' )
+        header = self.getHeader()
+        footerstatus = self.getFooterStatusWidget()
+        footerhelp = self.getFooterHelpWidget()
+        footer = urwid.Pile( [footerstatus, footerhelp] )
 
-        header1columns = urwid.Columns([self.headerleft, 
-                                        self.headercenter, 
-                                        self.headerright])
-        header1padded = urwid.Padding (header1columns, ('fixed left',2), 
-                                       ('fixed right',2), 20 )
-        self.header1 = urwid.AttrWrap(header1padded , "header")
-        self.header2 = urwid.Text("")
-        self.header = urwid.Pile([self.header1, self.header2])
-
-        self.footerstatus = self.getFooterStatusWidget()
-        self.footerhelp = self.getFooterHelpWidget()
-        self.footer = urwid.Pile( [self.footerstatus, self.footerhelp] )
-
-        self.view = urwid.Frame( listbox, header=self.header, footer=self.footer )
+        self.view = urwid.Frame( listbox, header=header, footer=footer )
 
         try:
             self.ui.run_wrapper( self.runLoop )
         except JsonWidgetExit:
             pass
-            
+        
+        # need to clear this timer, or else we have to wait for the timer
+        # before the app exits
+        self.clearFooterStatusTimer()
         if not self.endstatusmessage=="":
             print self.endstatusmessage,
+
+    def getHeader(self):
+        headerleft = urwid.Text( self.progname, align='left' )
+        headercenter = urwid.Text( self.json.getFilenameText(), align='center' )
+        headerright = urwid.Text( "schema: "+self.schema.getFilenameText(), align='right' )
+
+        header1columns = urwid.Columns([headerleft, headercenter, headerright])
+        header1padded = urwid.Padding (header1columns, ('fixed left',2), 
+                                       ('fixed right',2), 20 )
+        header1 = urwid.AttrWrap(header1padded , "header")
+        header2 = urwid.Text("")
+        return urwid.Pile([header1, header2])
 
     def setFooter(self, widgets):
         self.clearFooterStatusTimer()
@@ -274,7 +277,10 @@ class EntryForm:
                 if key == 'window resize':
                     size = self.ui.get_cols_rows()
                 elif key == 'ctrl x':
-                    self.handleExitRequest()
+                    if self.json.isSaved():
+                        self.handleExit()
+                    else:
+                        self.handleExitRequest()
                 elif key == 'ctrl s':
                     # this isn't functional yet...need to trap ctrl s first
                     self.handleSave()

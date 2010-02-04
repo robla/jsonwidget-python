@@ -158,19 +158,32 @@ class JsonNode(JsonBaseNode):
         self.parent=parent
         # self.children will get set in attachSchemaNode if there are any
         self.children=[]
+
+
         if self.parent==None:
             self.depth=0
+            self.root=self
+            # edit counter to help figure out if the data is out of line with what
+            # is on disk
+            self.editcount=0
+            self.savededitcount=0
         else:
             self.depth=self.parent.getDepth()+1
+            self.root=self.parent.getRoot()
+
         if not self.isTypeMatch(schemanode):
             raise Error("Validation error: type mismatch - key: %s data: %s jsontype: %s schematype: %s" % (self.key, str(self.data), self.getType(), schemanode.getType()) )
         else:
             self.attachSchemaNode(schemanode)
 
+    def getRoot(self):
+        return self.root
+
     def loadFromFile(self, filename=None):
         if filename is not None:
             self.filename=filename
-        self.data=json.load(open(self.filename))
+        self.setData(json.load(open(self.filename)))
+        self.savededitcount=self.editcount
 
     def saveToFile(self, filename=None):
         if filename is not None:
@@ -182,6 +195,7 @@ class JsonNode(JsonBaseNode):
         else:
             fd=open(self.filename, 'w+')
         json.dump(self.getData(), fd, indent=4)
+        self.savededitcount=self.editcount
 
     # pair this data node to the corresponding part of the schema
     def isTypeMatch(self, schemanode):
@@ -257,6 +271,7 @@ class JsonNode(JsonBaseNode):
         self.data=data
         if(self.depth>0):
             self.parent.setChildData(self.key, data)
+        self.root.editcount+=1
 
     # get a list of children, possibly ordered
     # Note that even though the JSON spec says maps are unordered, it's pretty
@@ -294,6 +309,10 @@ class JsonNode(JsonBaseNode):
             self.data.append(data)
         else:
             self.data[key]=data
+        self.root.editcount+=1
+
+    def isSaved(self):
+        return self.savededitcount==self.editcount
 
     def addChild(self, key=None):
         schemanode=self.schemanode.getChild(key)
