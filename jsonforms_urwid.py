@@ -316,12 +316,14 @@ class EntryForm:
             def keypress(self,(maxcol,),key):
                 urwid.Edit.keypress(self,(maxcol,),key)
                 if key == 'enter':
+                    currentfilename = entryform.json.getFilename()
                     entryform.json.setFilename(self.get_edit_text())
                     try:
                         entryform.handleSave()
                         msg = "Saved "+entryform.json.getFilename()
                     except:
                         msg = "FAILED TO WRITE "+entryform.json.getFilename()
+                        entryform.json.setFilename(currentfilename)
                     entryform.handleSaveStatus(msg)
                 elif key == 'esc':
                     entryform.cleanupUserQuestion()
