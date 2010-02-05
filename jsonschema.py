@@ -6,13 +6,16 @@
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
 import json
-    
+
+
 class Error(RuntimeError):
     pass
 
 
-# abstract base class for SchemaNode and JsonNode
 class JsonBaseNode:
+    """ abstract base class for SchemaNode and JsonNode """
+    # TODO: pull more functions in from subclasses
+
     def getFilename(self):
         return self.filename
 
@@ -23,13 +26,16 @@ class JsonBaseNode:
             return self.filename
 
     def setFilename(self, filename):
-        self.filename=filename
+        self.filename = filename
         self.savededitcount=0
 
-# Each SchemaNode instance represents one node in the data tree.  Each element 
-# of a child sequence (i.e. list in Python) and child map (i.e. dict in Python)
-# gets its own child SchemaNode.
 class SchemaNode(JsonBaseNode):
+    """ 
+    Each SchemaNode instance represents one node in the data tree.  Each
+    element of a child sequence (i.e. list in Python) and child map (i.e. dict
+    in Python) gets its own child SchemaNode.
+    """
+
     def __init__(self, key=None, data=None, filename=None, parent=None):
         if filename is not None:
             self.filename=filename
@@ -80,11 +86,14 @@ class SchemaNode(JsonBaseNode):
     def getType(self):
         return self.data['type']
         
-    # get a list of children, possibly ordered
-    # Note that even though the JSON spec says maps are unordered, it's pretty
-    # rude to muck with someone else's content ordering in a text file, and ad 
-    # hoc forms benefit greatly from being able to control the order of elements
     def getChildren(self):
+        """
+        Get a list of children, possibly ordered.  Note that even though the
+        JSON spec says maps are unordered, it's pretty rude to muck with 
+        someone else's content ordering in a text file, and ad hoc forms 
+        benefit greatly from being able to control the order of elements
+        """
+
         if(isinstance(self.children, dict)):
             return self.children.values()
         elif(isinstance(self.children, list)):
@@ -130,9 +139,12 @@ class SchemaNode(JsonBaseNode):
         return retval
 
 
-# JsonNode is a class to store the data associated with a schema.  Each node
-# of the tree gets tied to a SchemaNode
 class JsonNode(JsonBaseNode):
+    """
+    JsonNode is a class to store the data associated with a schema.  Each node
+    of the tree gets tied to a SchemaNode.
+    """
+
     def __init__(self, key=None, parent=None, filename=None, data=None,
                  schemanode=None, schemadata=None, schemafile=None):
         self.filename=filename
@@ -194,7 +206,6 @@ class JsonNode(JsonBaseNode):
         json.dump(self.getData(), fd, indent=4)
         self.savededitcount=self.editcount
 
-    # pair this data node to the corresponding part of the schema
     def isTypeMatch(self, schemanode):
         jsontype=self.getType()
         schematype=schemanode.getType()
@@ -205,11 +216,10 @@ class JsonNode(JsonBaseNode):
                        jsontype=='none' or
                        (jsontype=='int' and schematype=='number'))
 
-
         return isTypeMatch
 
-    # pair this data node to the corresponding part of the schema
     def attachSchemaNode(self, schemanode):
+        '''Pair this data node to the corresponding part of the schema'''
         self.schemanode=schemanode
 
         jsontype=self.getType()
@@ -236,8 +246,9 @@ class JsonNode(JsonBaseNode):
     def getSchemaNode(self):
         return self.schemanode
 
-    # get type string as defined by the schema language
     def getType(self):
+        """Get type string as defined by the schema language"""
+
         if(isinstance(self.data, basestring)):
             return 'str'
         elif(isinstance(self.data, bool)):
@@ -261,21 +272,26 @@ class JsonNode(JsonBaseNode):
     def getData(self):
         return self.data
 
-    # Set raw data
-    # TODO: move to storing child data exclusively in children, because current
-    # method has n log n memory footprint.
     def setData(self, data):
+        """Set raw data"""
+
+        # TODO: move to storing child data exclusively in children, because 
+        # current method has n log n memory footprint.
+
         if not self.data==data:
             self.root.editcount+=1
         self.data=data
         if(self.depth>0):
             self.parent.setChildData(self.key, data)
 
-    # get a list of children, possibly ordered
-    # Note that even though the JSON spec says maps are unordered, it's pretty
-    # rude to muck with someone else's content ordering in a text file, and ad 
-    # hoc forms benefit greatly from being able to control the order of elements
     def getChildren(self):
+        """
+        Get a list of children, possibly ordered.  Note that even though the
+        JSON spec says maps are unordered, it's pretty rude to muck with 
+        someone else's content ordering in a text file, and ad hoc forms 
+        benefit greatly from being able to control the order of elements
+        """
+
         if(isinstance(self.children, dict)):
             return self.children.values()
         elif(isinstance(self.children, list)):
@@ -286,9 +302,12 @@ class JsonNode(JsonBaseNode):
     def getChildKeys(self):
         return self.children.keys()
     
-    # this function returns the list of keys that don't yet have 
-    # associated json child nodes associated with them
     def getAvailableKeys(self):
+        """
+        This function returns the list of keys that don't yet have associated 
+        json child nodes associated with them.
+        """
+
         if(self.schemanode.getType()=='map'):
             schemakeys=set(self.schemanode.getChildKeys())
             jsonkeys=set(self.getChildKeys())
@@ -338,12 +357,12 @@ class JsonNode(JsonBaseNode):
     def enumOptions(self):
         return self.data['enum']
 
-    # how deep is this node in the tree?
     def getDepth(self):
+        """How deep is this node in the tree?"""
         return self.depth
 
-    # debugging function
     def printTree(self):
+        """Debugging function"""
         jsontype=self.getType()
         if jsontype=='map' or jsontype=='seq':
             print self.schemanode.getTitle()
