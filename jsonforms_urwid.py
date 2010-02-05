@@ -89,13 +89,16 @@ class GenericEditWidget( urwid.WidgetWrap ):
         editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
         urwid.WidgetWrap.__init__(self, editpair)
 
+    def getWidgetBaseClass(self):
+        return urwid.Edit
+
     def getEditFieldWidget(self):
         thiswidget=self
         # closure which effectively gives this object a callback when the 
         # text of the widget changes.  This was in lieu of figuring out how to
         # properly use Signals, which may need to wait until I upgrade to using
         # urwid 0.99.
-        class CallbackEdit(urwid.Edit):
+        class CallbackEdit(self.getWidgetBaseClass()):
             def set_edit_text(self, text):
                 urwid.Edit.set_edit_text(self, text)
                 thiswidget.json.setData(text)
@@ -104,15 +107,13 @@ class GenericEditWidget( urwid.WidgetWrap ):
 
 # Integer edit widget
 class IntEditWidget( GenericEditWidget ):
-    def getEditFieldWidget(self):
-        innerwidget=urwid.IntEdit("", self.json.getData())
-        return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
+    def getWidgetBaseClass(self):
+        return urwid.IntEdit
 
 # Number edit widget
 class NumberEditWidget( GenericEditWidget ):
-    def getEditFieldWidget(self):
-        innerwidget=FloatEdit("", self.json.getData())
-        return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
+    def getWidgetBaseClass(self):
+        return FloatEdit
 
 # Boolean edit widget
 class BoolEditWidget( GenericEditWidget ):
