@@ -1,7 +1,7 @@
 Things to get done before version 0.1
 
 On deck:
-*  Update data for booleans and enumerations
+*  Fix enum data reset bug
 
 Roadmap
 0.1.0:
@@ -12,6 +12,7 @@ Roadmap
 *  Remove hardcoded 20 character label column
 *  Remove hardcoded 13 character "Add field" button width
 *  Put "Add field" over in the data area
+*  Don't render "Add field" row if there's no fields to add
 
 0.1.1:
 *  Implement ability to edit arbitrary JSON
@@ -51,4 +52,5 @@ Done:
 *  Implement help panel on bottom
 *  Implement "save"
 *  change API of GenericEditWidget to only initialize with a valid JsonNode
+*  Update data for booleans and enumerations
 

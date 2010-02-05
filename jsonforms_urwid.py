@@ -127,20 +127,30 @@ class NumberEditWidget( GenericEditWidget ):
 # Boolean edit widget
 class BoolEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
-        return urwid.CheckBox("", self.json.getData())
+        thiswidget=self
+        def on_state_change(self, state, user_data=None):
+            thiswidget.json.setData(state)
+        return urwid.CheckBox("", self.json.getData(), 
+                              on_state_change=on_state_change)
 
 # Enumerated string edit widget
 class EnumEditWidget( GenericEditWidget ):
     def getEditFieldWidget(self):
         options=[]
         self.radiolist = []
+        thiswidget=self
         for option in self.schema.enumOptions():
             if(self.json.getData()==option):
                 state=True
             else:
                 state=False
-            options.append(urwid.RadioButton(self.radiolist, option, state=state))
+            def on_state_change(self, state, user_data=None):
+                thiswidget.json.setData(user_data)
+            options.append(urwid.RadioButton(self.radiolist, option, 
+                                             state=state, user_data=option, 
+                                             on_state_change=on_state_change))
         return urwid.GridFlow( options, 13,3,1, 'left')
+
 
 # Add a button
 class FieldAddButtons( urwid.WidgetWrap ):
