@@ -202,11 +202,6 @@ class JsonNode(JsonBaseNode):
         json.dump(self.getData(), fd, indent=4)
         self.savededitcount=self.editcount
 
-
-    def saveToFile(self, filename=None):
-        self.savededitcount=0
-        self.editcount=0
-
     # pair this data node to the corresponding part of the schema
     def isTypeMatch(self, schemanode):
         jsontype=self.getType()
