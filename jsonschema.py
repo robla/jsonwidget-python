@@ -179,6 +179,8 @@ class JsonNode(JsonBaseNode):
             raise Error("Validation error: type mismatch - key: %s data: %s jsontype: %s schematype: %s" % (self.key, str(self.data), self.getType(), schemanode.getType()) )
         else:
             self.attachSchemaNode(schemanode)
+        if self.depth==0:
+            self.setSaved(True)
 
     def getRoot(self):
         return self.root
@@ -187,8 +189,6 @@ class JsonNode(JsonBaseNode):
         if filename is not None:
             self.filename=filename
         self.data=json.load(open(self.filename))
-        self.savededitcount=0
-        self.editcount=0
 
     def saveToFile(self, filename=None):
         if filename is not None:
@@ -201,6 +201,11 @@ class JsonNode(JsonBaseNode):
             fd=open(self.filename, 'w+')
         json.dump(self.getData(), fd, indent=4)
         self.savededitcount=self.editcount
+
+
+    def saveToFile(self, filename=None):
+        self.savededitcount=0
+        self.editcount=0
 
     # pair this data node to the corresponding part of the schema
     def isTypeMatch(self, schemanode):
@@ -273,10 +278,11 @@ class JsonNode(JsonBaseNode):
     # TODO: move to storing child data exclusively in children, because current
     # method has n log n memory footprint.
     def setData(self, data):
+        if not self.data==data:
+            self.root.editcount+=1
         self.data=data
         if(self.depth>0):
             self.parent.setChildData(self.key, data)
-        self.root.editcount+=1
 
     # get a list of children, possibly ordered
     # Note that even though the JSON spec says maps are unordered, it's pretty
@@ -310,14 +316,24 @@ class JsonNode(JsonBaseNode):
         if(self.data==None):
             type=self.schemanode.getType()
             self.data=self.schemanode.getBlankValue()
+            self.root.editcount+=1
         if(self.getType()=='seq' and key==len(self.data)):
             self.data.append(data)
+            self.root.editcount+=1
         else:
+            if not self.data.has_key(key) or not self.data[key]==data:
+                self.root.editcount+=1
             self.data[key]=data
-        self.root.editcount+=1
 
     def isSaved(self):
         return self.savededitcount==self.editcount
+
+    def setSaved(self, saved):
+        if(saved):
+            self.editcount=0
+        else:
+            self.editcount=1
+        self.savededitcount=0
 
     def addChild(self, key=None):
         schemanode=self.schemanode.getChild(key)

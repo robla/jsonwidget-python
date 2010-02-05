@@ -201,7 +201,10 @@ class EntryForm:
 
     def getHeader(self):
         headerleft = urwid.Text( self.progname, align='left' )
-        headercenter = urwid.Text( self.json.getFilenameText(), align='center' )
+        filename = self.json.getFilenameText()
+        if self.json.isSaved() is False:
+            filename += " (modified)"
+        headercenter = urwid.Text( filename, align='center' )
         headerright = urwid.Text( "schema: "+self.schema.getFilenameText(), align='right' )
 
         header1columns = urwid.Columns([headerleft, headercenter, headerright])
@@ -267,6 +270,7 @@ class EntryForm:
     def runLoop(self):
         size = self.ui.get_cols_rows()
         while(True):
+            self.setHeader()
             canvas = self.view.render( size, focus=1 )
             self.ui.draw_screen( size, canvas )
             keys = None
