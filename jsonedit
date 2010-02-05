@@ -10,6 +10,7 @@ import urwid.curses_display
 import urwid
 import optparse
 import sys
+import os
 
 from jsonschema import *
 from jsonforms_urwid import *
@@ -21,8 +22,18 @@ urwid.curses_display.curses.has_colors = lambda : False
 # Create a JsonNode, then pass it to the EntryNode.  EntryNode takes over at 
 # this point, saving the json file as appropriate
 def show_form(schemafile, jsonfile):
-    # a full json object is the root node of a tree of JsonNodes
-    jsonobj=JsonNode(filename=jsonfile, schemafile=schemafile)
+    if os.access(jsonfile, os.R_OK):
+        # file exists, and we can read it
+        jsonobj=JsonNode(filename=jsonfile, schemafile=schemafile)
+    elif os.access(jsonfile, os.F_OK):
+        # file exists, but can't read it
+        sys.stderr.write("Cannot access file \"%s\" (check permissions)\n" % jsonfile)
+        sys.exit(os.EX_NOINPUT)
+    else:
+        # must be a new file
+        jsonobj=JsonNode(filename=None, schemafile=schemafile)
+        jsonobj.setFilename(jsonfile)
+
     form=EntryForm(jsonobj, program_name="jsonedit 0.1pre")
     form.run()
 
