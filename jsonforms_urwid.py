@@ -92,6 +92,9 @@ class GenericEditWidget( urwid.WidgetWrap ):
     def getWidgetBaseClass(self):
         return urwid.Edit
 
+    def storeTextAsData(self, text):
+        self.json.setData(text)
+
     def getEditFieldWidget(self):
         thiswidget=self
         # closure which effectively gives this object a callback when the 
@@ -101,7 +104,7 @@ class GenericEditWidget( urwid.WidgetWrap ):
         class CallbackEdit(self.getWidgetBaseClass()):
             def set_edit_text(self, text):
                 urwid.Edit.set_edit_text(self, text)
-                thiswidget.json.setData(text)
+                thiswidget.storeTextAsData(text)
         innerwidget=CallbackEdit("", str(self.json.getData()))
         return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
 
@@ -110,10 +113,16 @@ class IntEditWidget( GenericEditWidget ):
     def getWidgetBaseClass(self):
         return urwid.IntEdit
 
+    def storeTextAsData(self, text):
+        self.json.setData(int(text))
+
 # Number edit widget
 class NumberEditWidget( GenericEditWidget ):
     def getWidgetBaseClass(self):
         return FloatEdit
+
+    def storeTextAsData(self, text):
+        self.json.setData(float(text))
 
 # Boolean edit widget
 class BoolEditWidget( GenericEditWidget ):
