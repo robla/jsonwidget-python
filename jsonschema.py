@@ -2,18 +2,10 @@
 # Library for reading JSON files according to given JSON Schema
 #
 # Copyright (c) 2010, Rob Lanphier
-# All rights reserved.  
+# All rights reserved.
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
 import json
-
-import warnings
-
-# ignoring deprecation warning for sets
-warnings.simplefilter("ignore",DeprecationWarning)
-
-# sets deprecated in Python 2.6
-import sets
     
 class Error(RuntimeError):
     pass
@@ -298,8 +290,8 @@ class JsonNode(JsonBaseNode):
     # associated json child nodes associated with them
     def getAvailableKeys(self):
         if(self.schemanode.getType()=='map'):
-            schemakeys=sets.Set(self.schemanode.getChildKeys())
-            jsonkeys=sets.Set(self.getChildKeys())
+            schemakeys=set(self.schemanode.getChildKeys())
+            jsonkeys=set(self.getChildKeys())
             unusedkeys=schemakeys.difference(jsonkeys)
             return list(unusedkeys)
         elif(self.schemanode.getType()=='seq'):
@@ -316,7 +308,7 @@ class JsonNode(JsonBaseNode):
             self.data.append(data)
             self.root.editcount+=1
         else:
-            if not self.data.has_key(key) or not self.data[key]==data:
+            if not key in self.data or not self.data[key]==data:
                 self.root.editcount+=1
             self.data[key]=data
 
