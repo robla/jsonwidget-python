@@ -23,6 +23,9 @@ To do:
 *  Implement "save"
 *  Respect key order in json and schema files
 *  Remove hardcoded 20 character label column
+*  Implement "File exists.  Overwrite?"
+*  Implement immediate filename prompt when write fails
+*  Implement read-only flag
 
 Done:
 *  Basic editor

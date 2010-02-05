@@ -309,10 +309,14 @@ class EntryForm:
         class CallbackEdit(urwid.Edit):
             def keypress(self,(maxcol,),key):
                 if key == 'y':
-                    entryform.handleSave()
-                    msg = "Saved "+entryform.json.getFilename() + "\n"
-                    entryform.appendEndStatusMessage(msg)
-                    entryform.handleExit()
+                    if entryform.json.getFilename() is None:
+                        entryform.cleanupUserQuestion()
+                        entryform.handleWriteToRequest(exit_on_save=True)
+                    else:
+                        entryform.handleSave()
+                        msg = "Saved "+entryform.json.getFilename() + "\n"
+                        entryform.appendEndStatusMessage(msg)
+                        entryform.handleExit()
                 elif key == 'n':
                     entryform.handleExit()
                 elif key == 'esc':
@@ -324,7 +328,7 @@ class EntryForm:
         footerhelp = self.getFooterHelpWidget(helptext=helptext)
         self.setFooter( [footerstatus, footerhelp] )
 
-    def handleWriteToRequest(self):
+    def handleWriteToRequest(self, exit_on_save=False):
         entryform=self
         class CallbackEdit(urwid.Edit):
             def keypress(self,(maxcol,),key):
@@ -338,6 +342,11 @@ class EntryForm:
                     except:
                         msg = "FAILED TO WRITE "+entryform.json.getFilename()
                         entryform.json.setFilename(currentfilename)
+                    else:
+                        if exit_on_save:
+                            msg += "\n"
+                            entryform.appendEndStatusMessage(msg)
+                            entryform.handleExit()
                     entryform.handleSaveStatus(msg)
                 elif key == 'esc':
                     entryform.cleanupUserQuestion()
