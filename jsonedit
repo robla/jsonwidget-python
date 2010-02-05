@@ -22,8 +22,8 @@ urwid.curses_display.curses.has_colors = lambda : False
 # Create a JsonNode, then pass it to the EntryNode.  EntryNode takes over at 
 # this point, saving the json file as appropriate
 def show_form(schemafile, jsonfile):
-    if os.access(jsonfile, os.R_OK):
-        # file exists, and we can read it
+    if  jsonfile is None or os.access(jsonfile, os.R_OK):
+        # file exists, and we can read it (or we're just passing "None" through)
         jsonobj=JsonNode(filename=jsonfile, schemafile=schemafile)
     elif os.access(jsonfile, os.F_OK):
         # file exists, but can't read it
