@@ -145,7 +145,8 @@ class EnumEditWidget( GenericEditWidget ):
             else:
                 state=False
             def on_state_change(self, state, user_data=None):
-                thiswidget.json.setData(user_data)
+                if state:
+                    thiswidget.json.setData(user_data)
             options.append(urwid.RadioButton(self.radiolist, option, 
                                              state=state, user_data=option, 
                                              on_state_change=on_state_change))

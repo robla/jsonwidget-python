@@ -1,12 +1,11 @@
 Things to get done before version 0.1
 
 On deck:
-*  Fix enum data reset bug
+*  Look up proper doc format for python comments, and start using it.
 
 Roadmap
 0.1.0:
 *  Implement ability to delete child nodes
-*  Look up proper doc format for python comments, and start using it.
 *  Implement support for optional/required elements
 *  Respect key order in json and schema files
 *  Remove hardcoded 20 character label column
