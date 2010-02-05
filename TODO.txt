@@ -25,7 +25,6 @@ Someday maybe:
 *  Implement "File exists.  Overwrite?"
 *  Implement immediate filename prompt when write fails
 *  Implement read-only flag
-*  change API of GenericEditWidget to only initialize with a valid JsonNode
 
 Done:
 *  Basic editor
@@ -51,4 +50,5 @@ Done:
 *  Implement title bar at top
 *  Implement help panel on bottom
 *  Implement "save"
+*  change API of GenericEditWidget to only initialize with a valid JsonNode
 
