@@ -2,7 +2,7 @@
 # Library for building urwid-based forms from JSON schemas
 #
 # Copyright (c) 2010, Rob Lanphier
-# All rights reserved.  
+# All rights reserved.
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
 from jsonschema import *
@@ -24,7 +24,7 @@ def get_schema_widget( node ):
     if(isinstance(node, JsonNode)):
         jsonnode = node
     else:
-        raise Error("Type error: %s" % type(node).__name__) 
+        raise Error("Type error: %s" % type(node).__name__)
 
     # we want to make sure that we use a schema-appropriate edit widget, so
     # don't use jsonnode.getType() directly.
@@ -97,7 +97,7 @@ class GenericEditWidget( urwid.WidgetWrap ):
 
     def getEditFieldWidget(self):
         thiswidget = self
-        # closure which effectively gives this object a callback when the 
+        # closure which effectively gives this object a callback when the
         # text of the widget changes.  This was in lieu of figuring out how to
         # properly use Signals, which may need to wait until I upgrade to using
         # urwid 0.99.
@@ -130,7 +130,7 @@ class BoolEditWidget( GenericEditWidget ):
         thiswidget = self
         def on_state_change(self, state, user_data = None):
             thiswidget.json.setData(state)
-        return urwid.CheckBox("", self.json.getData(), 
+        return urwid.CheckBox("", self.json.getData(),
                               on_state_change = on_state_change)
 
 # Enumerated string edit widget
@@ -147,8 +147,8 @@ class EnumEditWidget( GenericEditWidget ):
             def on_state_change(self, state, user_data=None):
                 if state:
                     thiswidget.json.setData(user_data)
-            options.append(urwid.RadioButton(self.radiolist, option, 
-                                             state=state, user_data=option, 
+            options.append(urwid.RadioButton(self.radiolist, option,
+                                             state=state, user_data=option,
                                              on_state_change=on_state_change))
         return urwid.GridFlow( options, 13,3,1, 'left')
 
@@ -183,7 +183,7 @@ class JsonWidgetExit(Exception):
 class EntryForm:
     def __init__(self, json, program_name="JsonWidget"):
         self.ui = urwid.curses_display.Screen()
-        self.ui.register_palette( [ ('default', 'default', 'default'), 
+        self.ui.register_palette( [ ('default', 'default', 'default'),
                                     ('editfield', 'light gray', 'dark blue', 'underline'),
                                     ('editfieldfocus', 'white', 'dark red', 'underline'),
                                     ('header', 'light gray', 'dark red', 'standout'),
@@ -213,7 +213,7 @@ class EntryForm:
             self.ui.run_wrapper( self.runLoop )
         except JsonWidgetExit:
             pass
-        
+
         # need to clear this timer, or else we have to wait for the timer
         # before the app exits
         self.clearFooterStatusTimer()
@@ -229,7 +229,7 @@ class EntryForm:
         headerright = urwid.Text( "schema: "+self.schema.getFilenameText(), align='right' )
 
         header1columns = urwid.Columns([headerleft, headercenter, headerright])
-        header1padded = urwid.Padding (header1columns, ('fixed left',2), 
+        header1padded = urwid.Padding (header1columns, ('fixed left',2),
                                        ('fixed right',2), 20 )
         header1 = urwid.AttrWrap(header1padded , "header")
         header2 = urwid.Text("")
@@ -238,7 +238,7 @@ class EntryForm:
     def setHeader(self):
         header = self.getHeader()
         self.view.set_header(header)
-        
+
     def setFooter(self, widgets):
         self.clearFooterStatusTimer()
         self.view.set_footer(urwid.Pile( widgets ))
@@ -257,7 +257,7 @@ class EntryForm:
         if self.footertimer is not None:
             self.footertimer.cancel()
 
-    def getFooterStatusWidget(self, widget=None, active=False): 
+    def getFooterStatusWidget(self, widget=None, active=False):
         if widget is None:
             widget = urwid.Text("")
 
@@ -314,7 +314,7 @@ class EntryForm:
                     self.handleWriteToRequest()
                 else:
                     self.view.keypress( size, key )
-     
+
     def handleExitRequest(self):
         entryform = self
         class CallbackEdit(urwid.Edit):
@@ -393,8 +393,8 @@ class EntryForm:
 
     def appendEndStatusMessage(self, status):
         self.endstatusmessage += status
-        
+
     def getEndStatusMessage(self):
         return self.endstatusmessage
-        
+
 
