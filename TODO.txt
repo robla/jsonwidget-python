@@ -1,31 +1,26 @@
 Things to get done before version 0.1
 
 On deck:
-*  Implement ability to add child nodes
+*  Update data for booleans and enumerations
 
-To do:
+Roadmap
+0.1.0:
 *  Implement ability to delete child nodes
-*  Saving json files
-*  Fix deep mod problem 
-
-    def setChildData(self, key, data):
-        self.data[key]=data
-        # add this line:
-        self.parent.setChildData(self.key, self.data)
-   This will probably bomb out at the top level....figure out how to mitigate
-   that.
 *  Look up proper doc format for python comments, and start using it.
 *  Implement support for optional/required elements
-*  Figure out why running with no params fails
-*  change API of GenericEditWidget to only initialize with a valid JsonNode
-*  Implement title bar at top
-*  Implement help panel on bottom
-*  Implement "save"
 *  Respect key order in json and schema files
 *  Remove hardcoded 20 character label column
+*  Remove hardcoded 13 character "Add field" button width
+*  Put "Add field" over in the data area
+
+0.1.1:
+*  Implement ability to edit arbitrary JSON
+
+Someday maybe:
 *  Implement "File exists.  Overwrite?"
 *  Implement immediate filename prompt when write fails
 *  Implement read-only flag
+*  change API of GenericEditWidget to only initialize with a valid JsonNode
 
 Done:
 *  Basic editor
@@ -37,4 +32,18 @@ Done:
 *  Create function to get the unused fields
 *  Put valid field names on buttons
 *  Make the button display a list
+*  Saving json files
+*  Implement ability to add child nodes
+*  Fix deep mod problem 
+
+    def setChildData(self, key, data):
+        self.data[key]=data
+        # add this line:
+        self.parent.setChildData(self.key, self.data)
+   This will probably bomb out at the top level....figure out how to mitigate
+   that.
+*  Figure out why running with no params fails
+*  Implement title bar at top
+*  Implement help panel on bottom
+*  Implement "save"
 
