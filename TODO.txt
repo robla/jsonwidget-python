@@ -16,6 +16,10 @@ Roadmap
 0.1.1:
 *  Implement ability to edit arbitrary JSON
 
+0.2.0:
+*  Update to urwid 0.9.9 mainloop
+*  Look at SitePen internet draft to see if compatibility is feasible
+
 Someday maybe:
 *  Implement undo/redo stack
 *  Implement "File exists.  Overwrite?"
