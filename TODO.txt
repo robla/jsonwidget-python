@@ -1,11 +1,10 @@
 Things to get done before version 0.1
 
 On deck:
-*  Look up proper doc format for python comments, and start using it.
+*  Implement ability to delete child nodes
 
 Roadmap
 0.1.0:
-*  Implement ability to delete child nodes
 *  Implement support for optional/required elements
 *  Respect key order in json and schema files
 *  Remove hardcoded 20 character label column
@@ -18,6 +17,7 @@ Roadmap
 
 0.2.0:
 *  Update to urwid 0.9.9 mainloop
+*  Remap ctrl-s, ctrl-q, ctrl-c, etc
 *  Look at SitePen internet draft to see if compatibility is feasible
 
 Someday maybe:
@@ -52,4 +52,5 @@ Done:
 *  Implement "save"
 *  change API of GenericEditWidget to only initialize with a valid JsonNode
 *  Update data for booleans and enumerations
+*  Look up proper doc format for python comments, and start using it.
 

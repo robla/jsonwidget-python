@@ -302,7 +302,8 @@ class EntryForm:
 
     def get_footer_help_widget(self, helptext=None, rows=2):
         if(helptext is None):
-            helptext = [("^W", "Write/Save"), ("^X", "Exit")]
+            helptext = [("^W", "Write/Save"), ("^X", "Exit"),
+                        ("^D", "Delete Node")]
         numcols = (len(helptext) + 1) / rows
         helpcolumns = []
         for i in range(numcols):
@@ -347,30 +348,40 @@ class EntryForm:
                         self.handle_exit_request()
                 elif key == 'ctrl w':
                     self.handle_write_to_request()
+                elif key == 'ctrl d':
+                    self.handle_delete_node_request()
                 else:
                     self.view.keypress(size, key)
 
     def handle_exit_request(self):
+        self.yes_no_question(
+            'Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ',
+            yesfunc=self.handle_save_and_exit,
+            nofunc=self.handle_exit)
+
+    def yes_no_question(self, prompt, yesfunc=None, nofunc=None, 
+                        cancelfunc=None):
         entryform = self
 
         class CallbackEdit(urwid.Edit):
 
             def keypress(self, (maxcol, ), key):
                 if key == 'y':
-                    if entryform.json.get_filename() is None:
+                    if yesfunc is None:
                         entryform.cleanup_user_question()
-                        entryform.handle_write_to_request(exit_on_save=True)
                     else:
-                        entryform.handle_save()
-                        msg = "Saved " + entryform.json.get_filename() + "\n"
-                        entryform.append_end_status_message(msg)
-                        entryform.handle_exit()
+                        yesfunc()
                 elif key == 'n':
-                    entryform.handle_exit()
+                    if nofunc is None:
+                        entryform.cleanup_user_question()
+                    else:
+                        nofunc()
                 elif key == 'esc':
-                    entryform.cleanup_user_question()
-        prompt = CallbackEdit(
-            'Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ', "")
+                    if cancelfunc is None:
+                        entryform.cleanup_user_question()
+                    else:
+                        cancelfunc()
+        prompt = CallbackEdit(prompt, "")
         self.view.set_focus("footer")
         helptext = [("Y", "Yes"), ("N", "No"), ("ESC", "Cancel")]
         footerstatus = self.get_footer_status_widget(prompt, active=True)
@@ -411,6 +422,9 @@ class EntryForm:
         footerhelp = self.get_footer_help_widget(helptext=helptext)
         self.set_footer([footerstatus, footerhelp])
 
+    def handle_delete_node_request(self):
+        self.yes_no_question("You feel lucky, punk? ")
+
     def handle_save(self):
         self.json.save_to_file()
 
@@ -423,6 +437,16 @@ class EntryForm:
         footerhelp = self.get_footer_help_widget()
         self.set_footer([footerstatus, footerhelp])
         self.set_footer_status_timer(5.0)
+
+    def handle_save_and_exit(self):
+        if self.json.get_filename() is None:
+            self.cleanup_user_question()
+            self.handle_write_to_request(exit_on_save=True)
+        else:
+            self.handle_save()
+            msg = "Saved " + self.json.get_filename() + "\n"
+            self.append_end_status_message(msg)
+            self.handle_exit()
 
     def handle_exit(self):
         raise JsonWidgetExit()
