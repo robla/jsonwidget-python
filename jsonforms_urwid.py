@@ -7,6 +7,7 @@
 
 from jsonschema import *
 
+
 class Error(RuntimeError):
     pass
 
@@ -17,10 +18,13 @@ import threading
 
 from floatedit import FloatEdit
 
-# Class factory for UI widgets.
-# node: either a SchemaNode or JsonNode
-# returns the appropriate UI widget
+
 def get_schema_widget(node):
+    """
+    Class factory for UI widgets.
+    node: either a SchemaNode or JsonNode
+    returns the appropriate UI widget
+    """
     if(isinstance(node, JsonNode)):
         jsonnode = node
     else:
@@ -50,8 +54,10 @@ def get_schema_widget(node):
 
 # Series of editing widgets follows, each appropriate to a datatype or two
 
-# Map and Seq edit widget and container
+
 class ArrayEditWidget(urwid.WidgetWrap):
+    """ Map and Seq edit widget and container"""
+
     def __init__(self, jsonnode):
         self.json = jsonnode
         self.schema = jsonnode.getSchemaNode()
@@ -60,7 +66,7 @@ class ArrayEditWidget(urwid.WidgetWrap):
         leftmargin = urwid.Text("")
 
         mapfields = self.buildPile()
-        self.indentedmap = urwid.Columns([ ('fixed', 2, leftmargin), mapfields ])
+        self.indentedmap = urwid.Columns([('fixed', 2, leftmargin), mapfields])
         maparray.append(self.indentedmap)
         mappile = urwid.Pile(maparray)
         return urwid.WidgetWrap.__init__(self, mappile)
@@ -69,24 +75,26 @@ class ArrayEditWidget(urwid.WidgetWrap):
         self.json.addChild(key)
         self.indentedmap.widget_list[1] = self.buildPile()
 
-    # build a vertically stacked array of widgets
     def buildPile(self):
+        """Build a vertically stacked array of widgets"""
         pilearray = []
 
         for child in self.json.getChildren():
             pilearray.append(get_schema_widget(child))
-        pilearray.append(FieldAddButtons(self,self.json))
+        pilearray.append(FieldAddButtons(self, self.json))
 
         return urwid.Pile(pilearray)
 
-# generic widget used for free text entry (e.g. strings)
+
 class GenericEditWidget(urwid.WidgetWrap):
+    """ generic widget used for free text entry (e.g. strings)"""
+
     def __init__(self, jsonnode):
         self.schema = jsonnode.getSchemaNode()
         self.json = jsonnode
         editcaption = urwid.Text(('default', self.json.getTitle() + ": "))
         editfield = self.getEditFieldWidget()
-        editpair = urwid.Columns ([ ('fixed', 20, editcaption), editfield ])
+        editpair = urwid.Columns([('fixed', 20, editcaption), editfield])
         urwid.WidgetWrap.__init__(self, editpair)
 
     def getWidgetBaseClass(self):
@@ -97,44 +105,58 @@ class GenericEditWidget(urwid.WidgetWrap):
 
     def getEditFieldWidget(self):
         thiswidget = self
-        # closure which effectively gives this object a callback when the
-        # text of the widget changes.  This was in lieu of figuring out how to
-        # properly use Signals, which may need to wait until I upgrade to using
-        # urwid 0.99.
+
+        # CallbackEdit is a closure which effectively gives this object a
+        # callback when the text of the widget changes.  This was in lieu of
+        # figuring out how to properly use Signals, which may need to wait
+        # until I upgrade to using urwid 0.99.
+
         class CallbackEdit(self.getWidgetBaseClass()):
+
             def set_edit_text(self, text):
                 urwid.Edit.set_edit_text(self, text)
                 thiswidget.storeTextAsData(text)
+
         innerwidget = CallbackEdit("", str(self.json.getData()))
         return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
 
-# Integer edit widget
+
 class IntEditWidget(GenericEditWidget):
+    """ Integer edit widget"""
+
     def getWidgetBaseClass(self):
         return urwid.IntEdit
 
     def storeTextAsData(self, text):
         self.json.setData(int(text))
 
-# Number edit widget
+
 class NumberEditWidget(GenericEditWidget):
+    """ Number edit widget"""
+
     def getWidgetBaseClass(self):
         return FloatEdit
 
     def storeTextAsData(self, text):
         self.json.setData(float(text))
 
-# Boolean edit widget
+
 class BoolEditWidget(GenericEditWidget):
+    """ Boolean edit widget"""
+
     def getEditFieldWidget(self):
         thiswidget = self
-        def on_state_change(self, state, user_data = None):
-            thiswidget.json.setData(state)
-        return urwid.CheckBox("", self.json.getData(),
-                              on_state_change = on_state_change)
 
-# Enumerated string edit widget
+        def on_state_change(self, state, user_data=None):
+            thiswidget.json.setData(state)
+
+        return urwid.CheckBox("", self.json.getData(),
+                              on_state_change=on_state_change)
+
+
 class EnumEditWidget(GenericEditWidget):
+    """ Enumerated string edit widget"""
+
     def getEditFieldWidget(self):
         options = []
         self.radiolist = []
@@ -144,54 +166,64 @@ class EnumEditWidget(GenericEditWidget):
                 state = True
             else:
                 state = False
+
             def on_state_change(self, state, user_data=None):
                 if state:
                     thiswidget.json.setData(user_data)
+
             options.append(urwid.RadioButton(self.radiolist, option,
                                              state=state, user_data=option,
                                              on_state_change=on_state_change))
-        return urwid.GridFlow(options, 13,3,1, 'left')
+        return urwid.GridFlow(options, 13, 3, 1, 'left')
 
 
-# Add a button
 class FieldAddButtons(urwid.WidgetWrap):
+    """ Add a button"""
+
     def __init__(self, parentwidget, json):
         self.parentwidget = parentwidget
         self.json = json
         caption = urwid.Text(('default', "Add fields: "))
         buttonfield = self.getButtons()
-        editpair = urwid.Columns ([ ('fixed', 20, caption), buttonfield ])
+        editpair = urwid.Columns([('fixed', 20, caption), buttonfield])
         urwid.WidgetWrap.__init__(self, editpair)
 
     def getButtons(self):
         parentwidget = self.parentwidget
         buttons = []
+
         def on_press(button, user_data=None):
             parentwidget.addNode(user_data['key'])
+
         for key in self.json.getAvailableKeys():
             fieldname = self.json.getChildTitle(key)
-            buttons.append(urwid.Button(fieldname,on_press,{'key':key}))
+            buttons.append(urwid.Button(fieldname, on_press, {'key': key}))
         #TODO: remove hard coded widths
-        return urwid.GridFlow(buttons, 13,3,1, 'left')
+        return urwid.GridFlow(buttons, 13, 3, 1, 'left')
+
 
 class JsonWidgetExit(Exception):
     pass
 
-# the top-level form where all of the widgets get placed.
-# I'm guessing this should get replaced with a MainLoop when this moves to urwid
-# 0.99.
+
 class EntryForm:
+    """The top-level form where all of the widgets get placed."""
+
+    # I'm guessing this should get replaced with a MainLoop when this moves
+    # to urwid 0.99.
+
     def __init__(self, json, program_name="JsonWidget"):
         self.ui = urwid.curses_display.Screen()
-        self.ui.register_palette([ ('default', 'default', 'default'),
-                                    ('editfield', 'light gray', 'dark blue', 'underline'),
-                                    ('editfieldfocus', 'white', 'dark red', 'underline'),
-                                    ('header', 'light gray', 'dark red', 'standout'),
-                                    ('footerstatusdormant', 'light gray', 'dark blue'),
-                                    ('footerstatusactive', 'light gray', 'dark blue', 'standout'),
-                                    ('footerstatusedit', 'light gray', 'dark blue'),
-                                    ('footerkeys', 'light gray', 'dark blue', 'standout'),
-                                    ('footerhelp', 'light gray', 'dark blue') ])
+        self.ui.register_palette([
+            ('default', 'default', 'default'),
+            ('editfield', 'light gray', 'dark blue', 'underline'),
+            ('editfieldfocus', 'white', 'dark red', 'underline'),
+            ('header', 'light gray', 'dark red', 'standout'),
+            ('footerstatusdormant', 'light gray', 'dark blue'),
+            ('footerstatusactive', 'light gray', 'dark blue', 'standout'),
+            ('footerstatusedit', 'light gray', 'dark blue'),
+            ('footerkeys', 'light gray', 'dark blue', 'standout'),
+            ('footerhelp', 'light gray', 'dark blue')])
         self.json = json
         self.schema = json.getSchemaNode()
         self.endstatusmessage = ""
@@ -200,7 +232,7 @@ class EntryForm:
 
     def run(self):
         widget = get_schema_widget(self.json)
-        self.walker = urwid.SimpleListWalker([ widget ])
+        self.walker = urwid.SimpleListWalker([widget])
         listbox = urwid.ListBox(self.walker)
         header = self.getHeader()
         footerstatus = self.getFooterStatusWidget()
@@ -226,11 +258,12 @@ class EntryForm:
         if self.json.isSaved() is False:
             filename += " (modified)"
         headercenter = urwid.Text(filename, align='center')
-        headerright = urwid.Text("schema: "+self.schema.getFilenameText(), align='right')
+        headerright = urwid.Text("schema: " + self.schema.getFilenameText(),
+                                 align='right')
 
         header1columns = urwid.Columns([headerleft, headercenter, headerright])
-        header1padded = urwid.Padding (header1columns, ('fixed left',2),
-                                       ('fixed right',2), 20)
+        header1padded = urwid.Padding(header1columns, ('fixed left', 2),
+                                      ('fixed right', 2), 20)
         header1 = urwid.AttrWrap(header1padded, "header")
         header2 = urwid.Text("")
         return urwid.Pile([header1, header2])
@@ -269,8 +302,8 @@ class EntryForm:
 
     def getFooterHelpWidget(self, helptext=None, rows=2):
         if(helptext is None):
-            helptext = [("^W","Write/Save"),("^X","Exit")]
-        numcols = (len(helptext)+1)/rows
+            helptext = [("^W", "Write/Save"), ("^X", "Exit")]
+        numcols = (len(helptext) + 1) / rows
         helpcolumns = []
         for i in range(numcols):
             helpcolumns.append([])
@@ -281,7 +314,8 @@ class EntryForm:
         for item in helptext:
             textitem = urwid.Text([('footerkeys', item[0]), " ", item[1]])
             helpcolumns[col].append(textitem)
-            i += 1; col = i/rows
+            i += 1
+            col = i / rows
 
         # now stuff everything into column widgets
         helpwidgets = []
@@ -318,33 +352,38 @@ class EntryForm:
 
     def handleExitRequest(self):
         entryform = self
+
         class CallbackEdit(urwid.Edit):
-            def keypress(self,(maxcol,),key):
+
+            def keypress(self, (maxcol, ), key):
                 if key == 'y':
                     if entryform.json.getFilename() is None:
                         entryform.cleanupUserQuestion()
                         entryform.handleWriteToRequest(exit_on_save=True)
                     else:
                         entryform.handleSave()
-                        msg = "Saved "+entryform.json.getFilename() + "\n"
+                        msg = "Saved " + entryform.json.getFilename() + "\n"
                         entryform.appendEndStatusMessage(msg)
                         entryform.handleExit()
                 elif key == 'n':
                     entryform.handleExit()
                 elif key == 'esc':
                     entryform.cleanupUserQuestion()
-        prompt = CallbackEdit('Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ', "")
+        prompt = CallbackEdit(
+            'Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ', "")
         self.view.set_focus("footer")
-        helptext =  [("Y","Yes"),("N","No"),("ESC","Cancel")]
+        helptext = [("Y", "Yes"), ("N", "No"), ("ESC", "Cancel")]
         footerstatus = self.getFooterStatusWidget(prompt, active=True)
         footerhelp = self.getFooterHelpWidget(helptext=helptext)
         self.setFooter([footerstatus, footerhelp])
 
     def handleWriteToRequest(self, exit_on_save=False):
         entryform = self
+
         class CallbackEdit(urwid.Edit):
-            def keypress(self, (maxcol,), key):
-                urwid.Edit.keypress(self, (maxcol,), key)
+
+            def keypress(self, (maxcol, ), key):
+                urwid.Edit.keypress(self, (maxcol, ), key)
                 if key == 'enter':
                     currentfilename = entryform.json.getFilename()
                     entryform.json.setFilename(self.get_edit_text())
