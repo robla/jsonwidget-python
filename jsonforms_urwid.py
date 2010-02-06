@@ -20,7 +20,7 @@ from floatedit import FloatEdit
 # Class factory for UI widgets.
 # node: either a SchemaNode or JsonNode
 # returns the appropriate UI widget
-def get_schema_widget( node ):
+def get_schema_widget(node):
     if(isinstance(node, JsonNode)):
         jsonnode = node
     else:
@@ -51,16 +51,16 @@ def get_schema_widget( node ):
 # Series of editing widgets follows, each appropriate to a datatype or two
 
 # Map and Seq edit widget and container
-class ArrayEditWidget( urwid.WidgetWrap ):
+class ArrayEditWidget(urwid.WidgetWrap):
     def __init__(self, jsonnode):
         self.json = jsonnode
         self.schema = jsonnode.getSchemaNode()
         maparray = []
-        maparray.append(urwid.Text( self.json.getTitle() + ": " ))
-        leftmargin = urwid.Text( "" )
+        maparray.append(urwid.Text(self.json.getTitle() + ": "))
+        leftmargin = urwid.Text("")
 
         mapfields = self.buildPile()
-        self.indentedmap = urwid.Columns( [ ('fixed', 2, leftmargin), mapfields ] )
+        self.indentedmap = urwid.Columns([ ('fixed', 2, leftmargin), mapfields ])
         maparray.append(self.indentedmap)
         mappile = urwid.Pile(maparray)
         return urwid.WidgetWrap.__init__(self, mappile)
@@ -77,16 +77,16 @@ class ArrayEditWidget( urwid.WidgetWrap ):
             pilearray.append(get_schema_widget(child))
         pilearray.append(FieldAddButtons(self,self.json))
 
-        return urwid.Pile( pilearray )
+        return urwid.Pile(pilearray)
 
 # generic widget used for free text entry (e.g. strings)
-class GenericEditWidget( urwid.WidgetWrap ):
+class GenericEditWidget(urwid.WidgetWrap):
     def __init__(self, jsonnode):
         self.schema = jsonnode.getSchemaNode()
         self.json = jsonnode
-        editcaption = urwid.Text( ('default', self.json.getTitle() + ": ") )
+        editcaption = urwid.Text(('default', self.json.getTitle() + ": "))
         editfield = self.getEditFieldWidget()
-        editpair = urwid.Columns ( [ ('fixed', 20, editcaption), editfield ] )
+        editpair = urwid.Columns ([ ('fixed', 20, editcaption), editfield ])
         urwid.WidgetWrap.__init__(self, editpair)
 
     def getWidgetBaseClass(self):
@@ -109,7 +109,7 @@ class GenericEditWidget( urwid.WidgetWrap ):
         return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
 
 # Integer edit widget
-class IntEditWidget( GenericEditWidget ):
+class IntEditWidget(GenericEditWidget):
     def getWidgetBaseClass(self):
         return urwid.IntEdit
 
@@ -117,7 +117,7 @@ class IntEditWidget( GenericEditWidget ):
         self.json.setData(int(text))
 
 # Number edit widget
-class NumberEditWidget( GenericEditWidget ):
+class NumberEditWidget(GenericEditWidget):
     def getWidgetBaseClass(self):
         return FloatEdit
 
@@ -125,7 +125,7 @@ class NumberEditWidget( GenericEditWidget ):
         self.json.setData(float(text))
 
 # Boolean edit widget
-class BoolEditWidget( GenericEditWidget ):
+class BoolEditWidget(GenericEditWidget):
     def getEditFieldWidget(self):
         thiswidget = self
         def on_state_change(self, state, user_data = None):
@@ -134,7 +134,7 @@ class BoolEditWidget( GenericEditWidget ):
                               on_state_change = on_state_change)
 
 # Enumerated string edit widget
-class EnumEditWidget( GenericEditWidget ):
+class EnumEditWidget(GenericEditWidget):
     def getEditFieldWidget(self):
         options = []
         self.radiolist = []
@@ -150,17 +150,17 @@ class EnumEditWidget( GenericEditWidget ):
             options.append(urwid.RadioButton(self.radiolist, option,
                                              state=state, user_data=option,
                                              on_state_change=on_state_change))
-        return urwid.GridFlow( options, 13,3,1, 'left')
+        return urwid.GridFlow(options, 13,3,1, 'left')
 
 
 # Add a button
-class FieldAddButtons( urwid.WidgetWrap ):
+class FieldAddButtons(urwid.WidgetWrap):
     def __init__(self, parentwidget, json):
         self.parentwidget = parentwidget
         self.json = json
-        caption = urwid.Text( ('default', "Add fields: ") )
+        caption = urwid.Text(('default', "Add fields: "))
         buttonfield = self.getButtons()
-        editpair = urwid.Columns ( [ ('fixed', 20, caption), buttonfield ] )
+        editpair = urwid.Columns ([ ('fixed', 20, caption), buttonfield ])
         urwid.WidgetWrap.__init__(self, editpair)
 
     def getButtons(self):
@@ -172,7 +172,7 @@ class FieldAddButtons( urwid.WidgetWrap ):
             fieldname = self.json.getChildTitle(key)
             buttons.append(urwid.Button(fieldname,on_press,{'key':key}))
         #TODO: remove hard coded widths
-        return urwid.GridFlow( buttons, 13,3,1, 'left')
+        return urwid.GridFlow(buttons, 13,3,1, 'left')
 
 class JsonWidgetExit(Exception):
     pass
@@ -183,7 +183,7 @@ class JsonWidgetExit(Exception):
 class EntryForm:
     def __init__(self, json, program_name="JsonWidget"):
         self.ui = urwid.curses_display.Screen()
-        self.ui.register_palette( [ ('default', 'default', 'default'),
+        self.ui.register_palette([ ('default', 'default', 'default'),
                                     ('editfield', 'light gray', 'dark blue', 'underline'),
                                     ('editfieldfocus', 'white', 'dark red', 'underline'),
                                     ('header', 'light gray', 'dark red', 'standout'),
@@ -191,7 +191,7 @@ class EntryForm:
                                     ('footerstatusactive', 'light gray', 'dark blue', 'standout'),
                                     ('footerstatusedit', 'light gray', 'dark blue'),
                                     ('footerkeys', 'light gray', 'dark blue', 'standout'),
-                                    ('footerhelp', 'light gray', 'dark blue') ] )
+                                    ('footerhelp', 'light gray', 'dark blue') ])
         self.json = json
         self.schema = json.getSchemaNode()
         self.endstatusmessage = ""
@@ -200,17 +200,17 @@ class EntryForm:
 
     def run(self):
         widget = get_schema_widget(self.json)
-        self.walker = urwid.SimpleListWalker( [ widget ] )
-        listbox = urwid.ListBox( self.walker )
+        self.walker = urwid.SimpleListWalker([ widget ])
+        listbox = urwid.ListBox(self.walker)
         header = self.getHeader()
         footerstatus = self.getFooterStatusWidget()
         footerhelp = self.getFooterHelpWidget()
-        footer = urwid.Pile( [footerstatus, footerhelp] )
+        footer = urwid.Pile([footerstatus, footerhelp])
 
-        self.view = urwid.Frame( listbox, header=header, footer=footer )
+        self.view = urwid.Frame(listbox, header=header, footer=footer)
 
         try:
-            self.ui.run_wrapper( self.runLoop )
+            self.ui.run_wrapper(self.runLoop)
         except JsonWidgetExit:
             pass
 
@@ -221,17 +221,17 @@ class EntryForm:
             print self.endstatusmessage,
 
     def getHeader(self):
-        headerleft = urwid.Text( self.progname, align='left' )
+        headerleft = urwid.Text(self.progname, align='left')
         filename = self.json.getFilenameText()
         if self.json.isSaved() is False:
             filename += " (modified)"
-        headercenter = urwid.Text( filename, align='center' )
-        headerright = urwid.Text( "schema: "+self.schema.getFilenameText(), align='right' )
+        headercenter = urwid.Text(filename, align='center')
+        headerright = urwid.Text("schema: "+self.schema.getFilenameText(), align='right')
 
         header1columns = urwid.Columns([headerleft, headercenter, headerright])
         header1padded = urwid.Padding (header1columns, ('fixed left',2),
-                                       ('fixed right',2), 20 )
-        header1 = urwid.AttrWrap(header1padded , "header")
+                                       ('fixed right',2), 20)
+        header1 = urwid.AttrWrap(header1padded, "header")
         header2 = urwid.Text("")
         return urwid.Pile([header1, header2])
 
@@ -241,7 +241,7 @@ class EntryForm:
 
     def setFooter(self, widgets):
         self.clearFooterStatusTimer()
-        self.view.set_footer(urwid.Pile( widgets ))
+        self.view.set_footer(urwid.Pile(widgets))
 
     def setFooterStatusTimer(self, time):
         self.footertimer = threading.Timer(time, self.setDefaultFooter)
@@ -250,7 +250,7 @@ class EntryForm:
     def setDefaultFooter(self):
         footerstatus = self.getFooterStatusWidget()
         footerhelp = self.getFooterHelpWidget()
-        self.view.set_footer(urwid.Pile( [footerstatus, footerhelp] ))
+        self.view.set_footer(urwid.Pile([footerstatus, footerhelp]))
         self.ui.clear()
 
     def clearFooterStatusTimer(self):
@@ -269,14 +269,15 @@ class EntryForm:
 
     def getFooterHelpWidget(self, helptext=None, rows=2):
         if(helptext is None):
-            helptext =  [("^W","Write/Save"),("^X","Exit")]
+            helptext = [("^W","Write/Save"),("^X","Exit")]
         numcols = (len(helptext)+1)/rows
         helpcolumns = []
         for i in range(numcols):
             helpcolumns.append([])
 
         # populate the rows top to bottom, then left to right
-        i = 0; col = 0
+        i = 0
+        col = 0
         for item in helptext:
             textitem = urwid.Text([('footerkeys', item[0]), " ", item[1]])
             helpcolumns[col].append(textitem)
@@ -292,8 +293,8 @@ class EntryForm:
         size = self.ui.get_cols_rows()
         while(True):
             self.setHeader()
-            canvas = self.view.render( size, focus=1 )
-            self.ui.draw_screen( size, canvas )
+            canvas = self.view.render(size, focus=1)
+            self.ui.draw_screen(size, canvas)
             keys = None
             while(keys == None):
                 # self.ui.get_input() blocks for max_wait time, default 0.5 sec
@@ -313,7 +314,7 @@ class EntryForm:
                 elif key == 'ctrl w':
                     self.handleWriteToRequest()
                 else:
-                    self.view.keypress( size, key )
+                    self.view.keypress(size, key)
 
     def handleExitRequest(self):
         entryform = self
@@ -337,21 +338,21 @@ class EntryForm:
         helptext =  [("Y","Yes"),("N","No"),("ESC","Cancel")]
         footerstatus = self.getFooterStatusWidget(prompt, active=True)
         footerhelp = self.getFooterHelpWidget(helptext=helptext)
-        self.setFooter( [footerstatus, footerhelp] )
+        self.setFooter([footerstatus, footerhelp])
 
     def handleWriteToRequest(self, exit_on_save=False):
         entryform = self
         class CallbackEdit(urwid.Edit):
-            def keypress(self,(maxcol,),key):
-                urwid.Edit.keypress(self,(maxcol,),key)
+            def keypress(self, (maxcol,), key):
+                urwid.Edit.keypress(self, (maxcol,), key)
                 if key == 'enter':
                     currentfilename = entryform.json.getFilename()
                     entryform.json.setFilename(self.get_edit_text())
                     try:
                         entryform.handleSave()
-                        msg = "Saved "+entryform.json.getFilename()
+                        msg = "Saved " + entryform.json.getFilename()
                     except:
-                        msg = "FAILED TO WRITE "+entryform.json.getFilename()
+                        msg = "FAILED TO WRITE " + entryform.json.getFilename()
                         entryform.json.setFilename(currentfilename)
                     else:
                         if exit_on_save:
@@ -366,22 +367,22 @@ class EntryForm:
             filename = ""
         prompt = CallbackEdit('File name to write to? ', filename)
         self.view.set_focus("footer")
-        helptext =  [("Enter","Confirm"),("ESC","Cancel")]
+        helptext = [("Enter", "Confirm"), ("ESC", "Cancel")]
         footerstatus = self.getFooterStatusWidget(prompt, active=True)
         footerhelp = self.getFooterHelpWidget(helptext=helptext)
-        self.setFooter( [footerstatus, footerhelp] )
+        self.setFooter([footerstatus, footerhelp])
 
     def handleSave(self):
         self.json.saveToFile()
 
-    def handleSaveStatus(self,msg):
+    def handleSaveStatus(self, msg):
         self.setHeader()
         self.view.set_focus("body")
         msg = "  " + msg + "  "
         msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
         footerstatus = self.getFooterStatusWidget(msgwidget)
         footerhelp = self.getFooterHelpWidget()
-        self.setFooter( [footerstatus, footerhelp] )
+        self.setFooter([footerstatus, footerhelp])
         self.setFooterStatusTimer(5.0)
 
     def handleExit(self):
@@ -396,5 +397,3 @@ class EntryForm:
 
     def getEndStatusMessage(self):
         return self.endstatusmessage
-
-
