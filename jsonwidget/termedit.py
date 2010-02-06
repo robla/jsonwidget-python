@@ -5,8 +5,6 @@
 # All rights reserved.
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
-from jsonschema import *
-
 
 class Error(RuntimeError):
     pass
@@ -18,8 +16,10 @@ import threading
 import sys
 import os
 
-
-from floatedit import FloatEdit
+from jsonwidget.floatedit import FloatEdit
+from jsonwidget.schema import *
+from jsonwidget.jsonnode import *
+from jsonwidget.pinot import *
 
 
 def get_schema_widget(node):

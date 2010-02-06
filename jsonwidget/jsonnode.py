@@ -8,7 +8,7 @@
 import json
 
 from jsonwidget.schema import *
-
+from jsonwidget.jsonbase import *
 
 class Error(RuntimeError):
     pass

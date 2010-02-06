@@ -12,8 +12,7 @@ import optparse
 import sys
 import os
 
-from jsonschema import *
-from jsonforms_urwid import *
+from jsonwidget.termedit import *
 
 # Force monochrome for now.  Will probably revisit when 0.9.9 is widely
 # deployed
@@ -31,7 +30,7 @@ def main():
     usage = "usage: %prog [options] arg"
     parser = optparse.OptionParser(usage)
     parser.add_option("-s", "--schema", dest="schema",
-                      default="datatype-example-schema.json",
+                      default="schema/datatype-example-schema.json",
                       help="use this schema to build the form")
     parser.add_option("--tracebacks", dest="tracebacks",
                       default=False,

@@ -7,6 +7,7 @@
 
 import json
 
+from jsonwidget.jsonbase import *
 
 class Error(RuntimeError):
     pass
