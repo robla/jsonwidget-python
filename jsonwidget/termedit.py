@@ -1,13 +1,17 @@
 #!/usr/bin/python
-# Library for building urwid-based forms from JSON schemas
+# Library for building urwid-based forms from JSON schemas.
 #
 # Copyright (c) 2010, Rob Lanphier
 # All rights reserved.
 # Licensed under BSD-style license.  See LICENSE.txt for details.
+#
+# This file contains all of the glue between the JSON-specific code and the 
+# urwid-specific code.
 
 
-class Error(RuntimeError):
+class JsonEditorError(RuntimeError):
     pass
+
 
 import json
 import urwid.curses_display
@@ -31,7 +35,7 @@ def get_schema_widget(node):
     if(isinstance(node, JsonNode)):
         jsonnode = node
     else:
-        raise Error("Type error: %s" % type(node).__name__)
+        raise JsonEditorError("Type error: %s" % type(node).__name__)
 
     # we want to make sure that we use a schema-appropriate edit widget, so
     # don't use jsonnode.get_type() directly.
@@ -203,10 +207,6 @@ class FieldAddButtons(urwid.WidgetWrap):
             buttons.append(urwid.Button(fieldname, on_press, {'key': key}))
         #TODO: remove hard coded widths
         return urwid.GridFlow(buttons, 13, 3, 1, 'left')
-
-
-class JsonWidgetExit(Exception):
-    pass
 
 
 class JsonPinotFile(PinotFile):

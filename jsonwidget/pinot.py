@@ -1,15 +1,30 @@
 #!/usr/bin/python
-# Library for building urwid-based forms from JSON schemas
+# Pinot - set of classes for building a pine/pico/nano-inspired editor
 #
 # Copyright (c) 2010, Rob Lanphier
 # All rights reserved.
 # Licensed under BSD-style license.  See LICENSE.txt for details.
+#
+# classes:
+# RetroMainLoop - Main event loop base routines
+# PinotUserInterface - pine/pico/nano-inspired user interface routines
+# PinotFileEditor - Standalone file editor methods (load file, save file)
+#
+# The chain of classes below are the result of breaking up one monolithic
+# class broken out from jsonwdiget.   As of this writing, there isn't clean 
+# separation between these, and there's a few remaining ties to json, but 
+# future work will strive to separate these more cleanly.
+#
 
 
-class Error(RuntimeError):
+class PinotError(RuntimeError):
     pass
 
-import json
+
+class PinotExit(Exception):
+    pass
+
+
 import urwid.curses_display
 import urwid
 import threading
@@ -20,17 +35,6 @@ import os
 from jsonwidget.schema import *
 from jsonwidget.jsonnode import *
 from jsonwidget.pinot import *
-
-
-# The chain of classes below are the result of breaking up one monolithic
-# class.   As of this writing, there isn't clean separation between these, but 
-# future work will strive to separate these more cleanly.
-    
-# Sections:
-# RetroMainLoop - Main event loop base routines
-# PinotUserInterface - pine/pico/nano-inspired user interface routines
-# PinotFileEditor - Standalone file editor methods (load file, save file)
-# JsonEditor - JSON editor-specific commands
 
 
 class RetroMainLoop(object):
@@ -69,7 +73,7 @@ class RetroMainLoop(object):
 
         try:
             self.ui.run_wrapper(self.run_loop)
-        except JsonWidgetExit:
+        except PinotExit:
             pass
 
         # need to clear this timer, or else we have to wait for the timer
@@ -285,20 +289,20 @@ class PinotFileEditor(PinotUserInterface):
             nofunc=self.handle_exit)
 
     def handle_save(self):
-        self.json.save_to_file()
+        self.file.save_to_file()
 
     def handle_save_and_exit(self):
-        if self.json.get_filename() is None:
+        if self.file.get_filename() is None:
             self.cleanup_user_question()
             self.handle_write_to_request(exit_on_save=True)
         else:
             self.handle_save()
-            msg = "Saved " + self.json.get_filename() + "\n"
+            msg = "Saved " + self.file.get_filename() + "\n"
             self.append_end_status_message(msg)
             self.handle_exit()
 
     def handle_exit(self):
-        raise JsonWidgetExit()
+        raise PinotExit()
 
     def append_end_status_message(self, status):
         self.endstatusmessage += status
