@@ -35,7 +35,7 @@ def show_form(schemafile, jsonfile):
     else:
         # must be a new file
         jsonobj = JsonNode(filename=None, schemafile=schemafile)
-        jsonobj.setFilename(jsonfile)
+        jsonobj.set_filename(jsonfile)
 
     form = EntryForm(jsonobj, program_name="jsonedit 0.1pre")
     form.run()

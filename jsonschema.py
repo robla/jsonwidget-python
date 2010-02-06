@@ -16,16 +16,16 @@ class JsonBaseNode:
     """ abstract base class for SchemaNode and JsonNode """
     # TODO: pull more functions in from subclasses
 
-    def getFilename(self):
+    def get_filename(self):
         return self.filename
 
-    def getFilenameText(self):
+    def get_filename_text(self):
         if self.filename is None:
             return "(new file)"
         else:
             return self.filename
 
-    def setFilename(self, filename):
+    def set_filename(self, filename):
         self.filename = filename
         self.savededitcount = 0
 
@@ -41,7 +41,7 @@ class SchemaNode(JsonBaseNode):
         if filename is not None:
             self.filename = filename
             if data is None:
-                self.loadFromFile()
+                self.load_from_file()
         else:
             self.data = data
 
@@ -53,8 +53,8 @@ class SchemaNode(JsonBaseNode):
             self.depth = 0
             self.rootschema = self
         else:
-            self.depth = self.parent.getDepth() + 1
-            self.rootschema = self.parent.getRootSchema()
+            self.depth = self.parent.get_depth() + 1
+            self.rootschema = self.parent.get_root_schema()
         if(self.data['type'] == 'map'):
             self.children = {}
             for subkey, subdata in self.data['mapping'].items():
@@ -64,30 +64,30 @@ class SchemaNode(JsonBaseNode):
             self.children = [SchemaNode(key=0, data=self.data['sequence'][0],
                                         parent=self)]
 
-    def loadFromFile(self, filename=None):
+    def load_from_file(self, filename=None):
         if filename is not None:
             self.filename = file
         self.data = json.load(open(self.filename))
 
-    def getDepth(self):
+    def get_depth(self):
         return self.depth
 
-    def getRootSchema(self):
+    def get_root_schema(self):
         return self.rootschema
 
-    def getTitle(self):
+    def get_title(self):
         if 'title' in self.data:
             return self.data['title']
         else:
-            if self.depth > 0 and self.parent.getType() == 'seq':
-                return self.parent.getTitle()
+            if self.depth > 0 and self.parent.get_type() == 'seq':
+                return self.parent.get_title()
             else:
                 return str(self.key)
 
-    def getType(self):
+    def get_type(self):
         return self.data['type']
 
-    def getChildren(self):
+    def get_children(self):
         """
         Get a list of children, possibly ordered.  Note that even though the
         JSON spec says maps are unordered, it's pretty rude to muck with
@@ -103,8 +103,8 @@ class SchemaNode(JsonBaseNode):
             raise Error("self.children has invalid type %s" %
                         type(self.children).__name__)
 
-    def getChild(self, key):
-        type = self.getType()
+    def get_child(self, key):
+        type = self.get_type()
         if(type == 'map'):
             return self.children[key]
         elif(type == 'seq'):
@@ -112,20 +112,20 @@ class SchemaNode(JsonBaseNode):
         else:
             raise Error("self.children has invalid type %s" % type)
 
-    def getChildKeys(self):
+    def get_child_keys(self):
         return self.children.keys()
 
-    def getKey(self):
+    def get_key(self):
         return self.key
 
-    def isEnum(self):
+    def is_enum(self):
         return ('enum' in self.data)
 
-    def enumOptions(self):
+    def enum_options(self):
         return self.data['enum']
 
-    def getBlankValue(self):
-        type = self.getType()
+    def get_blank_value(self):
+        type = self.get_type()
         if(type == 'map'):
             retval = {}
         elif(type == 'seq'):
@@ -152,7 +152,7 @@ class JsonNode(JsonBaseNode):
         self.filename = filename
         if self.filename is not None:
             if data is None:
-                self.loadFromFile()
+                self.load_from_file()
         else:
             self.data = data
 
@@ -166,7 +166,7 @@ class JsonNode(JsonBaseNode):
         self.key = key
         # object ref for the parent
         self.parent = parent
-        # self.children will get set in attachSchemaNode if there are any
+        # self.children will get set in attach_schema_node if there are any
         self.children = []
 
 
@@ -178,29 +178,29 @@ class JsonNode(JsonBaseNode):
             self.editcount = 0
             self.savededitcount = 0
         else:
-            self.depth = self.parent.getDepth() + 1
-            self.root = self.parent.getRoot()
+            self.depth = self.parent.get_depth() + 1
+            self.root = self.parent.get_root()
 
-        if not self.isTypeMatch(schemanode):
+        if not self.is_type_match(schemanode):
             raise Error("Validation error: type mismatch -" +
                         " key: " + self.key +
                         " data: " + str(self.data) +
-                        " jsontype: " + self.getType() +
-                        " schematype: " + schemanode.getType())
+                        " jsontype: " + self.get_type() +
+                        " schematype: " + schemanode.get_type())
         else:
-            self.attachSchemaNode(schemanode)
+            self.attach_schema_node(schemanode)
         if self.depth == 0:
-            self.setSaved(True)
+            self.set_saved(True)
 
-    def getRoot(self):
+    def get_root(self):
         return self.root
 
-    def loadFromFile(self, filename=None):
+    def load_from_file(self, filename=None):
         if filename is not None:
             self.filename = filename
         self.data = json.load(open(self.filename))
 
-    def saveToFile(self, filename=None):
+    def save_to_file(self, filename=None):
         if filename is not None:
             self.filename = filename
         if self.filename is None:
@@ -209,52 +209,52 @@ class JsonNode(JsonBaseNode):
             self.filename = fd.name
         else:
             fd = open(self.filename, 'w+')
-        json.dump(self.getData(), fd, indent=4)
+        json.dump(self.get_data(), fd, indent=4)
         self.savededitcount = self.editcount
 
-    def isTypeMatch(self, schemanode):
-        jsontype = self.getType()
-        schematype = schemanode.getType()
+    def is_type_match(self, schemanode):
+        jsontype = self.get_type()
+        schematype = schemanode.get_type()
 
         # is the json type appropriate for the expected schema type?
-        isTypeMatch = (schematype == 'any' or
+        is_type_match = (schematype == 'any' or
                        schematype == jsontype or
                        jsontype == 'none' or
                        (jsontype == 'int' and schematype == 'number'))
 
-        return isTypeMatch
+        return is_type_match
 
-    def attachSchemaNode(self, schemanode):
+    def attach_schema_node(self, schemanode):
         '''Pair this data node to the corresponding part of the schema'''
         self.schemanode = schemanode
 
-        jsontype = self.getType()
-        schematype = schemanode.getType()
+        jsontype = self.get_type()
+        schematype = schemanode.get_type()
         if schematype == 'map':
             self.children = {}
         elif schematype == 'seq':
             self.children = []
         if jsontype == 'map':
             for subkey, subdata in self.data.items():
-                subschemanode = self.schemanode.getChild(subkey)
+                subschemanode = self.schemanode.get_child(subkey)
                 if subschemanode is None:
                     raise("Validation error: %s not a valid key in %s" %
-                          (subkey, self.schemanode.getKey()))
+                          (subkey, self.schemanode.get_key()))
                 self.children[subkey] = JsonNode(key=subkey, data=subdata,
                                                  parent=self,
                                                  schemanode=subschemanode)
         elif jsontype == 'seq':
             i = 0
             for subdata in self.data:
-                subschemanode = self.schemanode.getChild(i)
+                subschemanode = self.schemanode.get_child(i)
                 self.children.append(JsonNode(key=i, data=subdata, parent=self,
                                               schemanode=subschemanode))
                 i += 1
 
-    def getSchemaNode(self):
+    def get_schema_node(self):
         return self.schemanode
 
-    def getType(self):
+    def get_type(self):
         """Get type string as defined by the schema language"""
 
         if(isinstance(self.data, basestring)):
@@ -274,13 +274,13 @@ class JsonNode(JsonBaseNode):
         else:
             raise Error("unknown type: %s" % type(self.data).__name__)
 
-    def getKey(self):
+    def get_key(self):
         return self.key
 
-    def getData(self):
+    def get_data(self):
         return self.data
 
-    def setData(self, data):
+    def set_data(self, data):
         """Set raw data"""
 
         # TODO: move to storing child data exclusively in children, because
@@ -290,9 +290,9 @@ class JsonNode(JsonBaseNode):
             self.root.editcount += 1
         self.data = data
         if(self.depth > 0):
-            self.parent.setChildData(self.key, data)
+            self.parent.set_child_data(self.key, data)
 
-    def getChildren(self):
+    def get_children(self):
         """
         Get a list of children, possibly ordered.  Note that even though the
         JSON spec says maps are unordered, it's pretty rude to muck with
@@ -308,31 +308,31 @@ class JsonNode(JsonBaseNode):
             raise Error("self.children has invalid type %s" %
                         type(self.children).__name__)
 
-    def getChildKeys(self):
+    def get_child_keys(self):
         return self.children.keys()
 
-    def getAvailableKeys(self):
+    def get_available_keys(self):
         """
         This function returns the list of keys that don't yet have associated
         json child nodes associated with them.
         """
 
-        if(self.schemanode.getType() == 'map'):
-            schemakeys = set(self.schemanode.getChildKeys())
-            jsonkeys = set(self.getChildKeys())
+        if(self.schemanode.get_type() == 'map'):
+            schemakeys = set(self.schemanode.get_child_keys())
+            jsonkeys = set(self.get_child_keys())
             unusedkeys = schemakeys.difference(jsonkeys)
             return list(unusedkeys)
-        elif(self.schemanode.getType() == 'seq'):
+        elif(self.schemanode.get_type() == 'seq'):
             return [len(self.children)]
         else:
-            raise Error("type %s not implemented" % self.getType())
+            raise Error("type %s not implemented" % self.get_type())
 
-    def setChildData(self, key, data):
+    def set_child_data(self, key, data):
         if(self.data is None):
-            type = self.schemanode.getType()
-            self.data = self.schemanode.getBlankValue()
+            type = self.schemanode.get_type()
+            self.data = self.schemanode.get_blank_value()
             self.root.editcount += 1
-        if(self.getType() == 'seq' and key == len(self.data)):
+        if(self.get_type() == 'seq' and key == len(self.data)):
             self.data.append(data)
             self.root.editcount += 1
         else:
@@ -340,58 +340,58 @@ class JsonNode(JsonBaseNode):
                 self.root.editcount += 1
             self.data[key] = data
 
-    def isSaved(self):
+    def is_saved(self):
         return self.savededitcount == self.editcount
 
-    def setSaved(self, saved):
+    def set_saved(self, saved):
         if(saved):
             self.editcount = 0
         else:
             self.editcount = 1
         self.savededitcount = 0
 
-    def addChild(self, key=None):
-        schemanode = self.schemanode.getChild(key)
-        newnode = JsonNode(key=key, data=schemanode.getBlankValue(),
+    def add_child(self, key=None):
+        schemanode = self.schemanode.get_child(key)
+        newnode = JsonNode(key=key, data=schemanode.get_blank_value(),
                            parent=self, schemanode=schemanode)
-        self.setChildData(key, newnode.getData())
-        if(self.getType() == 'seq'):
+        self.set_child_data(key, newnode.get_data())
+        if(self.get_type() == 'seq'):
             self.children.insert(key, newnode)
         else:
             self.children[key] = newnode
 
-    def isEnum(self):
+    def is_enum(self):
         return ('enum' in self.data)
 
-    def enumOptions(self):
+    def enum_options(self):
         return self.data['enum']
 
-    def getDepth(self):
+    def get_depth(self):
         """How deep is this node in the tree?"""
         return self.depth
 
-    def printTree(self):
+    def print_tree(self):
         """Debugging function"""
-        jsontype = self.getType()
+        jsontype = self.get_type()
         if jsontype == 'map' or jsontype == 'seq':
-            print self.schemanode.getTitle()
-            for child in self.getChildren():
-                child.printTree()
+            print self.schemanode.get_title()
+            for child in self.get_children():
+                child.print_tree()
         else:
-            print self.schemanode.getTitle() + ": " + self.getData()
+            print self.schemanode.get_title() + ": " + self.get_data()
 
-    def getTitle(self):
-        schematitle = self.schemanode.getTitle()
-        if(self.depth > 0 and self.parent.schemanode.getType() == 'seq'):
-            title = "%s #%i" % (schematitle, self.getKey() + 1)
+    def get_title(self):
+        schematitle = self.schemanode.get_title()
+        if(self.depth > 0 and self.parent.schemanode.get_type() == 'seq'):
+            title = "%s #%i" % (schematitle, self.get_key() + 1)
         else:
             title = schematitle
         return title
 
-    def getChildTitle(self, key):
-        childschema = self.schemanode.getChild(key)
-        schematitle = childschema.getTitle()
-        if(self.schemanode.getType() == 'seq'):
+    def get_child_title(self, key):
+        childschema = self.schemanode.get_child(key)
+        schematitle = childschema.get_title()
+        if(self.schemanode.get_type() == 'seq'):
             title = "%s #%i" % (schematitle, key + 1)
         else:
             title = schematitle

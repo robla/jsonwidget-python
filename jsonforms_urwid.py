@@ -31,23 +31,23 @@ def get_schema_widget(node):
         raise Error("Type error: %s" % type(node).__name__)
 
     # we want to make sure that we use a schema-appropriate edit widget, so
-    # don't use jsonnode.getType() directly.
-    schemanode = jsonnode.getSchemaNode()
+    # don't use jsonnode.get_type() directly.
+    schemanode = jsonnode.get_schema_node()
 
-    if(schemanode.getType() == 'map'):
+    if(schemanode.get_type() == 'map'):
         return ArrayEditWidget(jsonnode)
-    elif(schemanode.getType() == 'seq'):
+    elif(schemanode.get_type() == 'seq'):
         return ArrayEditWidget(jsonnode)
-    elif(schemanode.getType() == 'str'):
-        if(schemanode.isEnum()):
+    elif(schemanode.get_type() == 'str'):
+        if(schemanode.is_enum()):
             return EnumEditWidget(jsonnode)
         else:
             return GenericEditWidget(jsonnode)
-    elif(schemanode.getType() == 'int'):
+    elif(schemanode.get_type() == 'int'):
         return IntEditWidget(jsonnode)
-    elif(schemanode.getType() == 'number'):
+    elif(schemanode.get_type() == 'number'):
         return NumberEditWidget(jsonnode)
-    elif(schemanode.getType() == 'bool'):
+    elif(schemanode.get_type() == 'bool'):
         return BoolEditWidget(jsonnode)
     else:
         return GenericEditWidget(jsonnode)
@@ -60,26 +60,26 @@ class ArrayEditWidget(urwid.WidgetWrap):
 
     def __init__(self, jsonnode):
         self.json = jsonnode
-        self.schema = jsonnode.getSchemaNode()
+        self.schema = jsonnode.get_schema_node()
         maparray = []
-        maparray.append(urwid.Text(self.json.getTitle() + ": "))
+        maparray.append(urwid.Text(self.json.get_title() + ": "))
         leftmargin = urwid.Text("")
 
-        mapfields = self.buildPile()
+        mapfields = self.build_pile()
         self.indentedmap = urwid.Columns([('fixed', 2, leftmargin), mapfields])
         maparray.append(self.indentedmap)
         mappile = urwid.Pile(maparray)
         return urwid.WidgetWrap.__init__(self, mappile)
 
-    def addNode(self, key):
-        self.json.addChild(key)
-        self.indentedmap.widget_list[1] = self.buildPile()
+    def add_node(self, key):
+        self.json.add_child(key)
+        self.indentedmap.widget_list[1] = self.build_pile()
 
-    def buildPile(self):
+    def build_pile(self):
         """Build a vertically stacked array of widgets"""
         pilearray = []
 
-        for child in self.json.getChildren():
+        for child in self.json.get_children():
             pilearray.append(get_schema_widget(child))
         pilearray.append(FieldAddButtons(self, self.json))
 
@@ -90,20 +90,20 @@ class GenericEditWidget(urwid.WidgetWrap):
     """ generic widget used for free text entry (e.g. strings)"""
 
     def __init__(self, jsonnode):
-        self.schema = jsonnode.getSchemaNode()
+        self.schema = jsonnode.get_schema_node()
         self.json = jsonnode
-        editcaption = urwid.Text(('default', self.json.getTitle() + ": "))
-        editfield = self.getEditFieldWidget()
+        editcaption = urwid.Text(('default', self.json.get_title() + ": "))
+        editfield = self.get_edit_field_widget()
         editpair = urwid.Columns([('fixed', 20, editcaption), editfield])
         urwid.WidgetWrap.__init__(self, editpair)
 
-    def getWidgetBaseClass(self):
+    def get_widget_base_class(self):
         return urwid.Edit
 
-    def storeTextAsData(self, text):
-        self.json.setData(text)
+    def store_text_as_data(self, text):
+        self.json.set_data(text)
 
-    def getEditFieldWidget(self):
+    def get_edit_field_widget(self):
         thiswidget = self
 
         # CallbackEdit is a closure which effectively gives this object a
@@ -111,65 +111,65 @@ class GenericEditWidget(urwid.WidgetWrap):
         # figuring out how to properly use Signals, which may need to wait
         # until I upgrade to using urwid 0.99.
 
-        class CallbackEdit(self.getWidgetBaseClass()):
+        class CallbackEdit(self.get_widget_base_class()):
 
             def set_edit_text(self, text):
                 urwid.Edit.set_edit_text(self, text)
-                thiswidget.storeTextAsData(text)
+                thiswidget.store_text_as_data(text)
 
-        innerwidget = CallbackEdit("", str(self.json.getData()))
+        innerwidget = CallbackEdit("", str(self.json.get_data()))
         return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
 
 
 class IntEditWidget(GenericEditWidget):
     """ Integer edit widget"""
 
-    def getWidgetBaseClass(self):
+    def get_widget_base_class(self):
         return urwid.IntEdit
 
-    def storeTextAsData(self, text):
-        self.json.setData(int(text))
+    def store_text_as_data(self, text):
+        self.json.set_data(int(text))
 
 
 class NumberEditWidget(GenericEditWidget):
     """ Number edit widget"""
 
-    def getWidgetBaseClass(self):
+    def get_widget_base_class(self):
         return FloatEdit
 
-    def storeTextAsData(self, text):
-        self.json.setData(float(text))
+    def store_text_as_data(self, text):
+        self.json.set_data(float(text))
 
 
 class BoolEditWidget(GenericEditWidget):
     """ Boolean edit widget"""
 
-    def getEditFieldWidget(self):
+    def get_edit_field_widget(self):
         thiswidget = self
 
         def on_state_change(self, state, user_data=None):
-            thiswidget.json.setData(state)
+            thiswidget.json.set_data(state)
 
-        return urwid.CheckBox("", self.json.getData(),
+        return urwid.CheckBox("", self.json.get_data(),
                               on_state_change=on_state_change)
 
 
 class EnumEditWidget(GenericEditWidget):
     """ Enumerated string edit widget"""
 
-    def getEditFieldWidget(self):
+    def get_edit_field_widget(self):
         options = []
         self.radiolist = []
         thiswidget = self
-        for option in self.schema.enumOptions():
-            if(self.json.getData() == option):
+        for option in self.schema.enum_options():
+            if(self.json.get_data() == option):
                 state = True
             else:
                 state = False
 
             def on_state_change(self, state, user_data=None):
                 if state:
-                    thiswidget.json.setData(user_data)
+                    thiswidget.json.set_data(user_data)
 
             options.append(urwid.RadioButton(self.radiolist, option,
                                              state=state, user_data=option,
@@ -184,19 +184,19 @@ class FieldAddButtons(urwid.WidgetWrap):
         self.parentwidget = parentwidget
         self.json = json
         caption = urwid.Text(('default', "Add fields: "))
-        buttonfield = self.getButtons()
+        buttonfield = self.get_buttons()
         editpair = urwid.Columns([('fixed', 20, caption), buttonfield])
         urwid.WidgetWrap.__init__(self, editpair)
 
-    def getButtons(self):
+    def get_buttons(self):
         parentwidget = self.parentwidget
         buttons = []
 
         def on_press(button, user_data=None):
-            parentwidget.addNode(user_data['key'])
+            parentwidget.add_node(user_data['key'])
 
-        for key in self.json.getAvailableKeys():
-            fieldname = self.json.getChildTitle(key)
+        for key in self.json.get_available_keys():
+            fieldname = self.json.get_child_title(key)
             buttons.append(urwid.Button(fieldname, on_press, {'key': key}))
         #TODO: remove hard coded widths
         return urwid.GridFlow(buttons, 13, 3, 1, 'left')
@@ -225,7 +225,7 @@ class EntryForm:
             ('footerkeys', 'light gray', 'dark blue', 'standout'),
             ('footerhelp', 'light gray', 'dark blue')])
         self.json = json
-        self.schema = json.getSchemaNode()
+        self.schema = json.get_schema_node()
         self.endstatusmessage = ""
         self.progname = program_name
         self.footertimer = None
@@ -234,31 +234,31 @@ class EntryForm:
         widget = get_schema_widget(self.json)
         self.walker = urwid.SimpleListWalker([widget])
         listbox = urwid.ListBox(self.walker)
-        header = self.getHeader()
-        footerstatus = self.getFooterStatusWidget()
-        footerhelp = self.getFooterHelpWidget()
+        header = self.get_header()
+        footerstatus = self.get_footer_status_widget()
+        footerhelp = self.get_footer_help_widget()
         footer = urwid.Pile([footerstatus, footerhelp])
 
         self.view = urwid.Frame(listbox, header=header, footer=footer)
 
         try:
-            self.ui.run_wrapper(self.runLoop)
+            self.ui.run_wrapper(self.run_loop)
         except JsonWidgetExit:
             pass
 
         # need to clear this timer, or else we have to wait for the timer
         # before the app exits
-        self.clearFooterStatusTimer()
+        self.clear_footer_status_timer()
         if not self.endstatusmessage == "":
             print self.endstatusmessage,
 
-    def getHeader(self):
+    def get_header(self):
         headerleft = urwid.Text(self.progname, align='left')
-        filename = self.json.getFilenameText()
-        if self.json.isSaved() is False:
+        filename = self.json.get_filename_text()
+        if self.json.is_saved() is False:
             filename += " (modified)"
         headercenter = urwid.Text(filename, align='center')
-        headerright = urwid.Text("schema: " + self.schema.getFilenameText(),
+        headerright = urwid.Text("schema: " + self.schema.get_filename_text(),
                                  align='right')
 
         header1columns = urwid.Columns([headerleft, headercenter, headerright])
@@ -268,29 +268,29 @@ class EntryForm:
         header2 = urwid.Text("")
         return urwid.Pile([header1, header2])
 
-    def setHeader(self):
-        header = self.getHeader()
+    def set_header(self):
+        header = self.get_header()
         self.view.set_header(header)
 
-    def setFooter(self, widgets):
-        self.clearFooterStatusTimer()
+    def set_footer(self, widgets):
+        self.clear_footer_status_timer()
         self.view.set_footer(urwid.Pile(widgets))
 
-    def setFooterStatusTimer(self, time):
-        self.footertimer = threading.Timer(time, self.setDefaultFooter)
+    def set_footer_status_timer(self, time):
+        self.footertimer = threading.Timer(time, self.set_default_footer)
         self.footertimer.start()
 
-    def setDefaultFooter(self):
-        footerstatus = self.getFooterStatusWidget()
-        footerhelp = self.getFooterHelpWidget()
+    def set_default_footer(self):
+        footerstatus = self.get_footer_status_widget()
+        footerhelp = self.get_footer_help_widget()
         self.view.set_footer(urwid.Pile([footerstatus, footerhelp]))
         self.ui.clear()
 
-    def clearFooterStatusTimer(self):
+    def clear_footer_status_timer(self):
         if self.footertimer is not None:
             self.footertimer.cancel()
 
-    def getFooterStatusWidget(self, widget=None, active=False):
+    def get_footer_status_widget(self, widget=None, active=False):
         if widget is None:
             widget = urwid.Text("")
 
@@ -300,7 +300,7 @@ class EntryForm:
             wrapped = urwid.AttrWrap(widget, "footerstatusdormant")
         return urwid.Pile([wrapped])
 
-    def getFooterHelpWidget(self, helptext=None, rows=2):
+    def get_footer_help_widget(self, helptext=None, rows=2):
         if(helptext is None):
             helptext = [("^W", "Write/Save"), ("^X", "Exit")]
         numcols = (len(helptext) + 1) / rows
@@ -323,10 +323,10 @@ class EntryForm:
             helpwidgets.append(urwid.Pile(helpcol))
         return urwid.Columns(helpwidgets)
 
-    def runLoop(self):
+    def run_loop(self):
         size = self.ui.get_cols_rows()
         while(True):
-            self.setHeader()
+            self.set_header()
             canvas = self.view.render(size, focus=1)
             self.ui.draw_screen(size, canvas)
             keys = None
@@ -341,43 +341,43 @@ class EntryForm:
                 if key == 'window resize':
                     size = self.ui.get_cols_rows()
                 elif key == 'ctrl x':
-                    if self.json.isSaved():
-                        self.handleExit()
+                    if self.json.is_saved():
+                        self.handle_exit()
                     else:
-                        self.handleExitRequest()
+                        self.handle_exit_request()
                 elif key == 'ctrl w':
-                    self.handleWriteToRequest()
+                    self.handle_write_to_request()
                 else:
                     self.view.keypress(size, key)
 
-    def handleExitRequest(self):
+    def handle_exit_request(self):
         entryform = self
 
         class CallbackEdit(urwid.Edit):
 
             def keypress(self, (maxcol, ), key):
                 if key == 'y':
-                    if entryform.json.getFilename() is None:
-                        entryform.cleanupUserQuestion()
-                        entryform.handleWriteToRequest(exit_on_save=True)
+                    if entryform.json.get_filename() is None:
+                        entryform.cleanup_user_question()
+                        entryform.handle_write_to_request(exit_on_save=True)
                     else:
-                        entryform.handleSave()
-                        msg = "Saved " + entryform.json.getFilename() + "\n"
-                        entryform.appendEndStatusMessage(msg)
-                        entryform.handleExit()
+                        entryform.handle_save()
+                        msg = "Saved " + entryform.json.get_filename() + "\n"
+                        entryform.append_end_status_message(msg)
+                        entryform.handle_exit()
                 elif key == 'n':
-                    entryform.handleExit()
+                    entryform.handle_exit()
                 elif key == 'esc':
-                    entryform.cleanupUserQuestion()
+                    entryform.cleanup_user_question()
         prompt = CallbackEdit(
             'Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ', "")
         self.view.set_focus("footer")
         helptext = [("Y", "Yes"), ("N", "No"), ("ESC", "Cancel")]
-        footerstatus = self.getFooterStatusWidget(prompt, active=True)
-        footerhelp = self.getFooterHelpWidget(helptext=helptext)
-        self.setFooter([footerstatus, footerhelp])
+        footerstatus = self.get_footer_status_widget(prompt, active=True)
+        footerhelp = self.get_footer_help_widget(helptext=helptext)
+        self.set_footer([footerstatus, footerhelp])
 
-    def handleWriteToRequest(self, exit_on_save=False):
+    def handle_write_to_request(self, exit_on_save=False):
         entryform = self
 
         class CallbackEdit(urwid.Edit):
@@ -385,54 +385,54 @@ class EntryForm:
             def keypress(self, (maxcol, ), key):
                 urwid.Edit.keypress(self, (maxcol, ), key)
                 if key == 'enter':
-                    currentfilename = entryform.json.getFilename()
-                    entryform.json.setFilename(self.get_edit_text())
+                    currentfilename = entryform.json.get_filename()
+                    entryform.json.set_filename(self.get_edit_text())
                     try:
-                        entryform.handleSave()
-                        msg = "Saved " + entryform.json.getFilename()
+                        entryform.handle_save()
+                        msg = "Saved " + entryform.json.get_filename()
                     except:
-                        msg = "FAILED TO WRITE " + entryform.json.getFilename()
-                        entryform.json.setFilename(currentfilename)
+                        msg = "FAILED TO WRITE " + entryform.json.get_filename()
+                        entryform.json.set_filename(currentfilename)
                     else:
                         if exit_on_save:
                             msg += "\n"
-                            entryform.appendEndStatusMessage(msg)
-                            entryform.handleExit()
-                    entryform.handleSaveStatus(msg)
+                            entryform.append_end_status_message(msg)
+                            entryform.handle_exit()
+                    entryform.handle_save_status(msg)
                 elif key == 'esc':
-                    entryform.cleanupUserQuestion()
-        filename = entryform.json.getFilename()
+                    entryform.cleanup_user_question()
+        filename = entryform.json.get_filename()
         if filename is None:
             filename = ""
         prompt = CallbackEdit('File name to write to? ', filename)
         self.view.set_focus("footer")
         helptext = [("Enter", "Confirm"), ("ESC", "Cancel")]
-        footerstatus = self.getFooterStatusWidget(prompt, active=True)
-        footerhelp = self.getFooterHelpWidget(helptext=helptext)
-        self.setFooter([footerstatus, footerhelp])
+        footerstatus = self.get_footer_status_widget(prompt, active=True)
+        footerhelp = self.get_footer_help_widget(helptext=helptext)
+        self.set_footer([footerstatus, footerhelp])
 
-    def handleSave(self):
-        self.json.saveToFile()
+    def handle_save(self):
+        self.json.save_to_file()
 
-    def handleSaveStatus(self, msg):
-        self.setHeader()
+    def handle_save_status(self, msg):
+        self.set_header()
         self.view.set_focus("body")
         msg = "  " + msg + "  "
         msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
-        footerstatus = self.getFooterStatusWidget(msgwidget)
-        footerhelp = self.getFooterHelpWidget()
-        self.setFooter([footerstatus, footerhelp])
-        self.setFooterStatusTimer(5.0)
+        footerstatus = self.get_footer_status_widget(msgwidget)
+        footerhelp = self.get_footer_help_widget()
+        self.set_footer([footerstatus, footerhelp])
+        self.set_footer_status_timer(5.0)
 
-    def handleExit(self):
+    def handle_exit(self):
         raise JsonWidgetExit()
 
-    def cleanupUserQuestion(self):
+    def cleanup_user_question(self):
         self.view.set_focus("body")
-        self.setDefaultFooter()
+        self.set_default_footer()
 
-    def appendEndStatusMessage(self, status):
+    def append_end_status_message(self, status):
         self.endstatusmessage += status
 
-    def getEndStatusMessage(self):
+    def get_end_status_message(self):
         return self.endstatusmessage
