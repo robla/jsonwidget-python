@@ -15,6 +15,9 @@ import json
 import urwid.curses_display
 import urwid
 import threading
+import sys
+import os
+
 
 from floatedit import FloatEdit
 
@@ -206,26 +209,25 @@ class JsonWidgetExit(Exception):
     pass
 
 
-class EntryForm:
-    """The top-level form where all of the widgets get placed."""
-
-    # Methods are broken up into a few sections that will probably be broken
-    # out into their own objects one day.  As of this writing, there isn't 
-    # clean separation between these, but future work will strive to separate
-    # these more cleanly.
+# The chain of classes below are the result of breaking up one monolithic
+# class.   As of this writing, there isn't clean separation between these, but 
+# future work will strive to separate these more cleanly.
     
-    # Sections:
-    # 1. Main event loop base routines
-    # 2. pine/pico/nano-inspired user interface routines
-    # 3. Standalone editor specific methods
-    # 4. JSON editor specific commands
+# Sections:
+# RetroMainLoop - Main event loop base routines
+# PinotUserInterface - pine/pico/nano-inspired user interface routines
+# PinotFileEditor - Standalone file editor methods (load file, save file)
+# JsonEditor - JSON editor-specific commands
 
-    ##########
-    # 1. Main event loop base routines
-    # I'm guessing this should get replaced with a MainLoop when this moves
-    # to urwid 0.99.
 
-    def __init__(self, json, program_name="JsonWidget"):
+class RetroMainLoop(object):
+    """
+    Main event loop base routines
+    I'm guessing this should get replaced with a MainLoop when this moves
+    to urwid 0.99.
+    """
+
+    def __init__(self, program_name="RetroMainLoop"):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette([
             ('default', 'default', 'default'),
@@ -237,14 +239,12 @@ class EntryForm:
             ('footerstatusedit', 'light gray', 'dark blue'),
             ('footerkeys', 'light gray', 'dark blue', 'standout'),
             ('footerhelp', 'light gray', 'dark blue')])
-        self.json = json
-        self.schema = json.get_schema_node()
         self.endstatusmessage = ""
         self.progname = program_name
         self.footertimer = None
 
     def run(self):
-        widget = get_schema_widget(self.json)
+        widget = self.file.get_edit_widget()
         self.walker = urwid.SimpleListWalker([widget])
         listbox = urwid.ListBox(self.walker)
         header = self.get_header()
@@ -280,10 +280,12 @@ class EntryForm:
                 except KeyboardInterrupt:
                     pass
             for key in keys:
+                # TODO: fix layer violation here.  ctrl keys should be handled
+                # in subclasses
                 if key == 'window resize':
                     size = self.ui.get_cols_rows()
                 elif key == 'ctrl x':
-                    if self.json.is_saved():
+                    if self.file.is_saved():
                         self.handle_exit()
                     else:
                         self.handle_exit_request()
@@ -294,15 +296,18 @@ class EntryForm:
                 else:
                     self.view.keypress(size, key)
 
-    ########
-    # 2. pine/pico/nano-inspired user interface routines
-    # These are the routines that implement the standard look-and-feel of the
-    # editor - header and footer format, status messages, yes/no prompts
+
+class PinotUserInterface(RetroMainLoop):
+    """
+    pine/pico/nano-inspired user interface routines
+    These are the routines that implement the standard look-and-feel of the
+    editor - header and footer format, status messages, yes/no prompts
+    """
 
     def get_header(self):
         headerleft = urwid.Text(self.progname, align='left')
-        filename = self.json.get_filename_text()
-        if self.json.is_saved() is False:
+        filename = self.file.get_filename_text()
+        if self.file.is_saved() is False:
             filename += " (modified)"
         headercenter = urwid.Text(filename, align='center')
         headerright = urwid.Text("schema: " + self.schema.get_filename_text(),
@@ -416,10 +421,13 @@ class EntryForm:
         self.view.set_focus("body")
         self.set_default_footer()
 
-    ##########
-    # 3.  Standalone editor specific methods
-    # These routines deal with the specifics of an editor that loads/saves
-    # files.  There shouldn't be anything JSON-specific in this
+
+class PinotFileEditor(PinotUserInterface):
+    """
+    Standalone editor specific methods
+    These routines deal with the specifics of an editor that loads/saves
+    files.  There shouldn't be anything JSON-specific in this
+    """
 
     def handle_write_to_request(self, exit_on_save=False):
         """Handle ctrl w - "write/save"."""
@@ -430,14 +438,14 @@ class EntryForm:
             def keypress(self, (maxcol, ), key):
                 urwid.Edit.keypress(self, (maxcol, ), key)
                 if key == 'enter':
-                    currentfilename = entryform.json.get_filename()
-                    entryform.json.set_filename(self.get_edit_text())
+                    currentfilename = entryform.file.get_filename()
+                    entryform.file.set_filename(self.get_edit_text())
                     try:
                         entryform.handle_save()
-                        msg = "Saved " + entryform.json.get_filename()
+                        msg = "Saved " + entryform.file.get_filename()
                     except:
-                        msg = "FAILED TO WRITE " + entryform.json.get_filename()
-                        entryform.json.set_filename(currentfilename)
+                        msg = "FAILED TO WRITE " + entryform.file.get_filename()
+                        entryform.file.set_filename(currentfilename)
                     else:
                         if exit_on_save:
                             msg += "\n"
@@ -446,7 +454,7 @@ class EntryForm:
                     entryform.handle_save_status(msg)
                 elif key == 'esc':
                     entryform.cleanup_user_question()
-        filename = entryform.json.get_filename()
+        filename = entryform.file.get_filename()
         if filename is None:
             filename = ""
         prompt = CallbackEdit('File name to write to? ', filename)
@@ -485,9 +493,77 @@ class EntryForm:
     def get_end_status_message(self):
         return self.endstatusmessage
 
-    ##########
-    # 4.  JSON editor specific commands
-    # These routines deal with the specifics of a JSON editor.
+class PinotFile(object):
+    '''Abstract base class'''
+
+    def get_filename(self):
+        pass
+
+    def save_to_file(self):
+        pass
+
+    def set_filename(self, name):
+        pass
+
+    def get_filename_text(self):
+        pass
+
+    def is_saved(self):
+        pass
+
+    def get_edit_widget(self):
+        pass
+
+
+class JsonPinotFile(PinotFile):
+    '''Glue to underlying JSON object'''
+
+    def __init__(self, jsonfile=None, schemafile=None):
+        if jsonfile is None or os.access(jsonfile, os.R_OK):
+            # file exists, and we can read it (or we're just passing "None")
+            self.json = JsonNode(filename=jsonfile, schemafile=schemafile)
+        elif os.access(jsonfile, os.F_OK):
+            # file exists, but can't read it
+            sys.stderr.write("Cannot access file \"%s\" (check permissions)\n" %
+                             jsonfile)
+            sys.exit(os.EX_NOINPUT)
+        else:
+            # must be a new file
+            self.json = JsonNode(filename=None, schemafile=schemafile)
+            self.set_filename(jsonfile)
+
+    def get_json(self):
+        return self.json
+
+    def get_filename(self):
+        return self.json.get_filename()
+
+    def save_to_file(self):
+        return self.json.save_to_file()
+
+    def set_filename(self, name):
+        return self.json.set_filename(name)
+
+    def get_filename_text(self):
+        return self.json.get_filename_text()
+
+    def is_saved(self):
+        return self.json.is_saved()
+
+    def get_edit_widget(self):
+        return get_schema_widget(self.json)
+
+class JsonEditor(PinotFileEditor):
+    """
+    JSON editor specific commands
+    These routines deal with the specifics of a JSON editor.
+    """
+    def __init__(self, jsonfile=None, schemafile=None, 
+                 program_name="JsonWidget"):
+        self.file = JsonPinotFile(jsonfile=jsonfile, schemafile=schemafile)
+        self.json = self.file.get_json()
+        self.schema = self.json.get_schema_node()
+        return PinotFileEditor.__init__(self, program_name=program_name)
 
     def handle_delete_node_request(self):
         """Handle ctrl d - "delete node"."""

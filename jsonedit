@@ -21,23 +21,8 @@ urwid.curses_display.curses.has_colors = lambda: False
 
 
 def show_form(schemafile, jsonfile):
-    '''Create a JsonNode, then pass it to the EntryNode.  EntryNode takes over
-       at this point, saving the json file as appropriate.'''
-
-    if jsonfile is None or os.access(jsonfile, os.R_OK):
-        # file exists, and we can read it (or we're just passing "None")
-        jsonobj = JsonNode(filename=jsonfile, schemafile=schemafile)
-    elif os.access(jsonfile, os.F_OK):
-        # file exists, but can't read it
-        sys.stderr.write("Cannot access file \"%s\" (check permissions)\n" %
-                         jsonfile)
-        sys.exit(os.EX_NOINPUT)
-    else:
-        # must be a new file
-        jsonobj = JsonNode(filename=None, schemafile=schemafile)
-        jsonobj.set_filename(jsonfile)
-
-    form = EntryForm(jsonobj, program_name="jsonedit 0.1pre")
+    form = JsonEditor(jsonfile=jsonfile, schemafile=schemafile,
+                      program_name="jsonedit 0.1pre")
     form.run()
 
 
