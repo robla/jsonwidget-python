@@ -209,6 +209,19 @@ class JsonWidgetExit(Exception):
 class EntryForm:
     """The top-level form where all of the widgets get placed."""
 
+    # Methods are broken up into a few sections that will probably be broken
+    # out into their own objects one day.  As of this writing, there isn't 
+    # clean separation between these, but future work will strive to separate
+    # these more cleanly.
+    
+    # Sections:
+    # 1. Main event loop base routines
+    # 2. pine/pico/nano-inspired user interface routines
+    # 3. Standalone editor specific methods
+    # 4. JSON editor specific commands
+
+    ##########
+    # 1. Main event loop base routines
     # I'm guessing this should get replaced with a MainLoop when this moves
     # to urwid 0.99.
 
@@ -251,6 +264,40 @@ class EntryForm:
         self.clear_footer_status_timer()
         if not self.endstatusmessage == "":
             print self.endstatusmessage,
+
+    def run_loop(self):
+        size = self.ui.get_cols_rows()
+        while(True):
+            self.set_header()
+            canvas = self.view.render(size, focus=1)
+            self.ui.draw_screen(size, canvas)
+            keys = None
+            while(keys == None):
+                # self.ui.get_input() blocks for max_wait time, default 0.5 sec
+                # use self.ui.set_input_timeouts() to change the default
+                try:
+                    keys = self.ui.get_input()
+                except KeyboardInterrupt:
+                    pass
+            for key in keys:
+                if key == 'window resize':
+                    size = self.ui.get_cols_rows()
+                elif key == 'ctrl x':
+                    if self.json.is_saved():
+                        self.handle_exit()
+                    else:
+                        self.handle_exit_request()
+                elif key == 'ctrl w':
+                    self.handle_write_to_request()
+                elif key == 'ctrl d':
+                    self.handle_delete_node_request()
+                else:
+                    self.view.keypress(size, key)
+
+    ########
+    # 2. pine/pico/nano-inspired user interface routines
+    # These are the routines that implement the standard look-and-feel of the
+    # editor - header and footer format, status messages, yes/no prompts
 
     def get_header(self):
         headerleft = urwid.Text(self.progname, align='left')
@@ -324,41 +371,6 @@ class EntryForm:
             helpwidgets.append(urwid.Pile(helpcol))
         return urwid.Columns(helpwidgets)
 
-    def run_loop(self):
-        size = self.ui.get_cols_rows()
-        while(True):
-            self.set_header()
-            canvas = self.view.render(size, focus=1)
-            self.ui.draw_screen(size, canvas)
-            keys = None
-            while(keys == None):
-                # self.ui.get_input() blocks for max_wait time, default 0.5 sec
-                # use self.ui.set_input_timeouts() to change the default
-                try:
-                    keys = self.ui.get_input()
-                except KeyboardInterrupt:
-                    pass
-            for key in keys:
-                if key == 'window resize':
-                    size = self.ui.get_cols_rows()
-                elif key == 'ctrl x':
-                    if self.json.is_saved():
-                        self.handle_exit()
-                    else:
-                        self.handle_exit_request()
-                elif key == 'ctrl w':
-                    self.handle_write_to_request()
-                elif key == 'ctrl d':
-                    self.handle_delete_node_request()
-                else:
-                    self.view.keypress(size, key)
-
-    def handle_exit_request(self):
-        self.yes_no_question(
-            'Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ',
-            yesfunc=self.handle_save_and_exit,
-            nofunc=self.handle_exit)
-
     def yes_no_question(self, prompt, yesfunc=None, nofunc=None, 
                         cancelfunc=None):
         entryform = self
@@ -388,7 +400,29 @@ class EntryForm:
         footerhelp = self.get_footer_help_widget(helptext=helptext)
         self.set_footer([footerstatus, footerhelp])
 
+    def handle_save_status(self, msg):
+        """Generic status message on a 5 second timer"""
+        # TODO: rename to something more generic
+        self.set_header()
+        self.view.set_focus("body")
+        msg = "  " + msg + "  "
+        msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
+        footerstatus = self.get_footer_status_widget(msgwidget)
+        footerhelp = self.get_footer_help_widget()
+        self.set_footer([footerstatus, footerhelp])
+        self.set_footer_status_timer(5.0)
+
+    def cleanup_user_question(self):
+        self.view.set_focus("body")
+        self.set_default_footer()
+
+    ##########
+    # 3.  Standalone editor specific methods
+    # These routines deal with the specifics of an editor that loads/saves
+    # files.  There shouldn't be anything JSON-specific in this
+
     def handle_write_to_request(self, exit_on_save=False):
+        """Handle ctrl w - "write/save"."""
         entryform = self
 
         class CallbackEdit(urwid.Edit):
@@ -422,21 +456,15 @@ class EntryForm:
         footerhelp = self.get_footer_help_widget(helptext=helptext)
         self.set_footer([footerstatus, footerhelp])
 
-    def handle_delete_node_request(self):
-        self.yes_no_question("You feel lucky, punk? ")
+    def handle_exit_request(self):
+        """Handle ctrl x - "exit"."""
+        self.yes_no_question(
+            'Save changes (ANSWERING "No" WILL DESTROY CHANGES) ? ',
+            yesfunc=self.handle_save_and_exit,
+            nofunc=self.handle_exit)
 
     def handle_save(self):
         self.json.save_to_file()
-
-    def handle_save_status(self, msg):
-        self.set_header()
-        self.view.set_focus("body")
-        msg = "  " + msg + "  "
-        msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
-        footerstatus = self.get_footer_status_widget(msgwidget)
-        footerhelp = self.get_footer_help_widget()
-        self.set_footer([footerstatus, footerhelp])
-        self.set_footer_status_timer(5.0)
 
     def handle_save_and_exit(self):
         if self.json.get_filename() is None:
@@ -451,12 +479,17 @@ class EntryForm:
     def handle_exit(self):
         raise JsonWidgetExit()
 
-    def cleanup_user_question(self):
-        self.view.set_focus("body")
-        self.set_default_footer()
-
     def append_end_status_message(self, status):
         self.endstatusmessage += status
 
     def get_end_status_message(self):
         return self.endstatusmessage
+
+    ##########
+    # 4.  JSON editor specific commands
+    # These routines deal with the specifics of a JSON editor.
+
+    def handle_delete_node_request(self):
+        """Handle ctrl d - "delete node"."""
+        self.yes_no_question("You feel lucky, punk? ")
+
