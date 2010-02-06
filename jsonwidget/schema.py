@@ -1,0 +1,123 @@
+#!/usr/bin/python
+# Library for reading JSON files according to given JSON Schema
+#
+# Copyright (c) 2010, Rob Lanphier
+# All rights reserved.
+# Licensed under BSD-style license.  See LICENSE.txt for details.
+
+import json
+
+
+class Error(RuntimeError):
+    pass
+
+
+class SchemaNode(JsonBaseNode):
+    """
+    Each SchemaNode instance represents one node in the data tree.  Each
+    element of a child sequence (i.e. list in Python) and child map (i.e. dict
+    in Python) gets its own child SchemaNode.
+    """
+
+    def __init__(self, key=None, data=None, filename=None, parent=None):
+        if filename is not None:
+            self.filename = filename
+            if data is None:
+                self.load_from_file()
+        else:
+            self.data = data
+
+        # object ref for the parent
+        self.parent = parent
+        # local index for the node
+        self.key = key
+        if self.parent is None:
+            self.depth = 0
+            self.rootschema = self
+        else:
+            self.depth = self.parent.get_depth() + 1
+            self.rootschema = self.parent.get_root_schema()
+        if(self.data['type'] == 'map'):
+            self.children = {}
+            for subkey, subdata in self.data['mapping'].items():
+                self.children[subkey] = SchemaNode(key=subkey, data=subdata,
+                                                 parent=self)
+        elif(self.data['type'] == 'seq'):
+            self.children = [SchemaNode(key=0, data=self.data['sequence'][0],
+                                        parent=self)]
+
+    def load_from_file(self, filename=None):
+        if filename is not None:
+            self.filename = file
+        self.data = json.load(open(self.filename))
+
+    def get_depth(self):
+        return self.depth
+
+    def get_root_schema(self):
+        return self.rootschema
+
+    def get_title(self):
+        if 'title' in self.data:
+            return self.data['title']
+        else:
+            if self.depth > 0 and self.parent.get_type() == 'seq':
+                return self.parent.get_title()
+            else:
+                return str(self.key)
+
+    def get_type(self):
+        return self.data['type']
+
+    def get_children(self):
+        """
+        Get a list of children, possibly ordered.  Note that even though the
+        JSON spec says maps are unordered, it's pretty rude to muck with
+        someone else's content ordering in a text file, and ad hoc forms
+        benefit greatly from being able to control the order of elements
+        """
+
+        if(isinstance(self.children, dict)):
+            return self.children.values()
+        elif(isinstance(self.children, list)):
+            return self.children
+        else:
+            raise Error("self.children has invalid type %s" %
+                        type(self.children).__name__)
+
+    def get_child(self, key):
+        type = self.get_type()
+        if(type == 'map'):
+            return self.children[key]
+        elif(type == 'seq'):
+            return self.children[0]
+        else:
+            raise Error("self.children has invalid type %s" % type)
+
+    def get_child_keys(self):
+        return self.children.keys()
+
+    def get_key(self):
+        return self.key
+
+    def is_enum(self):
+        return ('enum' in self.data)
+
+    def enum_options(self):
+        return self.data['enum']
+
+    def get_blank_value(self):
+        type = self.get_type()
+        if(type == 'map'):
+            retval = {}
+        elif(type == 'seq'):
+            retval = []
+        elif(type == 'int' or type == 'number'):
+            retval = 0
+        elif(type == 'bool'):
+            retval = False
+        elif(type == 'str'):
+            retval = ""
+        else:
+            retval = None
+        return retval
