@@ -19,6 +19,7 @@ import urwid
 import threading
 import sys
 import os
+import re
 
 from jsonwidget.floatedit import FloatEdit
 from jsonwidget.schema import *
@@ -156,13 +157,15 @@ class GenericEditWidget(BaseJsonEditWidget):
                 urwid.Edit.set_edit_text(self, text)
                 thiswidget.store_text_as_data(text)
 
-        innerwidget = CallbackEdit("", str(self.json.get_data()))
+        innerwidget = CallbackEdit("", self.get_value_text())
         if self.is_highlighted():
             widget = urwid.AttrWrap(innerwidget, 'selected')
         else:
             widget = urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
         return widget
 
+    def get_value_text(self):
+        return str(self.json.get_data())
 
 class IntEditWidget(GenericEditWidget):
     """ Integer edit widget"""
@@ -182,6 +185,10 @@ class NumberEditWidget(GenericEditWidget):
 
     def store_text_as_data(self, text):
         self.json.set_data(float(text))
+
+    def get_value_text(self):
+        valuetext = str(self.json.get_data())
+        return re.sub('.0$', '', valuetext)
 
 
 class BoolEditWidget(GenericEditWidget):
