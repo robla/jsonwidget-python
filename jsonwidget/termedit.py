@@ -174,7 +174,10 @@ class IntEditWidget(GenericEditWidget):
         return urwid.IntEdit
 
     def store_text_as_data(self, text):
-        self.json.set_data(int(text))
+        if text == '':
+            self.json.set_data(0)
+        else:
+            self.json.set_data(int(text))
 
 
 class NumberEditWidget(GenericEditWidget):
@@ -184,7 +187,10 @@ class NumberEditWidget(GenericEditWidget):
         return FloatEdit
 
     def store_text_as_data(self, text):
-        self.json.set_data(float(text))
+        if text == '':
+            self.json.set_data(0)
+        else:
+            self.json.set_data(float(text))
 
     def get_value_text(self):
         valuetext = str(self.json.get_data())
