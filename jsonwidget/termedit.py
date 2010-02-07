@@ -288,23 +288,22 @@ class JsonPinotFile(PinotFile):
         return JsonWalker([widget])
 
 class JsonWalker(urwid.SimpleListWalker):
-    def get_deepest_focus_node(self):
+    def get_deepest_focus_widget_with_json(self):
         """
-        Get the innermost JsonNode corresponding to where the cursor is right
-        now. 
+        Get the innermost widget with a JsonNode corresponding to where the 
+        cursor is right now. 
         """
         focuswidget = self.get_focus()[0]
         deeperwidget = focuswidget
         # Walk down the widget tree calling get_focus until we 
         # can't call it anymore.
         while deeperwidget is not None:
-            focuswidget = deeperwidget
             # Call get_json_node on the way down because the bottommost node 
             # may not have an associated JsonNode.
-            if hasattr(focuswidget, 'get_json_node'):
-                focusnode = focuswidget.get_json_node()
+            if hasattr(deeperwidget, 'get_json_node'):
+                focuswidget = deeperwidget
             deeperwidget = self._get_deeper_focus_widget(deeperwidget)
-        return focusnode
+        return focuswidget
 
     def _get_deeper_focus_widget(self, focuswidget):
         """ Recursion helper for get_deepest_focus_node """
@@ -315,6 +314,35 @@ class JsonWalker(urwid.SimpleListWalker):
             return focuswidget.get_focus()
         else:
             return None
+
+    def set_tree_focus(self):
+        """
+        Get the innermost widget with a JsonNode corresponding to where the 
+        cursor is right now. 
+        """
+        focuswidget = self.get_focus()[0]
+        deeperwidget = focuswidget
+        self.focusresetlist = []
+        # Walk down the widget tree calling get_focus until we 
+        # can't call it anymore.
+        while deeperwidget is not None:
+            # Call get_json_node on the way down because the bottommost node 
+            # may not have an associated JsonNode.
+            if hasattr(deeperwidget, 'get_json_node'):
+                focuswidget = deeperwidget
+            deeperwidget = self._get_deeper_focus_widget(deeperwidget)
+        return focuswidget
+
+    def _set_deeper_tree_focus(self, focuswidget):
+        """ Recursion helper for get_deepest_focus_node """
+        
+        if hasattr(focuswidget, 'get_w'):
+            return focuswidget.get_w()
+        if hasattr(focuswidget, 'get_focus'):
+            return focuswidget.get_focus()
+        else:
+            return None
+        
 
 class JsonEditor(PinotFileEditor):
     """
@@ -330,7 +358,18 @@ class JsonEditor(PinotFileEditor):
 
     def handle_delete_node_request(self):
         """Handle ctrl d - "delete node"."""
-        focusnode = self.walker.get_deepest_focus_node()
+        focuswidget = self.walker.get_deepest_focus_widget_with_json()
+        focusnode = focuswidget.get_json_node()
         focusnode.set_cursor(focusnode)
-        self.yes_no_question("You feel lucky, punk? ")
+        self.set_body()
+        self.yes_no_question("You feel lucky, punk? ",
+                             yesfunc=self.cleanup_delete_request,
+                             nofunc=self.cleanup_delete_request,
+                             cancelfunc=self.cleanup_delete_request)
+
+    def cleanup_delete_request(self):
+        self.json.set_cursor(None)
+        self.set_body()
+        self.cleanup_user_question()
+            
 

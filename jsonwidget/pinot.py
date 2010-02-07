@@ -62,14 +62,11 @@ class RetroMainLoop(object):
         self.footertimer = None
 
     def run(self):
-        self.walker = self.file.get_walker()
-        listbox = urwid.ListBox(self.walker)
         header = self.get_header()
-        footerstatus = self.get_footer_status_widget()
-        footerhelp = self.get_footer_help_widget()
-        footer = urwid.Pile([footerstatus, footerhelp])
+        body = self.get_body()
+        footer = self.get_footer()
 
-        self.view = urwid.Frame(listbox, header=header, footer=footer)
+        self.view = urwid.Frame(body, header=header, footer=footer)
 
         try:
             self.ui.run_wrapper(self.run_loop)
@@ -141,6 +138,17 @@ class PinotUserInterface(RetroMainLoop):
         header = self.get_header()
         self.view.set_header(header)
 
+    def set_body(self):
+        body = self.get_body()
+        self.view.set_body(body)
+        # Test if this is really needed
+        self.ui.clear()
+
+    def get_body(self):
+        self.walker = self.file.get_walker()
+        listbox = urwid.ListBox(self.walker)
+        return listbox
+
     def set_footer(self, widgets):
         self.clear_footer_status_timer()
         self.view.set_footer(urwid.Pile(widgets))
@@ -150,11 +158,14 @@ class PinotUserInterface(RetroMainLoop):
         self.footertimer.start()
 
     def set_default_footer(self):
-        footerstatus = self.get_footer_status_widget()
-        footerhelp = self.get_footer_help_widget()
-        self.view.set_footer(urwid.Pile([footerstatus, footerhelp]))
+        self.view.set_footer(self.get_footer())
         self.ui.clear()
 
+    def get_footer(self):
+        footerstatus = self.get_footer_status_widget()
+        footerhelp = self.get_footer_help_widget()
+        return urwid.Pile([footerstatus, footerhelp])
+   
     def clear_footer_status_timer(self):
         if self.footertimer is not None:
             self.footertimer.cancel()
