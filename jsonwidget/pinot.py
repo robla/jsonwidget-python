@@ -50,6 +50,7 @@ class RetroMainLoop(object):
             ('default', 'default', 'default'),
             ('editfield', 'light gray', 'dark blue', 'underline'),
             ('editfieldfocus', 'white', 'dark red', 'underline'),
+            ('selected', 'white', 'dark red', 'standout'),
             ('header', 'light gray', 'dark red', 'standout'),
             ('footerstatusdormant', 'light gray', 'dark blue'),
             ('footerstatusactive', 'light gray', 'dark blue', 'standout'),
@@ -61,8 +62,7 @@ class RetroMainLoop(object):
         self.footertimer = None
 
     def run(self):
-        widget = self.file.get_edit_widget()
-        self.walker = urwid.SimpleListWalker([widget])
+        self.walker = self.file.get_walker()
         listbox = urwid.ListBox(self.walker)
         header = self.get_header()
         footerstatus = self.get_footer_status_widget()
@@ -330,5 +330,10 @@ class PinotFile(object):
 
     def get_edit_widget(self):
         pass
+        
+    def get_walker(self):
+        widget = self.get_edit_widget()
+        return urwid.SimpleListWalker([widget])
+
 
 

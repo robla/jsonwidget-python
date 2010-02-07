@@ -50,6 +50,7 @@ class JsonNode(JsonBaseNode):
             # what is on disk
             self.editcount = 0
             self.savededitcount = 0
+            self.cursor = None
         else:
             self.depth = self.parent.get_depth() + 1
             self.root = self.parent.get_root()
@@ -269,3 +270,23 @@ class JsonNode(JsonBaseNode):
         else:
             title = schematitle
         return title
+
+    def is_root(self):
+        return self.parent is None
+
+    def set_cursor(self, node):
+        self.root.cursor = node
+
+    def get_cursor(self):
+        return self.root.cursor
+
+    def is_selected(self):
+        if self.root.cursor is None:
+            return False
+        elif self.root.cursor == self:
+            return True
+        elif self.is_root():
+            return False
+        else:
+            return self.parent.is_selected()
+

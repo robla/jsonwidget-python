@@ -61,13 +61,28 @@ def get_schema_widget(node):
 
 # Series of editing widgets follows, each appropriate to a datatype or two
 
+class BaseJsonEditWidget(urwid.WidgetWrap):
+    def init_highlight(self):
+        self.set_highlight(self.json.is_selected())
 
-class ArrayEditWidget(urwid.WidgetWrap):
+    def set_highlight(self, value=True):
+        self.highlighted = value
+        
+    def is_highlighted(self):
+        return self.highlighted
+        
+    def get_json_node(self):
+        return self.json
+
+class ArrayEditWidget(BaseJsonEditWidget):
     """ Map and Seq edit widget and container"""
 
     def __init__(self, jsonnode):
         self.json = jsonnode
         self.schema = jsonnode.get_schema_node()
+
+        self.init_highlight()
+
         maparray = []
         maparray.append(urwid.Text(self.json.get_title() + ": "))
         leftmargin = urwid.Text("")
@@ -76,7 +91,7 @@ class ArrayEditWidget(urwid.WidgetWrap):
         self.indentedmap = urwid.Columns([('fixed', 2, leftmargin), mapfields])
         maparray.append(self.indentedmap)
         mappile = urwid.Pile(maparray)
-        return urwid.WidgetWrap.__init__(self, mappile)
+        return BaseJsonEditWidget.__init__(self, mappile)
 
     def add_node(self, key):
         self.json.add_child(key)
@@ -87,22 +102,35 @@ class ArrayEditWidget(urwid.WidgetWrap):
         pilearray = []
 
         for child in self.json.get_children():
-            pilearray.append(get_schema_widget(child))
+            childwidget = get_schema_widget(child)
+            if(childwidget.is_highlighted()):
+                childwidget = urwid.AttrWrap(childwidget, 'selected')
+            pilearray.append(childwidget)
         pilearray.append(FieldAddButtons(self, self.json))
 
         return urwid.Pile(pilearray)
 
 
-class GenericEditWidget(urwid.WidgetWrap):
+
+class GenericEditWidget(BaseJsonEditWidget):
     """ generic widget used for free text entry (e.g. strings)"""
 
     def __init__(self, jsonnode):
         self.schema = jsonnode.get_schema_node()
         self.json = jsonnode
-        editcaption = urwid.Text(('default', self.json.get_title() + ": "))
+        self.init_highlight()
+
+        if self.is_highlighted():
+            style='selected'
+        else:
+            style='default'
+        editcaption = urwid.Text((style, self.json.get_title() + ": "))
         editfield = self.get_edit_field_widget()
         editpair = urwid.Columns([('fixed', 20, editcaption), editfield])
-        urwid.WidgetWrap.__init__(self, editpair)
+        if self.is_highlighted():
+            editpair = urwid.AttrWrap(editpair, 'selected')
+
+        BaseJsonEditWidget.__init__(self, editpair)
 
     def get_widget_base_class(self):
         return urwid.Edit
@@ -111,6 +139,10 @@ class GenericEditWidget(urwid.WidgetWrap):
         self.json.set_data(text)
 
     def get_edit_field_widget(self):
+        """
+        Called on initialization to pull the correct widget and attach a 
+        callback linking edits to modification of the corresponding JsonNode.
+        """
         thiswidget = self
 
         # CallbackEdit is a closure which effectively gives this object a
@@ -125,7 +157,11 @@ class GenericEditWidget(urwid.WidgetWrap):
                 thiswidget.store_text_as_data(text)
 
         innerwidget = CallbackEdit("", str(self.json.get_data()))
-        return urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
+        if self.is_highlighted():
+            widget = urwid.AttrWrap(innerwidget, 'selected')
+        else:
+            widget = urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
+        return widget
 
 
 class IntEditWidget(GenericEditWidget):
@@ -184,7 +220,7 @@ class EnumEditWidget(GenericEditWidget):
         return urwid.GridFlow(options, 13, 3, 1, 'left')
 
 
-class FieldAddButtons(urwid.WidgetWrap):
+class FieldAddButtons(BaseJsonEditWidget):
     """ Add a button"""
 
     def __init__(self, parentwidget, json):
@@ -193,7 +229,7 @@ class FieldAddButtons(urwid.WidgetWrap):
         caption = urwid.Text(('default', "Add fields: "))
         buttonfield = self.get_buttons()
         editpair = urwid.Columns([('fixed', 20, caption), buttonfield])
-        urwid.WidgetWrap.__init__(self, editpair)
+        BaseJsonEditWidget.__init__(self, editpair)
 
     def get_buttons(self):
         parentwidget = self.parentwidget
@@ -247,6 +283,38 @@ class JsonPinotFile(PinotFile):
     def get_edit_widget(self):
         return get_schema_widget(self.json)
 
+    def get_walker(self):
+        widget = self.get_edit_widget()
+        return JsonWalker([widget])
+
+class JsonWalker(urwid.SimpleListWalker):
+    def get_deepest_focus_node(self):
+        """
+        Get the innermost JsonNode corresponding to where the cursor is right
+        now. 
+        """
+        focuswidget = self.get_focus()[0]
+        deeperwidget = focuswidget
+        # Walk down the widget tree calling get_focus until we 
+        # can't call it anymore.
+        while deeperwidget is not None:
+            focuswidget = deeperwidget
+            # Call get_json_node on the way down because the bottommost node 
+            # may not have an associated JsonNode.
+            if hasattr(focuswidget, 'get_json_node'):
+                focusnode = focuswidget.get_json_node()
+            deeperwidget = self._get_deeper_focus_widget(deeperwidget)
+        return focusnode
+
+    def _get_deeper_focus_widget(self, focuswidget):
+        """ Recursion helper for get_deepest_focus_node """
+        
+        if hasattr(focuswidget, 'get_w'):
+            return focuswidget.get_w()
+        if hasattr(focuswidget, 'get_focus'):
+            return focuswidget.get_focus()
+        else:
+            return None
 
 class JsonEditor(PinotFileEditor):
     """
@@ -262,5 +330,7 @@ class JsonEditor(PinotFileEditor):
 
     def handle_delete_node_request(self):
         """Handle ctrl d - "delete node"."""
+        focusnode = self.walker.get_deepest_focus_node()
+        focusnode.set_cursor(focusnode)
         self.yes_no_question("You feel lucky, punk? ")
 
