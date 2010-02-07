@@ -32,6 +32,7 @@
           "sequence":
           [
             {
+              "title":"Item",
               "type":"str"
             }
           ]
