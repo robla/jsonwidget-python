@@ -1,7 +1,10 @@
 #!/usr/bin/python
 #
-# Urwid example lazy directory browser / tree view
-#    Copyright (C) 2004-2009  Ian Ward
+#  Generic TreeWidget/TreeWalker class 
+#    Original version:
+#      Urwid example lazy directory browser / tree view
+#      Copyright (C) 2004-2009  Ian Ward
+#    Copied and adapted by Rob Lanphier
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -20,13 +23,11 @@
 # Urwid web site: http://excess.org/urwid/
 
 """
-Urwid example lazy directory browser / tree view
+Urwid tree view
 
 Features:
-- custom selectable widgets for files and directories
-- custom message widgets to identify access errors and empty directories
+- custom selectable widgets for trees
 - custom list walker for displaying widgets in a tree fashion
-- outputs a quoted list of files and directories "selected" on exit
 """
 
 
