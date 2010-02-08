@@ -380,7 +380,7 @@ class JsonEditor(PinotFileEditor):
                              nofunc=self.cleanup_delete_request,
                              cancelfunc=self.cleanup_delete_request)
 
-    def handle_delete_node(focuswidget):
+    def handle_delete_node(self, focuswidget):
         self.cleanup_delete_request()        
 
     def cleanup_delete_request(self):
