@@ -25,6 +25,8 @@ from jsonwidget.floatedit import FloatEdit
 from jsonwidget.schema import *
 from jsonwidget.jsonnode import *
 from jsonwidget.pinot import *
+from jsonwidget.treetools import *
+
 
 
 def get_schema_widget(node):
