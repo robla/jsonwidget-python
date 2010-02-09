@@ -10,7 +10,7 @@ import json
 from jsonwidget.schema import *
 from jsonwidget.jsonbase import *
 
-class Error(RuntimeError):
+class JsonNodeError(RuntimeError):
     pass
 
 
@@ -56,11 +56,11 @@ class JsonNode(JsonBaseNode):
             self.root = self.parent.get_root()
 
         if not self.is_type_match(schemanode):
-            raise Error("Validation error: type mismatch -" +
-                        " key: " + self.key +
-                        " data: " + str(self.data) +
-                        " jsontype: " + self.get_type() +
-                        " schematype: " + schemanode.get_type())
+            raise JsonNodeError("Validation error: type mismatch -" +
+                                " key: " + self.key +
+                                " data: " + str(self.data) +
+                                " jsontype: " + self.get_type() +
+                                " schematype: " + schemanode.get_type())
         else:
             self.attach_schema_node(schemanode)
         if self.depth == 0:
@@ -146,7 +146,7 @@ class JsonNode(JsonBaseNode):
         elif(self.data is None):
             return 'none'
         else:
-            raise Error("unknown type: %s" % type(self.data).__name__)
+            raise JsonNodeError("unknown type: %s" % type(self.data).__name__)
 
     def get_key(self):
         return self.key
@@ -179,8 +179,8 @@ class JsonNode(JsonBaseNode):
         elif(isinstance(self.children, list)):
             return self.children
         else:
-            raise Error("self.children has invalid type %s" %
-                        type(self.children).__name__)
+            raise JsonNodeError("self.children has invalid type %s" %
+                                type(self.children).__name__)
 
     def get_child(self, key):
         return self.children[key]
@@ -191,8 +191,8 @@ class JsonNode(JsonBaseNode):
         elif isinstance(self.children, list):
             return range(len(self.children))
         else:
-            raise Error("self.children has invalid type %s" %
-                        type(self.children).__name__)
+            raise JsonNodeError("self.children has invalid type %s" %
+                                type(self.children).__name__)
 
     def get_available_keys(self):
         """
@@ -208,7 +208,7 @@ class JsonNode(JsonBaseNode):
         elif(self.schemanode.get_type() == 'seq'):
             return [len(self.children)]
         else:
-            raise Error("type %s not implemented" % self.get_type())
+            raise JsonNodeError("type %s not implemented" % self.get_type())
 
     def set_child_data(self, key, data):
         if(self.data is None):
