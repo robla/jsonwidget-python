@@ -73,7 +73,7 @@ class GenericEditWidget(BaseJsonEditWidget):
         self.schema = jsonnode.get_schema_node()
         self.json = jsonnode
         self.init_highlight()
-        super(self.__class__, self).__init__(parent, key, jsonnode)
+        self.__super.__init__(parent, key, jsonnode)
 
     def get_widget(self):
         if self.is_highlighted():
