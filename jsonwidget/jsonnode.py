@@ -186,7 +186,13 @@ class JsonNode(JsonBaseNode):
         return self.children[key]
 
     def get_child_keys(self):
-        return self.children.keys()
+        if isinstance(self.children, dict):
+            return self.children.keys()
+        elif isinstance(self.children, list):
+            return range(len(self.children))
+        else:
+            raise Error("self.children has invalid type %s" %
+                        type(self.children).__name__)
 
     def get_available_keys(self):
         """
