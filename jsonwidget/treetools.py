@@ -226,7 +226,7 @@ class ParentNode(object):
             self._widget = constructor(self, None, self._value) 
             return self._widget
         else:
-            return parent.get_widget(self.get_key())
+            return parent.get_child_widget(self.get_key())
 
     def get_child_widget(self, key):
         """Return the widget for a given key.  Create if necessary."""
