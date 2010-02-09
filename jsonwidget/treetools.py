@@ -248,7 +248,10 @@ class ParentNode(object):
         pass
 
     def get_child_index(self, key):
-        return self.items.index(key)
+        if key is None:
+            raise RuntimeError("FIXME: figure out what to return from root node")
+        else:
+            return self.items.index(key)
 
     def get_widget_constructor_for_child(self, key):
         """
@@ -312,8 +315,8 @@ class ParentNode(object):
         # need to go up a level
         parent = self.get_parent()
         if parent is None:
-            # we're at the root, so give up
-            return None
+            # we're at the root, so return root widget
+            return self.get_widget()
         else:
             # find myself in parent, and return
             return parent.get_child_widget(self.get_key())
