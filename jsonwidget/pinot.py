@@ -47,6 +47,19 @@ class RetroMainLoop(object):
     def __init__(self, program_name="RetroMainLoop"):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette([
+            ('body', 'black', 'light gray'),
+            ('selected', 'black', 'dark green', ('bold','underline')),
+            ('focus', 'light gray', 'dark blue', 'standout'),
+            ('selected focus', 'yellow', 'dark cyan', 
+                    ('bold','standout','underline')),
+            ('head', 'yellow', 'black', 'standout'),
+            ('foot', 'light gray', 'black'),
+            ('key', 'light cyan', 'black','underline'),
+            ('title', 'white', 'black', 'bold'),
+            ('dirmark', 'black', 'dark cyan', 'bold'),
+            ('flag', 'dark gray', 'light gray'),
+            ('error', 'dark red', 'light gray'),
+ 
             ('default', 'default', 'default'),
             ('editfield', 'light gray', 'dark blue', 'underline'),
             ('editfieldfocus', 'white', 'dark red', 'underline'),
@@ -145,9 +158,7 @@ class PinotUserInterface(RetroMainLoop):
         self.ui.clear()
 
     def get_body(self):
-        self.walker = self.file.get_walker()
-        listbox = urwid.ListBox(self.walker)
-        return listbox
+        return self.listbox
 
     def set_footer(self, widgets):
         self.clear_footer_status_timer()
@@ -338,13 +349,6 @@ class PinotFile(object):
 
     def is_saved(self):
         pass
-
-    def get_edit_widget(self):
-        pass
-        
-    def get_walker(self):
-        widget = self.get_edit_widget()
-        return urwid.SimpleListWalker([widget])
 
 
 

@@ -38,14 +38,14 @@ import os
 
 class TreeWidget(urwid.WidgetWrap):
     """A widget representing something in the file tree."""
-    def __init__(self, parent, name, index, display):
-        self.parent = parent
-        self.name = name
-        self.index = index
+    def __init__(self, parent, key, value):
+        self._parent = parent
+        self._key = key
+        self._value = value
         self.depth = self.calc_depth()
 
-        widget = self.get_indented_widget(display)
-        self.widget = widget
+        widget = self.get_indented_widget()
+
         w = urwid.AttrWrap(widget, None)
         self.__super.__init__(w)
         self.selected = False
@@ -53,11 +53,34 @@ class TreeWidget(urwid.WidgetWrap):
 
     def calc_depth(self):
         """virtual method. define in sub class"""
-        pass
+        if self._parent is None:
+            return 0
+        else:
+            return self._parent.get_depth() + 1
         
-    def get_indented_widget(self, display):
-        return urwid.Text(["  "*self.depth, display])
-    
+    def get_indented_widget(self):
+        leftmargin = urwid.Text("")
+        widget = self.get_widget()
+        return urwid.Columns([('fixed', 2 * self.depth, leftmargin), widget]) 
+
+    def get_widget(self):
+        self._innerwidget = urwid.Text(self.get_display_text())
+        return self._innerwidget
+
+    def get_display_text(self):
+        return str(self.get_value())
+
+    def get_key(self):
+        return self._key
+
+    def get_value(self):
+        return self._value
+        
+    def get_index(self):
+        parent = self.get_parent()
+        key = self.get_key()
+        return parent.get_child_index(key)
+
     def selectable(self):
         return True
     
@@ -96,23 +119,26 @@ class TreeWidget(urwid.WidgetWrap):
             return child
         else:
             parent = self.get_parent()
-            return parent.next_inorder_from(self.index)
+            return parent.next_inorder_from(self.get_index())
 
     def get_parent(self):
-        return self.parent
+        return self._parent
         
     def prev_inorder(self):
         """Return the previous TreeWidget depth first from this one."""
         
         parent = self.get_parent()
-        return parent.prev_inorder_from(self.index)
+        if self.get_key() is None:
+            return None
+        else:
+            parent.prev_inorder_from(self.get_index())
 
 
 class ParentWidget(TreeWidget):
     """Widget for an interior tree node."""
 
-    def __init__(self, parent, name, index ):
-        self.__super.__init__(parent, name, index, "")
+    def __init__(self, parent, key, value):
+        self.__super.__init__(parent, key, value)
         
         self.expanded = True
         
@@ -125,8 +151,7 @@ class ParentWidget(TreeWidget):
             mark = "+"
         else:
             mark = "-"
-        self.widget.set_text( ["  "*(self.depth),
-            ('dirmark', mark), " ", self.name] )
+        self._innerwidget.set_text([('dirmark', mark), " ", self.get_display_text()] )
 
     def keypress(self, size, key ):
         """Handle expand & collapse requests."""
@@ -172,37 +197,87 @@ class ParentWidget(TreeWidget):
 
     def self_as_parent(self):
         """Return self as a parent object."""
-        # virtual function.  implement in base class
-        pass
+        return parent.get_child_node(self.get_key())
 
 
 class ParentNode(object):
     """Store sorted tree contents and cache TreeWidget objects."""
-    def __init__(self, key):
-        self.key = key
+    def __init__(self, value, parent=None, key=None):
+        self._key = key
+        self._parent = parent
+        self._value = value
+        # this will only be set if this node is the root
+        self._widget = None
         self.widgets = {}
+        self.subtrees = {}
 
         self.items = self.get_items()
         # if no items, put a dummy None item in the list
         if not self.items:
             self.items = [None]
 
-    def get_widget(self, key):
+    def get_widget(self):
+        parent = self.get_parent()
+        if self._widget is not None:
+            return self._widget
+        elif self.get_parent() is None:
+            constructor = \
+                self.get_widget_constructor_for_value(self._value)
+            self._widget = constructor(self, None, self._value) 
+            return self._widget
+        else:
+            return parent.get_widget(self.get_key())
+
+    def get_child_widget(self, key):
         """Return the widget for a given key.  Create if necessary."""
         
+        if key is None:
+            return self.get_widget()
+
         if self.widgets.has_key(key):
             return self.widgets[key]
-        
-        constructor = self.get_constructor(key)
-        index = self.items.index(key)
-        widget = constructor(self.path, key, index)
+
+        constructor = self.get_widget_constructor_for_child(key)
+        widget = constructor(self, key, self.get_child_value(key))
         
         self.widgets[key] = widget
         return widget
 
-    def get_constructor(self, key):
-        """Return a constructor for the widget associated with the key"""
+    def get_child_value(self, key):
+        # virtual function. implement in sub class
         pass
+
+    def get_child_index(self, key):
+        return self.items.index(key)
+
+    def get_widget_constructor_for_child(self, key):
+        """
+        Return a TreeWidget constructor for the widget associated with the key.
+        """
+        # virtual function. implement in sub class
+        pass
+    
+    def get_subtree(self, key):
+        """Return the subtree for a given key.  Create if necessary."""
+        
+        if self.subtrees.has_key(key):
+            return self.subtrees[key]
+
+        if key is None:
+            return self
+
+        constructor = self.get_subtree_constructor(key)
+        subtree = constructor(self.get_child_value(key), parent=self, key=key)
+        
+        self.subtrees[key] = subtree
+        return subtree
+
+    def get_subtree_constructor(self, key):
+        """
+        Return a ParentNode constructor for the subtree associated with the 
+        key.
+        """
+        return self.__class__
 
     def next_inorder_from(self, index):
         """Return the TreeWidget following index depth first."""
@@ -210,7 +285,7 @@ class ParentNode(object):
         index += 1
         # try to get the next item at same level
         if index < len(self.items):
-            return self.get_widget(self.items[index])
+            return self.get_child_widget(self.items[index])
             
         # ...otherwise need to go up a level
         parent = self.get_parent()
@@ -219,15 +294,15 @@ class ParentNode(object):
             return None
         else:
             # find my location in parent, and return next inorder
-            mywidget = parent.get_widget(self.key)
-            return parent.next_inorder_from(mywidget.index)
+            mywidget = parent.get_child_widget(self.get_key())
+            return parent.next_inorder_from(mywidget.get_index())
 
     def prev_inorder_from(self, index):
         """Return the TreeWidget preceeding index depth first."""
         
         index -= 1
         if index >= 0:
-            widget = self.get_widget(self.items[index])
+            widget = self.get_child_widget(self.items[index])
             widget_child = widget.last_child()
             if widget_child: 
                 return widget_child
@@ -241,32 +316,42 @@ class ParentNode(object):
             return None
         else:
             # find myself in parent, and return
-            return parent.get_widget(self.key)
+            return parent.get_child_widget(self.get_key())
 
     def get_first(self):
         """Return the first TreeWidget in the directory."""
-        
-        return self.get_widget(self.items[0])
+        return self.get_child_widget(self.items[0])
     
     def get_last(self):
-        """Return the last TreeWIdget in the directory."""
+        """Return the last TreeWidget in the directory."""
+        return self.get_child_widget(self.items[-1])
         
-        return self.get_widget(self.items[-1])
+    def get_parent(self):
+        return self._parent
         
-
+    def get_key(self):
+        return self._key
+        
+    def get_depth(self):
+        parent = self.get_parent()
+        if parent is None:
+            return 0
+        else:
+            return parent.get_depth() + 1
 
 class TreeWalker(urwid.ListWalker):
     """ListWalker-compatible class for browsing directories.
     
     positions used are directory,filename tuples."""
     
-    def __init__(self, start_from):
-        widget = start_from.get_first()
-        self.focus = start_from, widget.name
+    def __init__(self, root_node):
+        """start_from: ParentNode at the root of the tree."""
+        widget = root_node.get_widget()
+        self.focus = root_node, widget.get_key()
 
     def get_focus(self):
         parent, key = self.focus
-        widget = parent.get_widget(key)
+        widget = parent.get_child_widget(key)
         return widget, self.focus
         
     def set_focus(self, focus):
@@ -276,21 +361,18 @@ class TreeWalker(urwid.ListWalker):
     
     def get_next(self, start_from):
         parent, key = start_from
-        try:
-            widget = parent.get_widget(key)
-        except:
-            raise RuntimeError(parent)
+        widget = parent.get_child_widget(key)
         target = widget.next_inorder()
         if target is None:
             return None, None
-        return target, (target.dir, target.name)
+        return target, (target.get_parent(), target.get_key())
 
     def get_prev(self, start_from):
         parent, key = start_from
-        widget = parent.get_widget(key)
+        widget = parent.get_child_widget(key)
         target = widget.prev_inorder()
         if target is None:
             return None, None
-        return target, (target.dir, target.name)
+        return target, (target.get_parent(), target.get_key())
 
 

@@ -182,6 +182,9 @@ class JsonNode(JsonBaseNode):
             raise Error("self.children has invalid type %s" %
                         type(self.children).__name__)
 
+    def get_child(self, key):
+        return self.children[key]
+
     def get_child_keys(self):
         return self.children.keys()
 
