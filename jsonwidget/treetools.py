@@ -126,12 +126,12 @@ class TreeWidget(urwid.WidgetWrap):
         
     def prev_inorder(self):
         """Return the previous TreeWidget depth first from this one."""
-        
+
         parent = self.get_parent()
         if self.get_key() is None:
             return None
         else:
-            parent.prev_inorder_from(self.get_index())
+            return parent.prev_inorder_from(self.get_index())
 
 
 class ParentWidget(TreeWidget):
