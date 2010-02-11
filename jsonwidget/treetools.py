@@ -132,10 +132,14 @@ class TreeWidget(urwid.WidgetWrap):
         """Return the previous TreeWidget depth first from this one."""
 
         parent = self.get_parent()
-        if self.get_key() is None:
+        if self.is_root():
             return None
         else:
             return parent.prev_inorder_from(self.get_index())
+    
+    def is_root(self):
+        """Is this widget at the root of the tree?"""
+        return self.get_key() is None
 
 
 class ParentWidget(TreeWidget):
