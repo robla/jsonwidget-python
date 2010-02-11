@@ -144,7 +144,7 @@ class TreeWidget(urwid.WidgetWrap):
     
     def is_root(self):
         """Is this widget at the root of the tree?"""
-        return self.get_key() is None
+        return self.get_parent() is None
 
 
 class ParentWidget(TreeWidget):
@@ -230,10 +230,11 @@ class ParentNode(object):
             self.items = [None]
 
     def get_widget(self):
-        parent = self.get_parent()
+        """ Return the widget for this node."""
         if self._widget is not None:
             return self._widget
-        elif self.get_parent() is None:
+        parent = self.get_parent()
+        if parent is None:
             constructor = \
                 self.get_root_widget()
             self._widget = constructor(self, None, self._value) 
@@ -244,11 +245,11 @@ class ParentNode(object):
     def get_child_widget(self, key):
         """Return the widget for a given key.  Create if necessary."""
         
-        if key is None:
-            return self.get_widget()
-
         if self.widgets.has_key(key):
             return self.widgets[key]
+
+        if key is None:
+            return self.get_widget()
 
         constructor = self.get_widget_constructor_for_child(key)
         widget = constructor(self, key, self.get_child_value(key))
