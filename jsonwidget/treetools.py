@@ -259,7 +259,8 @@ class ParentNode(object):
 
     def get_child_index(self, key):
         if key is None:
-            raise RuntimeError("FIXME: figure out what to return from root node")
+            # we're at the root
+            return None
         else:
             try:
                 return self.items.index(key)
@@ -301,6 +302,9 @@ class ParentNode(object):
     def next_inorder_from(self, index):
         """Return the TreeWidget following index depth first."""
     
+        if index is None:
+            # we're at the root
+            return self.get_first()
         index += 1
         # try to get the next item at same level
         if index < len(self.items):
