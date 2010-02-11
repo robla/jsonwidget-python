@@ -160,9 +160,9 @@ class ParentWidget(TreeWidget):
         """Update display widget text."""
         
         if self.expanded:
-            mark = "+"
-        else:
             mark = "-"
+        else:
+            mark = "+"
         self._innerwidget.set_text([('dirmark', mark), " ", self.get_display_text()] )
 
     def keypress(self, size, key ):
