@@ -65,8 +65,11 @@ class TreeWidget(urwid.WidgetWrap):
     def get_indented_widget(self):
         leftmargin = urwid.Text("")
         widgetlist = [self.get_widget()]
-        widgetlist.insert(0, ('fixed', 2 * (self.depth + 1), leftmargin)) 
+        widgetlist.insert(0, ('fixed', self.get_indent_cols(), leftmargin)) 
         return urwid.Columns(widgetlist)
+
+    def get_indent_cols(self):
+        return 2 * (self.depth + 1)
 
     def get_widget(self):
         self._innerwidget = urwid.Text(self.get_display_text())
@@ -178,7 +181,7 @@ class ParentWidget(TreeWidget):
         if event != 'mouse press' or button!=1:
             return False
 
-        if row == 0 and col == 2*self.depth:
+        if row == 0 and col == self.get_indent_cols():
             self.expanded = not self.expanded
             self.update_widget()
             return True
