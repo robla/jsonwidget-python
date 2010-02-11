@@ -69,7 +69,7 @@ class TreeWidget(urwid.WidgetWrap):
         return urwid.Columns(widgetlist)
 
     def get_indent_cols(self):
-        return 2 * (self.depth + 1)
+        return 3 * (self.depth + 1)
 
     def get_widget(self):
         self._innerwidget = urwid.Text(self.get_display_text())
