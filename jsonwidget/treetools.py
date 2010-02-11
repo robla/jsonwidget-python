@@ -36,6 +36,10 @@ import urwid
 import os
 
 
+class TreeWidgetError(RuntimeError):
+    pass
+
+
 class TreeWidget(urwid.WidgetWrap):
     """A widget representing something in the file tree."""
     def __init__(self, parent, key, value):
@@ -245,13 +249,20 @@ class ParentNode(object):
 
     def get_child_value(self, key):
         # virtual function. implement in sub class
-        pass
+        raise TreeWidgetError("unimplemented function get_child_value in %s" %
+                              str(self.__class__))
 
     def get_child_index(self, key):
         if key is None:
             raise RuntimeError("FIXME: figure out what to return from root node")
         else:
-            return self.items.index(key)
+            try:
+                return self.items.index(key)
+            except ValueError:
+                errorstring = ("Can't find key %s in ParentNode %s\n" +
+                               "ParentNode items: %s")
+                raise TreeWidgetError(errorstring % (key, self.get_key(), 
+                                      str(self.get_items())))
 
     def get_widget_constructor_for_child(self, key):
         """
@@ -347,10 +358,13 @@ class TreeWalker(urwid.ListWalker):
     
     positions used are directory,filename tuples."""
     
-    def __init__(self, root_node):
+    def __init__(self, start_from):
         """start_from: ParentNode at the root of the tree."""
-        widget = root_node.get_widget()
-        self.focus = root_node, widget.get_key()
+        widget = start_from.get_widget()
+        if start_from.get_parent() is None:
+            self.focus = start_from, widget.get_key()
+        else:
+            self.focus = start_from.get_parent(), widget.get_key()
 
     def get_focus(self):
         parent, key = self.focus
