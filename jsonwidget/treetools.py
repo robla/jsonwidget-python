@@ -57,15 +57,16 @@ class TreeWidget(urwid.WidgetWrap):
 
     def calc_depth(self):
         """virtual method. define in sub class"""
-        if self._parent is None:
+        if self.get_parent() is None:
             return 0
         else:
-            return self._parent.get_depth() + 1
+            return self.get_parent().get_depth() + 1
         
     def get_indented_widget(self):
         leftmargin = urwid.Text("")
-        widget = self.get_widget()
-        return urwid.Columns([('fixed', 2 * self.depth, leftmargin), widget]) 
+        widgetlist = [self.get_widget()]
+        widgetlist.insert(0, ('fixed', 2 * (self.depth + 1), leftmargin)) 
+        return urwid.Columns(widgetlist)
 
     def get_widget(self):
         self._innerwidget = urwid.Text(self.get_display_text())
