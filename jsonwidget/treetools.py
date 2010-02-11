@@ -174,7 +174,7 @@ class ParentWidget(TreeWidget):
         else:
             return self.__super.keypress(size, key)
     
-    def mouse_event(self, (maxcol,), event, button, col, row, focus):
+    def mouse_event(self, size, event, button, col, row, focus):
         if event != 'mouse press' or button!=1:
             return False
 
