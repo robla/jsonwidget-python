@@ -235,7 +235,7 @@ class ParentNode(object):
             return self._widget
         elif self.get_parent() is None:
             constructor = \
-                self.get_widget_constructor_for_value(self._value)
+                self.get_root_widget()
             self._widget = constructor(self, None, self._value) 
             return self._widget
         else:

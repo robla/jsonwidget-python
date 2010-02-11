@@ -274,6 +274,10 @@ class JsonWidgetParent(ParentNode):
         else:
             return self.json.get_child(key)
 
+    def get_root_widget(self):
+        jsonnode = self.json.get_root()
+        return self.get_widget_constructor_for_value(jsonnode)
+
     def get_widget_constructor_for_value(self, value):
         # we want to make sure that we use a schema-appropriate edit widget, so
         # don't use value.get_type() directly.
