@@ -65,11 +65,12 @@ class TreeWidget(urwid.WidgetWrap):
     def get_indented_widget(self):
         leftmargin = urwid.Text("")
         widgetlist = [self.get_widget()]
-        widgetlist.insert(0, ('fixed', self.get_indent_cols(), leftmargin)) 
+        if self.depth > 0:
+            widgetlist.insert(0, ('fixed', self.get_indent_cols(), leftmargin))
         return urwid.Columns(widgetlist)
 
     def get_indent_cols(self):
-        return 3 * (self.depth + 1)
+        return 3 * self.depth
 
     def get_widget(self):
         self._innerwidget = urwid.Text(self.get_display_text())
