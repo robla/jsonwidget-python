@@ -347,12 +347,15 @@ class JsonEditor(PinotFileEditor):
         focusnode = focuswidget.get_json_node()
         focusnode.set_cursor(focusnode)
         self.set_body()
+        editor = self
+        def delete_func():
+            return editor.handle_delete_node(focuswidget)
         self.yes_no_question("Delete selected field? ",
-                             yesfunc=self.handle_delete_node(focuswidget),
+                             yesfunc=delete_func,
                              nofunc=self.cleanup_delete_request,
                              cancelfunc=self.cleanup_delete_request)
 
-    def handle_delete_node(focuswidget):
+    def handle_delete_node(self, focuswidget):
         self.cleanup_delete_request()        
 
     def cleanup_delete_request(self):
