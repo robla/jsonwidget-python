@@ -350,8 +350,9 @@ class ParentNode(TreeNode):
         """Return the previous child node in index order from the given key."""
         index = self.get_child_index(key)
         child_keys = self.get_child_keys()
+        index -= 1
         
-        if index > 0:
+        if index >= 0:
             # get the previous item at same level
             return self.get_child_node(child_keys[index])
         else:
