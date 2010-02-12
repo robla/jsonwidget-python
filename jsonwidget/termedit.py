@@ -47,14 +47,15 @@ class ArrayEditWidget(ParentWidget):
 class GenericEditWidget(BaseJsonEditWidget):
     """ generic widget used for free text entry (e.g. strings)"""
     def load_inner_widget(self):
-        if self.selected:
+        if self.is_selected():
             style='selected'
         else:
             style='default'
-        editcaption = urwid.Text((style, self.json.get_title() + ": "))
+        jsonnode = self.get_json_node()
+        editcaption = urwid.Text((style, jsonnode.get_title() + ": "))
         editfield = self.get_edit_field_widget()
         editpair = urwid.Columns([('fixed', 20, editcaption), editfield])
-        if self.is_highlighted():
+        if self.is_selected():
             editpair = urwid.AttrWrap(editpair, 'selected')
 
         return editpair
@@ -84,14 +85,14 @@ class GenericEditWidget(BaseJsonEditWidget):
                 thiswidget.store_text_as_data(text)
 
         innerwidget = CallbackEdit("", self.get_value_text())
-        if self.is_highlighted():
+        if self.is_selected():
             widget = urwid.AttrWrap(innerwidget, 'selected')
         else:
             widget = urwid.AttrWrap(innerwidget, 'editfield', 'editfieldfocus')
         return widget
 
     def get_value_text(self):
-        return str(self.json.get_data())
+        return str(self.get_json_node().get_data())
 
     def keypress(self, size, key):
         """Pass keystrokes through to child widget"""
@@ -230,7 +231,7 @@ class JsonWidgetParent(ParentNode):
         return ArrayEditWidget(self)
 
     def load_child_keys(self):
-        return self.json.get_child_keys()
+        return self.get_value().get_child_keys()
 
     def load_child_node(self, key):
         depth = self.get_depth() + 1
@@ -241,12 +242,7 @@ class JsonWidgetParent(ParentNode):
             return JsonWidgetParent(jsonnode, parent=self, key=key, 
                                     depth=depth)
         else:
-            return JsonWidgetTreeNode(jsonnode, parent=self, key=key, 
-                                      depth=depth)
-
-
-class JsonWalker(TreeWalker):
-    pass
+            return JsonWidgetNode(jsonnode, parent=self, key=key, depth=depth)
 
 
 class JsonPinotFile(PinotFile):
@@ -287,7 +283,7 @@ class JsonPinotFile(PinotFile):
 class JsonFrame(urwid.ListBox):
     def __init__(self, jsonobj):
         self.json = jsonobj
-        walker = JsonWalker(JsonWidgetParent(self.json))
+        walker = TreeWalker(JsonWidgetParent(self.json))
         return super(self.__class__, self).__init__(walker)
 
 
