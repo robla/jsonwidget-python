@@ -28,55 +28,26 @@ from jsonwidget.pinot import *
 from jsonwidget.treetools import *
 
 
-
 # Series of editing widgets follows, each appropriate to a datatype or two
 
 class BaseJsonEditWidget(TreeWidget):
-    def __init__(self, parent, key, value):
-        TreeWidget.__init__(self, parent, key, value)
-
-    def init_highlight(self):
-        self.set_highlight(self.json.is_selected())
-
-    def set_highlight(self, value=True):
-        self.highlighted = value
-        
-    def is_highlighted(self):
-        return self.highlighted
-        
     def get_json_node(self):
-        return self.json
+        return self.get_node().get_value()
+
 
 class ArrayEditWidget(ParentWidget):
     """ Map and Seq edit widget and container"""
-
-    def __init__(self, parent, key, value):
-        self.json = value
-        self.schema = value.get_schema_node()
-        self.__super.__init__(parent, key, value)
+    def get_json_node(self):
+        return self.get_node().get_value()
         
     def get_display_text(self):
-        return self.json.get_title() + ": "
-
-    def self_as_parent(self):
-        """Return self as a parent object."""
-        return self.get_parent().get_subtree(self.get_key())
-
-    def get_json_node(self):
-        return self.json
+        return self.get_json_node().get_title() + ": "
 
 
 class GenericEditWidget(BaseJsonEditWidget):
     """ generic widget used for free text entry (e.g. strings)"""
-
-    def __init__(self, parent, key, jsonnode):
-        self.schema = jsonnode.get_schema_node()
-        self.json = jsonnode
-        self.init_highlight()
-        self.__super.__init__(parent, key, jsonnode)
-
-    def get_widget(self):
-        if self.is_highlighted():
+    def load_inner_widget(self):
+        if self.selected:
             style='selected'
         else:
             style='default'
@@ -86,14 +57,13 @@ class GenericEditWidget(BaseJsonEditWidget):
         if self.is_highlighted():
             editpair = urwid.AttrWrap(editpair, 'selected')
 
-        self._innerwidget = editpair
-        return self._innerwidget
+        return editpair
 
     def get_widget_base_class(self):
         return urwid.Edit
 
     def store_text_as_data(self, text):
-        self.json.set_data(text)
+        self.get_json_node().set_data(text)
 
     def get_edit_field_widget(self):
         """
@@ -219,8 +189,68 @@ class FieldAddButtons(BaseJsonEditWidget):
         return urwid.GridFlow(buttons, 13, 3, 1, 'left')
 
 
+class JsonWidgetNode(TreeNode):
+    def __init__(self, jsonnode, parent=None, key=None, depth=None):
+        if not isinstance(jsonnode, JsonNode):
+            raise RuntimeError(str(jsonnode))
+        key = jsonnode.get_key()
+        depth = jsonnode.get_depth()
+        TreeNode.__init__(self, jsonnode, key=key, parent=parent, depth=depth)
+
+    def load_widget(self):
+        jsonnode = self.get_value()
+        # we want to make sure that we use a schema-appropriate edit widget, so
+        # don't use jsonnode.get_type() directly.
+        schemanode = jsonnode.get_schema_node()
+
+        if(schemanode.get_type() == 'str'):
+            if(schemanode.is_enum()):
+                return EnumEditWidget(self)
+            else:
+                return GenericEditWidget(self)
+        elif(schemanode.get_type() == 'int'):
+            return IntEditWidget(self)
+        elif(schemanode.get_type() == 'number'):
+            return NumberEditWidget(self)
+        elif(schemanode.get_type() == 'bool'):
+            return BoolEditWidget(self)
+        else:
+            return GenericEditWidget(self)
+
+class JsonWidgetParent(ParentNode):
+    def __init__(self, jsonnode, parent=None, key=None, depth=None):
+        if not isinstance(jsonnode, JsonNode):
+            raise RuntimeError(str(jsonnode))
+        key = jsonnode.get_key()
+        depth = jsonnode.get_depth()
+        ParentNode.__init__(self, jsonnode, key=key, parent=parent, 
+                            depth=depth)
+
+    def load_widget(self):
+        return ArrayEditWidget(self)
+
+    def load_child_keys(self):
+        return self.json.get_child_keys()
+
+    def load_child_node(self, key):
+        depth = self.get_depth() + 1
+        jsonnode = self.get_value().get_child(key)
+        schemanode = jsonnode.get_schema_node()
+        nodetype = schemanode.get_type()
+        if (nodetype == 'map') or (nodetype == 'seq'):
+            return JsonWidgetParent(jsonnode, parent=self, key=key, 
+                                    depth=depth)
+        else:
+            return JsonWidgetTreeNode(jsonnode, parent=self, key=key, 
+                                      depth=depth)
+
+
+class JsonWalker(TreeWalker):
+    pass
+
+
 class JsonPinotFile(PinotFile):
-    '''Glue to underlying JSON object'''
+    '''Glue to between PinotFile and underlying JSON object'''
 
     def __init__(self, jsonfile=None, schemafile=None):
         if jsonfile is None or os.access(jsonfile, os.R_OK):
@@ -253,61 +283,6 @@ class JsonPinotFile(PinotFile):
 
     def is_saved(self):
         return self.json.is_saved()
-
-
-class JsonWidgetParent(ParentNode):
-    def __init__(self, jsonobj, parent=None, key=None):
-        self.json = jsonobj
-        if not isinstance(self.json, JsonNode):
-            raise RuntimeError(str(self.json))
-
-        super(self.__class__, self).__init__(jsonobj, 
-                                             parent=parent,
-                                             key=self.json.get_key())
-
-    def get_items(self):
-        return self.json.get_child_keys()
-
-    def get_child_value(self, key):
-        if key is None:
-            return self.json
-        else:
-            return self.json.get_child(key)
-
-    def get_root_widget(self):
-        jsonnode = self.json.get_root()
-        return self.get_widget_constructor_for_value(jsonnode)
-
-    def get_widget_constructor_for_value(self, value):
-        # we want to make sure that we use a schema-appropriate edit widget, so
-        # don't use value.get_type() directly.
-        schemanode = value.get_schema_node()
-
-        if(schemanode.get_type() == 'map'):
-            return ArrayEditWidget
-        elif(schemanode.get_type() == 'seq'):
-            return ArrayEditWidget
-        elif(schemanode.get_type() == 'str'):
-            if(schemanode.is_enum()):
-                return EnumEditWidget
-            else:
-                return GenericEditWidget
-        elif(schemanode.get_type() == 'int'):
-            return IntEditWidget
-        elif(schemanode.get_type() == 'number'):
-            return NumberEditWidget
-        elif(schemanode.get_type() == 'bool'):
-            return BoolEditWidget
-        else:
-            return GenericEditWidget
-
-    def get_widget_constructor_for_child(self, key):
-        jsonnode = self.get_child_value(key)
-        return self.get_widget_constructor_for_value(jsonnode)
-
-class JsonWalker(TreeWalker):
-    pass
-
 
 class JsonFrame(urwid.ListBox):
     def __init__(self, jsonobj):
