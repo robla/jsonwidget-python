@@ -264,7 +264,15 @@ class TreeNode(object):
         return self._key
 
     def get_parent(self):
+        if self._parent == None and self.get_depth() > 0:
+            self._parent = self.load_parent()
         return self._parent
+        
+    def load_parent(self):
+        """Provide TreeNode with a parent for the current node.  This function
+        is only required if the tree was instantiated from a child node
+        (virtual function)"""
+        raise TreeWidgetError("virtual function.  Implement in subclass")
         
     def get_value(self):
         return self._value
@@ -284,11 +292,17 @@ class TreeNode(object):
         else:
             return None
 
-
+    def get_root(self):
+        root = self
+        while root.get_parent() is not None:
+            root = root.get_parent()
+        return root
+        
+        
 class ParentNode(TreeNode):
     """Maintain sort order for TreeNodes."""
     def __init__(self, value, parent=None, key=None, depth=None):
-        TreeNode.__init__(self, value, parent, key)
+        TreeNode.__init__(self, value, parent=parent, key=key, depth=depth)
 
         self._child_keys = None
         self._children = {}
@@ -315,18 +329,22 @@ class ParentNode(TreeNode):
 
     def get_child_node(self, key):
         """Return the child node for a given key.  Create if necessary."""
-        if key in self._children:
-            return self._children[key]
-        else:
-            return self.load_child_node(key)
+        if key not in self._children:
+            self._children[key] = self.load_child_node(key)
+        return self._children[key]
 
     def load_child_node(self, key):
         """Load the child node for a given key (virtual function)"""
         raise TreeWidgetError("virtual function.  Implement in subclass")
 
+    def set_child_node(self, key, node):
+        """Set the child node for a given key.  Useful for bottom-up, lazy 
+        population of a tree.."""
+        self._children[key]=node
+
     def get_child_index(self, key):
         try:
-            return self._child_keys.index(key)
+            return self.get_child_keys().index(key)
         except ValueError:
             errorstring = ("Can't find key %s in ParentNode %s\n" +
                            "ParentNode items: %s")
@@ -402,4 +420,71 @@ class TreeWalker(urwid.ListWalker):
         else:
             return target, target.get_node()
 
+
+class TreeListBox(urwid.ListBox):
+    def keypress(self, size, key):
+        key = self.__super.keypress(size, key)
+        return self.unhandled_input(size, key)
+
+    def unhandled_input(self, size, input):
+        """Handle macro-navigation keys"""
+        if input == 'left':
+            self.move_focus_to_parent(size)
+        elif input == '-':
+            self.collapse_focus_parent(size)
+        elif input == 'home':
+            self.focus_home(size)
+        elif input == 'end':
+            self.focus_end(size)
+        else:
+            return input
+                                        
+    def collapse_focus_parent(self, size):
+        """Collapse parent directory."""
+
+        widget, pos = self.body.get_focus()
+        self.move_focus_to_parent(size)
+        
+        pwidget, ppos = self.body.get_focus()
+        if pos != ppos:
+            self.keypress(size, "-")
+
+    def move_focus_to_parent(self, size):
+        """Move focus to parent of widget in focus."""
+
+        widget, pos = self.body.get_focus()
+        
+        middle, top, bottom = self.calculate_visible( size )
+
+        row_offset, focus_widget, focus_pos, focus_rows, cursor = middle
+        trim_top, fill_above = top
+
+        parentpos = pos.get_parent()
+        
+        for widget, pos, rows in fill_above:
+            row_offset -= rows
+            if pos == parentpos:
+                self.change_focus(size, pos, row_offset)
+                return
+
+        self.change_focus(size, pos.get_parent())
+        
+    def focus_home(self, size):
+        """Move focus to very top."""
+
+        widget, pos = self.body.get_focus()
+        rootnode = pos.get_root()
+        self.change_focus(size, rootnode)
+
+    def focus_end( self, size ):
+        """Move focus to far bottom."""
+
+        maxrow, maxcol = size
+        widget, pos = self.body.get_focus()
+        rootnode = pos.get_root()
+        rootwidget = rootnode.get_widget()
+        lastwidget = rootwidget.last_child()
+        lastnode = lastwidget.get_node()
+
+        self.change_focus(size, lastnode, maxrow-1)
 
