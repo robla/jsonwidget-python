@@ -106,10 +106,11 @@ class IntEditWidget(GenericEditWidget):
         return urwid.IntEdit
 
     def store_text_as_data(self, text):
+        jsonnode = self.get_json_node()
         if text == '':
-            self.json.set_data(0)
+            jsonnode.set_data(0)
         else:
-            self.json.set_data(int(text))
+            jsonnode.set_data(int(text))
 
 
 class NumberEditWidget(GenericEditWidget):
@@ -119,13 +120,15 @@ class NumberEditWidget(GenericEditWidget):
         return FloatEdit
 
     def store_text_as_data(self, text):
+        jsonnode = self.get_json_node()
         if text == '':
-            self.json.set_data(0)
+            jsonnode.set_data(0)
         else:
-            self.json.set_data(float(text))
+            jsonnode.set_data(float(text))
 
     def get_value_text(self):
-        valuetext = str(self.json.get_data())
+        jsonnode = self.get_json_node()
+        valuetext = str(jsonnode.get_data())
         return re.sub('.0$', '', valuetext)
 
 
@@ -133,12 +136,12 @@ class BoolEditWidget(GenericEditWidget):
     """ Boolean edit widget"""
 
     def get_edit_field_widget(self):
-        thiswidget = self
+        jsonnode = self.get_json_node()
 
         def on_state_change(self, state, user_data=None):
-            thiswidget.json.set_data(state)
+            jsonnode.set_data(state)
 
-        return urwid.CheckBox("", self.json.get_data(),
+        return urwid.CheckBox("", jsonnode.get_data(),
                               on_state_change=on_state_change)
 
 
@@ -147,19 +150,20 @@ class EnumEditWidget(GenericEditWidget):
 
     def get_edit_field_widget(self):
         options = []
-        self.radiolist = []
-        thiswidget = self
-        for option in self.schema.enum_options():
-            if(self.json.get_data() == option):
+        self._radiolist = []
+        jsonnode = self.get_json_node()
+        schemanode = jsonnode.get_schema_node()
+        for option in schemanode.enum_options():
+            if(jsonnode.get_data() == option):
                 state = True
             else:
                 state = False
 
             def on_state_change(self, state, user_data=None):
                 if state:
-                    thiswidget.json.set_data(user_data)
+                    jsonnode.set_data(user_data)
 
-            options.append(urwid.RadioButton(self.radiolist, option,
+            options.append(urwid.RadioButton(self._radiolist, option,
                                              state=state, user_data=option,
                                              on_state_change=on_state_change))
         return urwid.GridFlow(options, 13, 3, 1, 'left')
@@ -168,27 +172,51 @@ class EnumEditWidget(GenericEditWidget):
 class FieldAddButtons(BaseJsonEditWidget):
     """ Add a button"""
 
-    def __init__(self, parentwidget, json):
-        self.parentwidget = parentwidget
-        self.json = json
+    def load_inner_widget(self):
+        if self.is_selected():
+            style='selected'
+        else:
+            style='default'
+        jsonnode = self.get_json_node()
+
         caption = urwid.Text(('default', "Add fields: "))
         buttonfield = self.get_buttons()
         editpair = urwid.Columns([('fixed', 20, caption), buttonfield])
-        BaseJsonEditWidget.__init__(self, editpair)
+        return editpair
 
     def get_buttons(self):
-        parentwidget = self.parentwidget
         buttons = []
 
         def on_press(button, user_data=None):
+            ### FIXME - need to figre you where to put add_node
             parentwidget.add_node(user_data['key'])
 
-        for key in self.json.get_available_keys():
-            fieldname = self.json.get_child_title(key)
+        jsonnode = self.get_node().get_value()
+        for key in jsonnode.get_available_keys():
+            fieldname = jsonnode.get_child_title(key)
             buttons.append(urwid.Button(fieldname, on_press, {'key': key}))
         #TODO: remove hard coded widths
         return urwid.GridFlow(buttons, 13, 3, 1, 'left')
 
+class FieldAddKey(object):
+    """
+    Dummy class used as a key for FieldAddButtons.  This library uses an object
+    instance rather than a string as a key to prevent collisions with valid 
+    JSON keys.
+    """
+    pass
+
+
+class FieldAddNode(TreeNode):
+    def __init__(self, jsonnode, parent=None, key=None, depth=None):
+        if not isinstance(jsonnode, JsonNode):
+            raise RuntimeError(str(jsonnode))
+        key = jsonnode.get_key()
+        depth = jsonnode.get_depth()
+        TreeNode.__init__(self, jsonnode, key=key, parent=parent, depth=depth)        
+        
+    def load_widget(self):
+        return FieldAddButtons(self)
 
 class JsonWidgetNode(TreeNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None):
@@ -218,12 +246,14 @@ class JsonWidgetNode(TreeNode):
         else:
             return GenericEditWidget(self)
 
+
 class JsonWidgetParent(ParentNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None):
         if not isinstance(jsonnode, JsonNode):
             raise RuntimeError(str(jsonnode))
         key = jsonnode.get_key()
         depth = jsonnode.get_depth()
+        self._fieldaddkey = FieldAddKey()
         ParentNode.__init__(self, jsonnode, key=key, parent=parent, 
                             depth=depth)
 
@@ -231,18 +261,29 @@ class JsonWidgetParent(ParentNode):
         return ArrayEditWidget(self)
 
     def load_child_keys(self):
-        return self.get_value().get_child_keys()
+        keys = self.get_value().get_child_keys()
+        fieldaddkey = self._fieldaddkey
+        keys.append(fieldaddkey)
+        return keys
 
     def load_child_node(self, key):
         depth = self.get_depth() + 1
-        jsonnode = self.get_value().get_child(key)
-        schemanode = jsonnode.get_schema_node()
-        nodetype = schemanode.get_type()
-        if (nodetype == 'map') or (nodetype == 'seq'):
-            return JsonWidgetParent(jsonnode, parent=self, key=key, 
-                                    depth=depth)
+        if isinstance(key, FieldAddKey):
+            return FieldAddNode(self.get_value(), parent=self, depth=depth, 
+                                key=key)
         else:
-            return JsonWidgetNode(jsonnode, parent=self, key=key, depth=depth)
+            try:
+                jsonnode = self.get_value().get_child(key)
+            except:
+                raise RuntimeError(self.get_parent())
+            schemanode = jsonnode.get_schema_node()
+            nodetype = schemanode.get_type()
+            if (nodetype == 'map') or (nodetype == 'seq'):
+                return JsonWidgetParent(jsonnode, parent=self, key=key, 
+                                        depth=depth)
+            else:
+                return JsonWidgetNode(jsonnode, parent=self, key=key, 
+                                      depth=depth)
 
 
 class JsonPinotFile(PinotFile):
