@@ -177,7 +177,7 @@ class FieldAddButtons(BaseJsonEditWidget):
             style='selected'
         else:
             style='default'
-        jsonnode = self.get_json_node()
+        jsonnode = self.get_node().get_parent().get_value()
 
         caption = urwid.Text(('default', "Add fields: "))
         buttonfield = self.get_buttons()
@@ -186,12 +186,12 @@ class FieldAddButtons(BaseJsonEditWidget):
 
     def get_buttons(self):
         buttons = []
+        parentnode = self.get_node().get_parent()
 
         def on_press(button, user_data=None):
-            ### FIXME - need to figre you where to put add_node
-            parentwidget.add_node(user_data['key'])
+            parentnode.add_node(user_data['key'])
 
-        jsonnode = self.get_node().get_value()
+        jsonnode = self.get_node().get_parent().get_value()
         for key in jsonnode.get_available_keys():
             fieldname = jsonnode.get_child_title(key)
             buttons.append(urwid.Button(fieldname, on_press, {'key': key}))
@@ -209,8 +209,6 @@ class FieldAddKey(object):
 
 class FieldAddNode(TreeNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None):
-        key = jsonnode.get_key()
-        depth = jsonnode.get_depth()
         TreeNode.__init__(self, jsonnode, key=key, parent=parent, depth=depth)        
         
     def load_widget(self):
@@ -263,8 +261,7 @@ class JsonWidgetParent(ParentNode):
     def load_child_node(self, key):
         depth = self.get_depth() + 1
         if isinstance(key, FieldAddKey):
-            return FieldAddNode(self.get_value(), parent=self, depth=depth, 
-                                key=key)
+            return FieldAddNode(None, parent=self, depth=depth, key=key)
         else:
             jsonnode = self.get_value().get_child(key)
             schemanode = jsonnode.get_schema_node()
@@ -275,6 +272,14 @@ class JsonWidgetParent(ParentNode):
             else:
                 return JsonWidgetNode(jsonnode, parent=self, key=key, 
                                       depth=depth)
+
+    def add_node(self, key):
+        jsonnode = self.get_value()
+        jsonnode.add_child(key)
+        self.get_child_keys(reload=True)
+        fieldaddnode = self.get_child_node(self._fieldaddkey)
+        fieldaddnode.get_widget(reload=True)
+        
 
 
 class JsonPinotFile(PinotFile):

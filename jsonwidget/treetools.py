@@ -88,6 +88,13 @@ class TreeWidget(urwid.WidgetWrap):
     def keypress(self, size, key):
         """Toggle selected on space, ignore other keys."""
 
+        w = self.get_w()
+        try:
+            key = w.keypress(size, key)
+        except AttributeError:
+            # no biggie...we'll just handle the keypress here
+            pass
+
         if key == " ":
             self.selected = not self.selected
             self.update_w()
@@ -236,9 +243,9 @@ class TreeNode(object):
         self._depth = depth
         self._widget = None
 
-    def get_widget(self):
+    def get_widget(self, reload=False):
         """ Return the widget for this node."""
-        if self._widget is None:
+        if self._widget is None or reload == True:
             self._widget = self.load_widget()
         return self._widget
 
@@ -310,9 +317,9 @@ class ParentNode(TreeNode):
     def load_widget(self):
         return ParentWidget(self)
 
-    def get_child_keys(self):
+    def get_child_keys(self, reload=False):
         """Return a possibly ordered list of child keys"""
-        if self._child_keys is None:
+        if self._child_keys is None or reload == True:
             self._child_keys = self.load_child_keys()
         return self._child_keys
 
@@ -327,9 +334,9 @@ class ParentNode(TreeNode):
         child = self.get_child_node(key)
         return child.get_widget()
 
-    def get_child_node(self, key):
+    def get_child_node(self, key, reload=False):
         """Return the child node for a given key.  Create if necessary."""
-        if key not in self._children:
+        if key not in self._children or reload == True:
             self._children[key] = self.load_child_node(key)
         return self._children[key]
 
