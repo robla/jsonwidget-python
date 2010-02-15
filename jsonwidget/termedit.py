@@ -209,8 +209,6 @@ class FieldAddKey(object):
 
 class FieldAddNode(TreeNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None):
-        if not isinstance(jsonnode, JsonNode):
-            raise RuntimeError(str(jsonnode))
         key = jsonnode.get_key()
         depth = jsonnode.get_depth()
         TreeNode.__init__(self, jsonnode, key=key, parent=parent, depth=depth)        
@@ -220,8 +218,6 @@ class FieldAddNode(TreeNode):
 
 class JsonWidgetNode(TreeNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None):
-        if not isinstance(jsonnode, JsonNode):
-            raise RuntimeError(str(jsonnode))
         key = jsonnode.get_key()
         depth = jsonnode.get_depth()
         TreeNode.__init__(self, jsonnode, key=key, parent=parent, depth=depth)
@@ -249,8 +245,6 @@ class JsonWidgetNode(TreeNode):
 
 class JsonWidgetParent(ParentNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None):
-        if not isinstance(jsonnode, JsonNode):
-            raise RuntimeError(str(jsonnode))
         key = jsonnode.get_key()
         depth = jsonnode.get_depth()
         self._fieldaddkey = FieldAddKey()
@@ -272,10 +266,7 @@ class JsonWidgetParent(ParentNode):
             return FieldAddNode(self.get_value(), parent=self, depth=depth, 
                                 key=key)
         else:
-            try:
-                jsonnode = self.get_value().get_child(key)
-            except:
-                raise RuntimeError(self.get_parent())
+            jsonnode = self.get_value().get_child(key)
             schemanode = jsonnode.get_schema_node()
             nodetype = schemanode.get_type()
             if (nodetype == 'map') or (nodetype == 'seq'):
