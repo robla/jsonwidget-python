@@ -34,6 +34,9 @@ class BaseJsonEditWidget(TreeWidget):
     def get_json_node(self):
         return self.get_node().get_value()
 
+    def unhandled_keys(self, size, key):
+        """Overriding default selection behavior"""
+        return key
 
 class ArrayEditWidget(ParentWidget):
     """ Map and Seq edit widget and container"""
@@ -42,6 +45,10 @@ class ArrayEditWidget(ParentWidget):
         
     def get_display_text(self):
         return self.get_json_node().get_title() + ": "
+
+    def unhandled_keys(self, size, key):
+        """Overriding default selection behavior"""
+        return key
 
 
 class GenericEditWidget(BaseJsonEditWidget):
