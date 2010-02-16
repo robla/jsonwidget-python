@@ -242,10 +242,12 @@ class JsonWidgetNode(TreeNode):
 
 
 class JsonWidgetParent(ParentNode):
-    def __init__(self, jsonnode, parent=None, key=None, depth=None):
+    def __init__(self, jsonnode, parent=None, key=None, depth=None, 
+                 listbox=None):
         key = jsonnode.get_key()
         depth = jsonnode.get_depth()
         self._fieldaddkey = FieldAddKey()
+        self._listbox = listbox
         ParentNode.__init__(self, jsonnode, key=key, parent=parent, 
                             depth=depth)
 
@@ -253,9 +255,11 @@ class JsonWidgetParent(ParentNode):
         return ArrayEditWidget(self)
 
     def load_child_keys(self):
-        keys = self.get_value().get_child_keys()
-        fieldaddkey = self._fieldaddkey
-        keys.append(fieldaddkey)
+        jsonnode = self.get_value()
+        keys = jsonnode.get_child_keys()
+        if len(jsonnode.get_available_keys()) > 0:
+            fieldaddkey = self._fieldaddkey
+            keys.append(fieldaddkey)
         return keys
 
     def load_child_node(self, key):
@@ -268,7 +272,7 @@ class JsonWidgetParent(ParentNode):
             nodetype = schemanode.get_type()
             if (nodetype == 'map') or (nodetype == 'seq'):
                 return JsonWidgetParent(jsonnode, parent=self, key=key, 
-                                        depth=depth)
+                                        depth=depth, listbox=self._listbox)
             else:
                 return JsonWidgetNode(jsonnode, parent=self, key=key, 
                                       depth=depth)
@@ -277,9 +281,11 @@ class JsonWidgetParent(ParentNode):
         jsonnode = self.get_value()
         jsonnode.add_child(key)
         self.get_child_keys(reload=True)
-        fieldaddnode = self.get_child_node(self._fieldaddkey)
-        fieldaddnode.get_widget(reload=True)
-        
+        newnode = self.get_child_node(key)
+        self._listbox.set_focus(newnode)
+        if len(jsonnode.get_available_keys()) > 0:
+            fieldaddnode = self.get_child_node(self._fieldaddkey)
+            fieldaddnode.get_widget(reload=True)
 
 
 class JsonPinotFile(PinotFile):
@@ -317,10 +323,11 @@ class JsonPinotFile(PinotFile):
     def is_saved(self):
         return self.json.is_saved()
 
-class JsonFrame(urwid.ListBox):
+
+class JsonFrame(TreeListBox):
     def __init__(self, jsonobj):
         self.json = jsonobj
-        walker = TreeWalker(JsonWidgetParent(self.json))
+        walker = TreeWalker(JsonWidgetParent(self.json, listbox=self))
         return super(self.__class__, self).__init__(walker)
 
 
