@@ -471,13 +471,16 @@ class TreeListBox(urwid.ListBox):
 
         widget, pos = self.body.get_focus()
         
+        parentpos = pos.get_parent()
+        
+        if parentpos is None:
+            return
+        
         middle, top, bottom = self.calculate_visible( size )
 
         row_offset, focus_widget, focus_pos, focus_rows, cursor = middle
         trim_top, fill_above = top
 
-        parentpos = pos.get_parent()
-        
         for widget, pos, rows in fill_above:
             row_offset -= rows
             if pos == parentpos:
