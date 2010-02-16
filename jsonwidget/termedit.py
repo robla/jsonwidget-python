@@ -192,7 +192,7 @@ class FieldAddButtons(BaseJsonEditWidget):
         parentnode = self.get_node().get_parent()
 
         def on_press(button, user_data=None):
-            parentnode.add_node(user_data['key'])
+            parentnode.add_child_node(user_data['key'])
 
         jsonnode = self.get_node().get_parent().get_value()
         for key in jsonnode.get_available_keys():
@@ -243,6 +243,14 @@ class JsonWidgetNode(TreeNode):
         else:
             return GenericEditWidget(self)
 
+    def delete_node(self):
+        parent = self.get_parent()
+        if parent is None:
+            jsonnode = self.get_value()
+            jsonnode.set_data(None)
+            self.get_widget(reload=True)
+        else:
+            parent.delete_child_node(self.get_key())
 
 class JsonWidgetParent(ParentNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None, 
@@ -280,15 +288,31 @@ class JsonWidgetParent(ParentNode):
                 return JsonWidgetNode(jsonnode, parent=self, key=key, 
                                       depth=depth)
 
-    def add_node(self, key):
+    def add_child_node(self, key):
+        # update the json first
         jsonnode = self.get_value()
         jsonnode.add_child(key)
+        # refresh the child key cache
         self.get_child_keys(reload=True)
         newnode = self.get_child_node(key)
-        self._listbox.set_focus(newnode)
+        # change the focus to the new field.  This will be especially
+        # important should this be the last new field, since the last button
+        # in the row we're currently focused on will disappear.
+        size = self._listbox._size
+        offset, inset = self._listbox.get_focus_offset_inset(size)
+        self._listbox.change_focus(size, newnode, coming_from='below',
+                                   offset_inset = offset)
+        # if we're out of fields to add, nuke the corresponding button
         if len(jsonnode.get_available_keys()) > 0:
             fieldaddnode = self.get_child_node(self._fieldaddkey)
             fieldaddnode.get_widget(reload=True)
+
+    def delete_child_node(self, key):
+        childnode = self.get_child_node(key)
+        self._listbox.set_focus(childnode.get_widget().prev_inorder())
+        jsonnode = self.get_value()
+        jsonnode.delete_child(key)
+        self.get_child_keys(reload=True)
 
 
 class JsonPinotFile(PinotFile):
@@ -333,6 +357,11 @@ class JsonFrame(TreeListBox):
         walker = TreeWalker(JsonWidgetParent(self.json, listbox=self))
         return super(self.__class__, self).__init__(walker)
 
+    def keypress(self, size, key):
+        # HACK: this is the only reliable way I could figure out how to get
+        # this info to AddChildNode
+        self._size = size
+        return self.__super.keypress(size, key)
 
 class JsonEditor(PinotFileEditor):
     """
@@ -349,19 +378,17 @@ class JsonEditor(PinotFileEditor):
 
     def handle_delete_node_request(self):
         """Handle ctrl d - "delete node"."""
-        focuswidget = self.walker.get_deepest_focus_widget_with_json()
-        focusnode = focuswidget.get_json_node()
-        focusnode.set_cursor(focusnode)
-        self.set_body()
         editor = self
         def delete_func():
-            return editor.handle_delete_node(focuswidget)
+            return editor.handle_delete_node()
         self.yes_no_question("Delete selected field? ",
                              yesfunc=delete_func,
                              nofunc=self.cleanup_delete_request,
                              cancelfunc=self.cleanup_delete_request)
 
-    def handle_delete_node(self, focuswidget):
+    def handle_delete_node(self):
+        widget, node = self.listbox.get_focus()
+        node.delete_node()
         self.cleanup_delete_request()        
 
     def cleanup_delete_request(self):

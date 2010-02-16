@@ -359,8 +359,10 @@ class ParentNode(TreeNode):
         try:
             return self.get_child_keys().index(key)
         except ValueError:
-            # we'll assume it was deleted
-            return None
+            errorstring = ("Can't find key %s in ParentNode %s\n" +
+                           "ParentNode items: %s")
+            raise TreeWidgetError(errorstring % (key, self.get_key(), 
+                                  str(self.get_child_keys())))
 
     def next_child(self, key):
         """Return the next child node in index order from the given key."""
