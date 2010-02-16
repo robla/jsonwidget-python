@@ -246,6 +246,7 @@ class JsonNode(JsonBaseNode):
     def delete_child(self, key=None):
         self.root.editcount += 1
         self.data.pop(key)
+        self.children.pop(key)
         # propogate the change up the tree
         if(self.depth > 0):
             self.parent.set_child_data(self.key, self.data)

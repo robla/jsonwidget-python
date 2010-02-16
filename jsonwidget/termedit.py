@@ -302,17 +302,29 @@ class JsonWidgetParent(ParentNode):
         offset, inset = self._listbox.get_focus_offset_inset(size)
         self._listbox.change_focus(size, newnode, coming_from='below',
                                    offset_inset = offset)
-        # if we're out of fields to add, nuke the corresponding button
+        # refresh the field add buttons, since the list of available keys has
+        # changed
         if len(jsonnode.get_available_keys()) > 0:
             fieldaddnode = self.get_child_node(self._fieldaddkey)
             fieldaddnode.get_widget(reload=True)
 
     def delete_child_node(self, key):
+        # get ready to focus on previous node
         childnode = self.get_child_node(key)
-        self._listbox.set_focus(childnode.get_widget().prev_inorder())
+        prevnode = childnode.get_widget().prev_inorder().get_node()
+        size = self._listbox._size
+        offset, inset = self._listbox.get_focus_offset_inset(size)
+        # update the json
         jsonnode = self.get_value()
         jsonnode.delete_child(key)
-        self.get_child_keys(reload=True)
+        # change focus
+        keys = self.get_child_keys(reload=True)
+        self._listbox.change_focus(size, prevnode, coming_from='below',
+                                   offset_inset = offset)
+        # refresh the field add buttons, since the list of available keys has
+        # changed
+        fieldaddnode = self.get_child_node(self._fieldaddkey)
+        fieldaddnode.get_widget(reload=True)
 
 
 class JsonPinotFile(PinotFile):
@@ -359,7 +371,7 @@ class JsonFrame(TreeListBox):
 
     def keypress(self, size, key):
         # HACK: this is the only reliable way I could figure out how to get
-        # this info to AddChildNode
+        # this info to add_child_node
         self._size = size
         return self.__super.keypress(size, key)
 
