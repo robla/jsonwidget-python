@@ -308,6 +308,25 @@ class JsonWidgetParent(ParentNode):
             fieldaddnode = self.get_child_node(self._fieldaddkey)
             fieldaddnode.get_widget(reload=True)
 
+    def delete_node(self):
+        '''Delete this node and all of its children'''
+        parent = self.get_parent()
+        if parent is None:
+            jsonnode = self.get_value()
+            keys = jsonnode.get_child_keys()
+            for key in reversed(keys):
+                jsonnode.delete_child(key)
+                self._children.pop(key)
+            jsonnode.set_data(None)
+            self.get_child_keys(reload=True)
+            self.get_widget(reload=True)
+            # refresh the field add buttons, since the list of available keys 
+            # has changed
+            fieldaddnode = self.get_child_node(self._fieldaddkey)
+            fieldaddnode.get_widget(reload=True)
+        else:
+            parent.delete_child_node(self.get_key())
+
     def delete_child_node(self, key):
         # get ready to focus on previous node
         childnode = self.get_child_node(key)
@@ -317,6 +336,8 @@ class JsonWidgetParent(ParentNode):
         # update the json
         jsonnode = self.get_value()
         jsonnode.delete_child(key)
+        # update this node tree
+        self._children.pop(key)
         # change focus
         keys = self.get_child_keys(reload=True)
         self._listbox.change_focus(size, prevnode, coming_from='below',
