@@ -86,15 +86,21 @@ class TreeWidget(urwid.WidgetWrap):
         return self.selected
     
     def keypress(self, size, key):
-        """Toggle selected on space, ignore other keys."""
-
+        """allow subclasses to intercept keystrokes"""
         w = self.get_w()
         try:
             key = w.keypress(size, key)
         except AttributeError:
             # no biggie...we'll just handle the keypress here
             pass
+        key = self.unhandled_keys(size, key)
+        return key
 
+    def unhandled_keys(self, size, key):
+        """
+        Override this method to intercept keystrokes in subclasses.
+        Default behavior: Toggle selected on space, ignore other keys.
+        """
         if key == " ":
             self.selected = not self.selected
             self.update_w()

@@ -62,7 +62,7 @@ class RetroMainLoop(object):
  
             ('default', 'default', 'default'),
             ('editfield', 'light gray', 'dark blue', 'underline'),
-            ('editfieldfocus', 'white', 'dark red', 'underline'),
+            ('editfieldfocus', 'white', 'dark red', ('underline','standout')),
             ('selected', 'white', 'dark red', 'standout'),
             ('header', 'light gray', 'dark red', 'standout'),
             ('footerstatusdormant', 'light gray', 'dark blue'),

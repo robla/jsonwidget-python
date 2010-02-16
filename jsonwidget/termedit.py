@@ -47,16 +47,16 @@ class ArrayEditWidget(ParentWidget):
 class GenericEditWidget(BaseJsonEditWidget):
     """ generic widget used for free text entry (e.g. strings)"""
     def load_inner_widget(self):
-        if self.is_selected():
-            style='selected'
-        else:
-            style='default'
         jsonnode = self.get_json_node()
-        editcaption = urwid.Text((style, jsonnode.get_title() + ": "))
+        editcaption = urwid.Text(jsonnode.get_title() + ": ")
         editfield = self.get_edit_field_widget()
         editpair = urwid.Columns([('fixed', 20, editcaption), editfield])
         if self.is_selected():
-            editpair = urwid.AttrWrap(editpair, 'selected')
+            editpair = urwid.AttrWrap(editpair, 'selected', 
+                                      focus_attr='selected focus')
+        else:
+            editpair = urwid.AttrWrap(editpair, 'body', 
+                                      focus_attr='focus')
 
         return editpair
 
@@ -173,13 +173,9 @@ class FieldAddButtons(BaseJsonEditWidget):
     """ Add a button"""
 
     def load_inner_widget(self):
-        if self.is_selected():
-            style='selected'
-        else:
-            style='default'
         jsonnode = self.get_node().get_parent().get_value()
 
-        caption = urwid.Text(('default', "Add fields: "))
+        caption = urwid.Text("Add fields: ")
         buttonfield = self.get_buttons()
         editpair = urwid.Columns([('fixed', 20, caption), buttonfield])
         return editpair
