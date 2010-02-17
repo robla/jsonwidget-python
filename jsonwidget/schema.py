@@ -20,13 +20,15 @@ class SchemaNode(JsonBaseNode):
     in Python) gets its own child SchemaNode.
     """
 
-    def __init__(self, key=None, data=None, filename=None, parent=None):
+    def __init__(self, key=None, data=None, filename=None, parent=None, 
+                 ordermap=None):
         if filename is not None:
             self.filename = filename
             if data is None:
                 self.load_from_file()
         else:
             self.data = data
+            self.ordermap = ordermap
 
         # object ref for the parent
         self.parent = parent
@@ -40,17 +42,17 @@ class SchemaNode(JsonBaseNode):
             self.rootschema = self.parent.get_root_schema()
         if(self.data['type'] == 'map'):
             self.children = {}
+            
             for subkey, subdata in self.data['mapping'].items():
+                ordermap = \
+                    self.ordermap['children']['mapping']['children'][subkey]
                 self.children[subkey] = SchemaNode(key=subkey, data=subdata,
-                                                 parent=self)
+                                                   parent=self, 
+                                                   ordermap=ordermap)
         elif(self.data['type'] == 'seq'):
+            ordermap = self.ordermap['children']['sequence']['children'][0]
             self.children = [SchemaNode(key=0, data=self.data['sequence'][0],
-                                        parent=self)]
-
-    def load_from_file(self, filename=None):
-        if filename is not None:
-            self.filename = file
-        self.data = json.load(open(self.filename))
+                                        parent=self, ordermap=ordermap)]
 
     def get_depth(self):
         return self.depth
@@ -69,6 +71,9 @@ class SchemaNode(JsonBaseNode):
 
     def get_type(self):
         return self.data['type']
+
+    def _get_key_order(self):
+        return self.ordermap['children']['mapping']['keys']
 
     def get_children(self):
         """
@@ -94,9 +99,6 @@ class SchemaNode(JsonBaseNode):
             return self.children[0]
         else:
             raise Error("self.children has invalid type %s" % type)
-
-    def get_child_keys(self):
-        return self.children.keys()
 
     def get_key(self):
         return self.key

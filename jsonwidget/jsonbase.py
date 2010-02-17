@@ -7,8 +7,9 @@
 
 import json
 
+from jsonwidget.jsonorder import *
 
-class Error(RuntimeError):
+class JsonBaseError(RuntimeError):
     pass
 
 
@@ -28,5 +29,40 @@ class JsonBaseNode:
     def set_filename(self, filename):
         self.filename = filename
         self.savededitcount = 0
+
+    def load_from_file(self, filename=None):
+        if filename is not None:
+            self.filename = file
+        with open(self.filename, 'r') as f:
+            jsonbuffer = f.read()
+        f.closed  
+        self.data = json.loads(jsonbuffer)
+        self.ordermap = JsonOrderMap(jsonbuffer).get_order_map()
+
+    def _get_key_order(self):
+        """virtual function"""
+        pass
+
+    def get_child_keys(self):
+        if isinstance(self.children, dict):
+            keys = self.children.keys()
+            ordermap = self._get_key_order()
+            def keycmp(a, b):
+                try:
+                    ai = ordermap.index(a)
+                except:
+                    ai = len(keys)
+                try:
+                    bi = ordermap.index(b)
+                except:
+                    bi = len(keys)
+                return cmp(ai, bi)
+            keys.sort(cmp=keycmp)
+            return keys
+        elif isinstance(self.children, list):
+            return range(len(self.children))
+        else:
+            raise JsonBaseError("self.children has invalid type %s" %
+                                type(self.children).__name__)
 
 

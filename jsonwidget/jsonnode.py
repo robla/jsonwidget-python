@@ -21,7 +21,8 @@ class JsonNode(JsonBaseNode):
     """
 
     def __init__(self, key=None, parent=None, filename=None, data=None,
-                 schemanode=None, schemadata=None, schemafile=None):
+                 schemanode=None, schemadata=None, schemafile=None, 
+                 ordermap=None):
         self.filename = filename
         if self.filename is not None:
             if data is None:
@@ -34,6 +35,9 @@ class JsonNode(JsonBaseNode):
         else:
             schemanode = SchemaNode(key=key, data=schemadata,
                                   filename=schemafile)
+
+        if ordermap is not None:
+            self.ordermap = ordermap
 
         # local index for the node
         self.key = key
@@ -68,11 +72,6 @@ class JsonNode(JsonBaseNode):
 
     def get_root(self):
         return self.root
-
-    def load_from_file(self, filename=None):
-        if filename is not None:
-            self.filename = filename
-        self.data = json.load(open(self.filename))
 
     def save_to_file(self, filename=None):
         if filename is not None:
@@ -115,14 +114,15 @@ class JsonNode(JsonBaseNode):
                     raise("Validation error: %s not a valid key in %s" %
                           (subkey, self.schemanode.get_key()))
                 self.children[subkey] = JsonNode(key=subkey, data=subdata,
-                                                 parent=self,
-                                                 schemanode=subschemanode)
+                    parent=self, schemanode=subschemanode, 
+                    ordermap=self.ordermap['children'][subkey])
         elif jsontype == 'seq':
             i = 0
             for subdata in self.data:
                 subschemanode = self.schemanode.get_child(i)
+                ordermap = self.ordermap['children'][i]
                 self.children.append(JsonNode(key=i, data=subdata, parent=self,
-                                              schemanode=subschemanode))
+                    schemanode=subschemanode, ordermap=ordermap))
                 i += 1
 
     def get_schema_node(self):
@@ -185,14 +185,13 @@ class JsonNode(JsonBaseNode):
     def get_child(self, key):
         return self.children[key]
 
-    def get_child_keys(self):
-        if isinstance(self.children, dict):
-            return self.children.keys()
-        elif isinstance(self.children, list):
-            return range(len(self.children))
-        else:
-            raise JsonNodeError("self.children has invalid type %s" %
-                                type(self.children).__name__)
+    def _get_key_order(self):
+        """virtual function"""
+        try:
+            ordermap = self.ordermap['keys']
+        except AttributeError:
+            ordermap = self.schemanode._get_key_order()
+        return ordermap
 
     def get_available_keys(self):
         """
