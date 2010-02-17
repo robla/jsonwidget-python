@@ -1,20 +1,19 @@
 Things to get done before version 0.1
 
 On deck:
-*  Implement ability to delete child nodes
+*  Respect key order in json and schema files
 
 Roadmap
 0.1.0:
 *  Implement support for optional/required elements
-*  Respect key order in json and schema files
 *  Remove hardcoded 20 character label column
 *  Remove hardcoded 13 character "Add field" button width
 *  Put "Add field" over in the data area
-*  Don't render "Add field" row if there's no fields to add
+*  Disable the "delete" option when a field that can't be deleted is selected
+*  Highlight all children when deleting
 
 0.1.1:
 *  Implement ability to edit arbitrary JSON
-*  Adapt browse.py from urwid into reusable TreeWalker component, and use that
 
 0.2.0:
 *  Update to urwid 0.9.9 mainloop
@@ -54,4 +53,7 @@ Done:
 *  change API of GenericEditWidget to only initialize with a valid JsonNode
 *  Update data for booleans and enumerations
 *  Look up proper doc format for python comments, and start using it.
+*  Adapt browse.py from urwid into reusable TreeWalker component, and use that
+*  Implement ability to delete child nodes
+*  Don't render "Add field" row if there's no fields to add
 
