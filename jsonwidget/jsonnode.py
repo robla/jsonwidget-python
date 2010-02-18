@@ -82,7 +82,7 @@ class JsonNode(JsonBaseNode):
             self.filename = fd.name
         else:
             fd = open(self.filename, 'w+')
-        json.dump(self.get_data(), fd, indent=4)
+        json.dump(self.get_data(), fd, indent=4, sort_keys=True)
         self.savededitcount = self.editcount
 
     def is_type_match(self, schemanode):
@@ -186,11 +186,7 @@ class JsonNode(JsonBaseNode):
         return self.children[key]
 
     def _get_key_order(self):
-        """virtual function"""
-        try:
-            ordermap = self.ordermap['keys']
-        except AttributeError:
-            ordermap = self.schemanode._get_key_order()
+        ordermap = self.schemanode._get_key_order()
         return ordermap
 
     def get_available_keys(self):
@@ -203,7 +199,8 @@ class JsonNode(JsonBaseNode):
             schemakeys = set(self.schemanode.get_child_keys())
             jsonkeys = set(self.get_child_keys())
             unusedkeys = schemakeys.difference(jsonkeys)
-            return list(unusedkeys)
+            sortedkeys = self.sort_keys(list(unusedkeys))
+            return sortedkeys
         elif(self.schemanode.get_type() == 'seq'):
             return [len(self.children)]
         else:

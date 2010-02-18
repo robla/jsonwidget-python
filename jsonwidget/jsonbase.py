@@ -43,22 +43,24 @@ class JsonBaseNode:
         """virtual function"""
         pass
 
+    def sort_keys(self, keys):
+        ordermap = self._get_key_order()
+        def keycmp(a, b):
+            try:
+                ai = ordermap.index(a)
+            except:
+                ai = len(keys)
+            try:
+                bi = ordermap.index(b)
+            except:
+                bi = len(keys)
+            return cmp(ai, bi)
+        return sorted(keys, cmp=keycmp)
+
     def get_child_keys(self):
         if isinstance(self.children, dict):
             keys = self.children.keys()
-            ordermap = self._get_key_order()
-            def keycmp(a, b):
-                try:
-                    ai = ordermap.index(a)
-                except:
-                    ai = len(keys)
-                try:
-                    bi = ordermap.index(b)
-                except:
-                    bi = len(keys)
-                return cmp(ai, bi)
-            keys.sort(cmp=keycmp)
-            return keys
+            return self.sort_keys(keys)
         elif isinstance(self.children, list):
             return range(len(self.children))
         else:
