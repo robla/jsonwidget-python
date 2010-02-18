@@ -1,4 +1,10 @@
 #!/usr/bin/python
+# JsonOrderMap - class for scraping key order out of JSON text
+#
+# Copyright (c) 2010, Rob Lanphier
+# All rights reserved.
+# Licensed under BSD-style license.  See LICENSE.txt for details.
+
 
 import simpleparse
 import json
