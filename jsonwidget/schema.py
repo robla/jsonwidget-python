@@ -105,6 +105,9 @@ class SchemaNode(JsonBaseNode):
 
     def is_enum(self):
         return ('enum' in self.data)
+        
+    def is_required(self):
+        return ('required' in self.data and self.data['required'])
 
     def enum_options(self):
         return self.data['enum']

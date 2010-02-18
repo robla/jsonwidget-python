@@ -1,18 +1,20 @@
 Things to get done before version 0.1
 
 On deck:
-*  Implement support for optional/required elements
 
 Roadmap
 0.1.0:
+*  Disable the "delete" option when a field that can't be deleted is selected
+**  Ensure that "delete" over "add fields" area doesn't cause crash
+**  Provide alert "foo is a required field"
+*  Fix crashing problem with deleting whole address entries in address book
 *  Remove hardcoded 20 character label column
 *  Remove hardcoded 13 character "Add field" button width
 *  Put "Add field" over in the data area
 *  Change "add fields" to "add items" for sequences
-*  Disable the "delete" option when a field that can't be deleted is selected
-**  Ensure that "delete" over "add fields" area doesn't cause crash
 *  Add alias for editing address books
-*  Fix crashing problem with deleting whole address entries in address book
+*  Minimal check for urwid and simpleparse (and look for /etc/lsb-release to 
+   figure out the right error message)
 
 0.1.1:
 *  Implement ability to edit arbitrary JSON
@@ -61,3 +63,5 @@ Done:
 *  Implement ability to delete child nodes
 *  Don't render "Add field" row if there's no fields to add
 *  Use schema key order in editor
+*  Autopopulate required fields with blank data
+

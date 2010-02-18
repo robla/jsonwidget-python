@@ -61,6 +61,7 @@
             {
               "type":"map",
               "title":"Phone number",
+              "required":true,
               "mapping":
               {
                 "workhomeother":

@@ -108,14 +108,25 @@ class JsonNode(JsonBaseNode):
         elif schematype == 'seq':
             self.children = []
         if jsontype == 'map':
+            schemakeys = self.schemanode.get_child_keys()
+            # first add all nodes for which there is JSON data, removing them
+            # from our local schemakeys array so that we can iterate through 
+            # the schema keys we miss in this pass
             for subkey, subdata in self.data.items():
                 subschemanode = self.schemanode.get_child(subkey)
                 if subschemanode is None:
                     raise("Validation error: %s not a valid key in %s" %
                           (subkey, self.schemanode.get_key()))
+                schemakeys.remove(subkey)
                 self.children[subkey] = JsonNode(key=subkey, data=subdata,
                     parent=self, schemanode=subschemanode, 
                     ordermap=self.ordermap['children'][subkey])
+            # iterate through the unpopulated schema keys and add subnodes if 
+            # the nodes are required
+            for subkey in schemakeys:
+                subschemanode = self.schemanode.get_child(subkey)
+                if subschemanode.is_required():
+                    self.add_child(subkey)
         elif jsontype == 'seq':
             i = 0
             for subdata in self.data:
@@ -124,6 +135,8 @@ class JsonNode(JsonBaseNode):
                 self.children.append(JsonNode(key=i, data=subdata, parent=self,
                     schemanode=subschemanode, ordermap=ordermap))
                 i += 1
+            if i == 0 and self.schemanode.get_child(0).is_required():
+                self.add_child(0)
 
     def get_schema_node(self):
         return self.schemanode
