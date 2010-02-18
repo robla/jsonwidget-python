@@ -91,12 +91,10 @@ class JsonOrderMap(object):
         return self._ordermap
 
 if __name__ == "__main__":
-    filename = '/home/robla/2010/jsonwidget-python/tmp/ordered.json'
-    with open(filename, 'r') as f:
-        jsonfile = f.read()
-    f.closed  
-    ordermap = JsonOrderMap(jsonfile).get_order_map()
     import json
-    print json.dumps(ordermap, indent=4)
+    foo = "{'a':1,'b':1,'c':{'c1':1,'c2':1}}"
+    foomap = JsonOrderMap(foo).get_order_map()
+    print "Original JSON: ", foo
+    print "Order map:\n", json.dumps(foomap, indent=4)
     
 
