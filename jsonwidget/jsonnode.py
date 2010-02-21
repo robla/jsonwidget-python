@@ -325,4 +325,14 @@ class JsonNode(JsonBaseNode):
             return False
         else:
             return self.parent.is_selected()
+            
+    def is_deletable(self):
+        parent = self.parent
+        if parent is not None and parent.get_type()=='seq':
+            if len(parent.get_children()) > 1:
+                return True
+            else:
+                return not self.schemanode.is_required()
+        else:
+            return not self.schemanode.is_required()
 

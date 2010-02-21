@@ -217,6 +217,9 @@ class FieldAddNode(TreeNode):
     def load_widget(self):
         return FieldAddButtons(self)
 
+    def is_deletable(self):
+        return False
+
 class JsonWidgetNode(TreeNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None):
         key = jsonnode.get_key()
@@ -251,6 +254,9 @@ class JsonWidgetNode(TreeNode):
             self.get_widget(reload=True)
         else:
             parent.delete_child_node(self.get_key())
+            
+    def is_deletable(self):
+        return self.get_value().is_deletable()
 
 class JsonWidgetParent(ParentNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None, 
@@ -347,6 +353,8 @@ class JsonWidgetParent(ParentNode):
         fieldaddnode = self.get_child_node(self._fieldaddkey)
         fieldaddnode.get_widget(reload=True)
 
+    def is_deletable(self):
+        return self.get_value().is_deletable()
 
 class JsonPinotFile(PinotFile):
     '''Glue to between PinotFile and underlying JSON object'''
@@ -417,12 +425,33 @@ class JsonEditor(PinotFileEditor):
     def handle_delete_node_request(self):
         """Handle ctrl d - "delete node"."""
         editor = self
-        def delete_func():
-            return editor.handle_delete_node()
-        self.yes_no_question("Delete selected field? ",
-                             yesfunc=delete_func,
-                             nofunc=self.cleanup_delete_request,
-                             cancelfunc=self.cleanup_delete_request)
+        widget, node = self.listbox.get_focus()
+
+        if node.is_deletable():
+            def delete_func():
+                return editor.handle_delete_node()
+            self.yes_no_question("Delete selected field? ",
+                                 yesfunc=delete_func,
+                                 nofunc=self.cleanup_delete_request,
+                                 cancelfunc=self.cleanup_delete_request)
+        else:
+            if isinstance(node, FieldAddNode):
+                nodetitle = "button"
+            else:
+                nodetitle = node.get_value().get_title()
+            delparent = node.get_parent()
+            while delparent is not None and not delparent.is_deletable():
+                delparent = delparent.get_parent()
+            if delparent is not None:
+                msg = ("Cannot delete %s, try deleting %s instead" % 
+                       (nodetitle, 
+                        delparent.get_value().get_title()))
+                self.listbox.set_focus(delparent)
+            else:
+                msg = "Cannot delete %s" % nodetitle
+            self.cleanup_delete_request()
+            self.display_notification(msg)
+
 
     def handle_delete_node(self):
         widget, node = self.listbox.get_focus()
