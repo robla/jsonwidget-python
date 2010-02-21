@@ -27,7 +27,6 @@ from jsonwidget.jsonnode import *
 from jsonwidget.pinot import *
 from jsonwidget.treetools import *
 
-
 # Series of editing widgets follows, each appropriate to a datatype or two
 
 class BaseJsonEditWidget(TreeWidget):
@@ -413,7 +412,7 @@ class JsonEditor(PinotFileEditor):
     These routines deal with the specifics of a JSON editor.
     """
     def __init__(self, jsonfile=None, schemafile=None, 
-                 program_name="JsonWidget"):
+                 program_name="JsonWidget", monochrome=True):
         self.file = JsonPinotFile(jsonfile=jsonfile, schemafile=schemafile)
         self.json = self.file.get_json()
         self.schema = self.json.get_schema_node()
@@ -423,6 +422,9 @@ class JsonEditor(PinotFileEditor):
         self.set_default_footer_helpitems([("^W", "Write/Save"), 
                                            ("^X", "Exit"),
                                            ("^D", "Delete Item")])
+        if monochrome:
+            urwid.curses_display.curses.has_colors = lambda: False
+
 
 
     def handle_delete_node_request(self):

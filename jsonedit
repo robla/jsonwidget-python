@@ -5,23 +5,14 @@
 # All rights reserved.
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
-import json
-import urwid.curses_display
-import urwid
 import optparse
 import sys
-import os
+import jsonwidget.termedit
 
-from jsonwidget.termedit import *
-
-# Force monochrome for now.  Will probably revisit when 0.9.9 is widely
-# deployed
-urwid.curses_display.curses.has_colors = lambda: False
-
-
-def show_form(schemafile, jsonfile):
-    form = JsonEditor(jsonfile=jsonfile, schemafile=schemafile,
-                      program_name="jsonedit 0.1pre")
+def run_editor(schemafile, jsonfile):
+    form = jsonwidget.termedit.JsonEditor(jsonfile=jsonfile, 
+                                          schemafile=schemafile,
+                                          program_name="jsonedit 0.1pre")
     form.run()
 
 
@@ -46,7 +37,7 @@ def main():
         jsonfile = args[0]
     else:
         jsonfile = None
-    show_form(options.schema, jsonfile)
+    run_editor(options.schema, jsonfile)
 
 if __name__ == "__main__":
     main()
