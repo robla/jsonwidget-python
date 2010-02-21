@@ -407,7 +407,12 @@ class JsonEditor(PinotFileEditor):
         self.json = self.file.get_json()
         self.schema = self.json.get_schema_node()
         self.listbox = JsonFrame(self.json)
-        return PinotFileEditor.__init__(self, program_name=program_name)
+        PinotFileEditor.__init__(self, program_name=program_name, 
+                                 unhandled_input=self.unhandled_input)
+        self.set_default_footer_helpitems([("^W", "Write/Save"), 
+                                           ("^X", "Exit"),
+                                           ("^D", "Delete Node")])
+
 
     def handle_delete_node_request(self):
         """Handle ctrl d - "delete node"."""
@@ -435,4 +440,23 @@ class JsonEditor(PinotFileEditor):
     def get_walker(self):
         widget = self.get_edit_widget()
         return JsonWalker([widget])
+
+    def unhandled_input(self, input):
+        """ Attach handlers for keyboard commands here. """
+        if input == 'ctrl x':
+            if self.file.is_saved():
+                self.handle_exit()
+                return None
+            else:
+                self.handle_exit_request()
+                return None
+        elif input == 'ctrl w':
+            self.handle_write_to_request()
+            return None
+        elif input == 'ctrl d':
+            self.handle_delete_node_request()
+            return None
+        else:
+            return input
+
 

@@ -44,7 +44,7 @@ class RetroMainLoop(object):
     to urwid 0.99.
     """
 
-    def __init__(self, program_name="RetroMainLoop"):
+    def __init__(self, program_name="RetroMainLoop", unhandled_input=None):
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette([
             ('body', 'black', 'light gray'),
@@ -73,6 +73,7 @@ class RetroMainLoop(object):
         self.endstatusmessage = ""
         self.progname = program_name
         self.footertimer = None
+        self._unhandled_input = unhandled_input
 
     def run(self):
         header = self.get_header()
@@ -111,17 +112,11 @@ class RetroMainLoop(object):
                 # in subclasses
                 if key == 'window resize':
                     size = self.ui.get_cols_rows()
-                elif key == 'ctrl x':
-                    if self.file.is_saved():
-                        self.handle_exit()
-                    else:
-                        self.handle_exit_request()
-                elif key == 'ctrl w':
-                    self.handle_write_to_request()
-                elif key == 'ctrl d':
-                    self.handle_delete_node_request()
                 else:
-                    self.view.keypress(size, key)
+                    if self._unhandled_input is not None:
+                        key = self._unhandled_input(key)
+                    if key is not None:
+                        self.view.keypress(size, key)
 
 
 class PinotUserInterface(RetroMainLoop):
@@ -130,6 +125,10 @@ class PinotUserInterface(RetroMainLoop):
     These are the routines that implement the standard look-and-feel of the
     editor - header and footer format, status messages, yes/no prompts
     """
+
+    def __init__(self, **kwargs):
+        self._default_footer_helpitems = None
+        RetroMainLoop.__init__(self, **kwargs)
 
     def get_header(self):
         headerleft = urwid.Text(self.progname, align='left')
@@ -172,6 +171,9 @@ class PinotUserInterface(RetroMainLoop):
         self.view.set_footer(self.get_footer())
         self.ui.clear()
 
+    def set_default_footer_helpitems(self, helpitems=None):
+        self._default_footer_helpitems = helpitems
+        
     def get_footer(self):
         footerstatus = self.get_footer_status_widget()
         footerhelp = self.get_footer_help_widget()
@@ -193,8 +195,7 @@ class PinotUserInterface(RetroMainLoop):
 
     def get_footer_help_widget(self, helptext=None, rows=2):
         if(helptext is None):
-            helptext = [("^W", "Write/Save"), ("^X", "Exit"),
-                        ("^D", "Delete Node")]
+            helptext = self._default_footer_helpitems
         numcols = (len(helptext) + 1) / rows
         helpcolumns = []
         for i in range(numcols):
