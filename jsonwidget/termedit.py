@@ -182,7 +182,10 @@ class FieldAddButtons(BaseJsonEditWidget):
     def load_inner_widget(self):
         jsonnode = self.get_node().get_parent().get_value()
 
-        caption = urwid.Text("Add fields: ")
+        if jsonnode.get_schema_node().get_type() == 'seq':
+            caption = urwid.Text("Add item: ")
+        else:
+            caption = urwid.Text("Add field(s): ")
         buttonfield = self.get_buttons()
         editpair = urwid.Columns([('fixed', 20, caption), buttonfield])
         return editpair
