@@ -419,36 +419,38 @@ class JsonEditor(PinotFileEditor):
                                  unhandled_input=self.unhandled_input)
         self.set_default_footer_helpitems([("^W", "Write/Save"), 
                                            ("^X", "Exit"),
-                                           ("^D", "Delete Node")])
+                                           ("^D", "Delete Item")])
 
 
     def handle_delete_node_request(self):
-        """Handle ctrl d - "delete node"."""
+        """Handle ctrl d - "delete item"."""
         editor = self
         widget, node = self.listbox.get_focus()
 
         if node.is_deletable():
             def delete_func():
                 return editor.handle_delete_node()
-            self.yes_no_question("Delete selected field? ",
+            msg = "Delete %s? " % node.get_value().get_title()
+            self.yes_no_question(msg,
                                  yesfunc=delete_func,
                                  nofunc=self.cleanup_delete_request,
                                  cancelfunc=self.cleanup_delete_request)
         else:
             if isinstance(node, FieldAddNode):
-                nodetitle = "button"
+                nodemsg = 'Cannot delete "add field" buttons'
             else:
-                nodetitle = node.get_value().get_title()
+                nodemsg = ("%s is a required field" % 
+                           node.get_value().get_title())
             delparent = node.get_parent()
             while delparent is not None and not delparent.is_deletable():
                 delparent = delparent.get_parent()
             if delparent is not None:
-                msg = ("Cannot delete %s, try deleting %s instead" % 
-                       (nodetitle, 
-                        delparent.get_value().get_title()))
+                parenttitle = delparent.get_value().get_title()
+                msg = ("%s of %s, try deleting %s instead" % 
+                       (nodemsg, parenttitle, parenttitle))
                 self.listbox.set_focus(delparent)
             else:
-                msg = "Cannot delete %s" % nodetitle
+                msg = nodemsg
             self.cleanup_delete_request()
             self.display_notification(msg)
 

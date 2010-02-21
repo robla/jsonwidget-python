@@ -1,27 +1,26 @@
 Things to get done before version 0.1
 
 On deck:
-*  Disable the "delete" option when a field that can't be deleted is selected
-**  Ensure that "delete" over "add fields" area doesn't cause crash
-**  Provide alert "foo is a required field"
+*  Keep item highlighted while deleting
 
 Roadmap
 0.1.0:
-*  Keep item highlighted while deleting
-*  Remove hardcoded 20 character label column
-*  Remove hardcoded 13 character "Add field" button width
-*  Put "Add field" over in the data area
 *  Change "add fields" to "add items" for sequences
+*  Clean up imports in "jsonedit"
 *  Add alias for editing address books
 *  Minimal check for urwid and simpleparse (and look for /etc/lsb-release to 
    figure out the right error message)
-*  Rename "delete node" to something less compscinerdy
 *  Improve documentation in __init__.py
+*  Remove hardcoded 20 character label column
+*  Remove hardcoded 13 character "Add field" button width
+*  Put "Add field" over in the data area
+*  "Space" and "enter" should toggle expand/collapse on parent nodes
 
 0.1.1:
 *  Implement ability to edit arbitrary JSON
 *  Highlight all children when deleting
 *  Preserve key order in json files when saving
+*  Add a schema selection menu
 
 0.2.0:
 *  Update to urwid 0.9.9 mainloop
@@ -67,4 +66,8 @@ Done:
 *  Use schema key order in editor
 *  Autopopulate required fields with blank data
 *  Fix crashing problem with deleting whole address entries in address book
+*  Disable the "delete" option when a field that can't be deleted is selected
+**  Ensure that "delete" over "add fields" area doesn't cause crash
+**  Provide alert "foo is a required field"
+*  Rename "delete node" to something less compscinerdy
 
