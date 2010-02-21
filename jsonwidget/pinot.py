@@ -65,14 +65,14 @@ class RetroMainLoop(object):
             ('editfieldfocus', 'white', 'dark red', ('underline','standout')),
             ('selected', 'white', 'dark red', 'standout'),
             ('header', 'light gray', 'dark red', 'standout'),
-            ('footerstatusdormant', 'light gray', 'dark blue'),
-            ('footerstatusactive', 'light gray', 'dark blue', 'standout'),
-            ('footerstatusedit', 'light gray', 'dark blue'),
+            ('notificationdormant', 'light gray', 'dark blue'),
+            ('notificationactive', 'light gray', 'dark blue', 'standout'),
+            ('notificationedit', 'light gray', 'dark blue'),
             ('footerkeys', 'light gray', 'dark blue', 'standout'),
             ('footerhelp', 'light gray', 'dark blue')])
         self.endstatusmessage = ""
         self.progname = program_name
-        self.footertimer = None
+        self.notificationtimer = None
         self._unhandled_input = unhandled_input
 
     def run(self):
@@ -89,7 +89,7 @@ class RetroMainLoop(object):
 
         # need to clear this timer, or else we have to wait for the timer
         # before the app exits
-        self.clear_footer_status_timer()
+        self.clear_notification_timer()
         if not self.endstatusmessage == "":
             print self.endstatusmessage,
 
@@ -160,12 +160,12 @@ class PinotUserInterface(RetroMainLoop):
         return self.listbox
 
     def set_footer(self, widgets):
-        self.clear_footer_status_timer()
+        self.clear_notification_timer()
         self.view.set_footer(urwid.Pile(widgets))
 
-    def set_footer_status_timer(self, time):
-        self.footertimer = threading.Timer(time, self.set_default_footer)
-        self.footertimer.start()
+    def set_notification_timer(self, time):
+        self.notificationtimer = threading.Timer(time, self.set_default_footer)
+        self.notificationtimer.start()
 
     def set_default_footer(self):
         self.view.set_footer(self.get_footer())
@@ -175,22 +175,22 @@ class PinotUserInterface(RetroMainLoop):
         self._default_footer_helpitems = helpitems
         
     def get_footer(self):
-        footerstatus = self.get_footer_status_widget()
+        notification = self.get_notification_widget()
         footerhelp = self.get_footer_help_widget()
-        return urwid.Pile([footerstatus, footerhelp])
+        return urwid.Pile([notification, footerhelp])
    
-    def clear_footer_status_timer(self):
-        if self.footertimer is not None:
-            self.footertimer.cancel()
+    def clear_notification_timer(self):
+        if self.notificationtimer is not None:
+            self.notificationtimer.cancel()
 
-    def get_footer_status_widget(self, widget=None, active=False):
+    def get_notification_widget(self, widget=None, active=False):
         if widget is None:
             widget = urwid.Text("")
 
         if(active):
-            wrapped = urwid.AttrWrap(widget, "footerstatusactive")
+            wrapped = urwid.AttrWrap(widget, "notificationactive")
         else:
-            wrapped = urwid.AttrWrap(widget, "footerstatusdormant")
+            wrapped = urwid.AttrWrap(widget, "notificationdormant")
         return urwid.Pile([wrapped])
 
     def get_footer_help_widget(self, helptext=None, rows=2):
@@ -241,21 +241,20 @@ class PinotUserInterface(RetroMainLoop):
         prompt = CallbackEdit(prompt, "")
         self.view.set_focus("footer")
         helptext = [("Y", "Yes"), ("N", "No"), ("ESC", "Cancel")]
-        footerstatus = self.get_footer_status_widget(prompt, active=True)
+        notification = self.get_notification_widget(prompt, active=True)
         footerhelp = self.get_footer_help_widget(helptext=helptext)
-        self.set_footer([footerstatus, footerhelp])
+        self.set_footer([notification, footerhelp])
 
-    def handle_save_status(self, msg):
-        """Generic status message on a 5 second timer"""
-        # TODO: rename to something more generic
+    def display_notification(self, msg):
+        """Generic notification on a 5 second timer"""
         self.set_header()
         self.view.set_focus("body")
         msg = "  " + msg + "  "
-        msgwidget = urwid.Text(('footerstatusactive', msg), align='center')
-        footerstatus = self.get_footer_status_widget(msgwidget)
+        msgwidget = urwid.Text(('notificationactive', msg), align='center')
+        notification = self.get_notification_widget(msgwidget)
         footerhelp = self.get_footer_help_widget()
-        self.set_footer([footerstatus, footerhelp])
-        self.set_footer_status_timer(5.0)
+        self.set_footer([notification, footerhelp])
+        self.set_notification_timer(5.0)
 
     def cleanup_user_question(self):
         self.view.set_focus("body")
@@ -291,7 +290,7 @@ class PinotFileEditor(PinotUserInterface):
                             msg += "\n"
                             entryform.append_end_status_message(msg)
                             entryform.handle_exit()
-                    entryform.handle_save_status(msg)
+                    entryform.display_notification(msg)
                 elif key == 'esc':
                     entryform.cleanup_user_question()
         filename = entryform.file.get_filename()
@@ -300,9 +299,9 @@ class PinotFileEditor(PinotUserInterface):
         prompt = CallbackEdit('File name to write to? ', filename)
         self.view.set_focus("footer")
         helptext = [("Enter", "Confirm"), ("ESC", "Cancel")]
-        footerstatus = self.get_footer_status_widget(prompt, active=True)
+        notification = self.get_notification_widget(prompt, active=True)
         footerhelp = self.get_footer_help_widget(helptext=helptext)
-        self.set_footer([footerstatus, footerhelp])
+        self.set_footer([notification, footerhelp])
 
     def handle_exit_request(self):
         """Handle ctrl x - "exit"."""
