@@ -1,16 +1,15 @@
 Things to get done before version 0.1
 
 On deck:
-*  Add alias for editing address books
+*  Remove hardcoded 20 character label column
 
 Roadmap
 0.1.0:
+*  Remove hardcoded 13 character "Add field" button width
 *  Graceful error on mismatched schema
 *  Minimal check for urwid and simpleparse (and look for /etc/lsb-release to 
    figure out the right error message)
 *  Improve documentation in __init__.py
-*  Remove hardcoded 20 character label column
-*  Remove hardcoded 13 character "Add field" button width
 *  Put "Add field" over in the data area
 *  "Space" and "enter" should toggle expand/collapse on parent nodes
 
@@ -73,4 +72,5 @@ Done:
 *  Keep item highlighted while deleting
 *  Change "add fields" to "add items" for sequences
 *  Clean up imports in "jsonedit"
+*  Add alias for editing address books
 

@@ -20,37 +20,94 @@
           "title":"Last Name",
           "required":true
         },
-        "address":
+        "organizations":
         {
-          "type":"map",
-          "title":"Address",
-          "mapping":
-          {
-            "streetAddress":
+          "type":"seq",
+          "title":"Affiliations",
+          "sequence":
+          [
             {
-              "type":"str",
-              "title":"Street Address",
-              "required":true
-            },
-            "city":
-            {
-              "type":"str",
-              "title":"City",
-              "required":true
-            },
-            "state":
-            {
-              "type":"str",
-              "title":"State",
-              "required":true
-            },
-            "postalCode":
-            {
-              "type":"str",
-              "title":"Postal (Zip) Code",
-              "required":true
+              "type":"map",
+              "required":true,
+              "mapping":
+              {
+                "name":
+                {
+                  "type":"str",
+                  "required":true,
+                  "title":"Organization Name"
+                },
+                "title":
+                {
+                  "type":"str",
+                  "title":"Title/Role"
+                },
+                "department":
+                {
+                  "type":"str",
+                  "title":"Department"
+                },
+                "type":
+                {
+                  "type":"str",
+                  "enum":
+                  [
+                    "job",
+                    "school",
+                    "other"
+                  ],
+                  "title":"Type"
+                }
+              },
+              "title":"Organization"
             }
-          }
+          ]
+        },
+        "addresses":
+        {
+          "type":"seq",
+          "title":"Addresses",
+          "sequence":
+          [
+            {
+              "type":"map",
+              "title":"Address",
+              "required":true,
+              "mapping":
+              {
+                "streetAddress":
+                {
+                  "type":"str",
+                  "title":"Street Address",
+                  "required":true
+                },
+                "locality":
+                {
+                  "type":"str",
+                  "title":"City (locality)",
+                  "required":true
+                },
+                "region":
+                {
+                  "type":"str",
+                  "title":"State/Provence/Region",
+                  "required":true
+                },
+                "postalCode":
+                {
+                  "type":"str",
+                  "title":"Postal (Zip) Code",
+                  "required":true
+                },
+                "country":
+                {
+                  "type":"str",
+                  "title":"Country",
+                  "required":true
+                }
+              }
+            }
+          ]
         },
         "phoneNumbers":
         {
@@ -82,6 +139,96 @@
                 {
                   "type":"str",
                   "required":true
+                }
+              }
+            }
+          ]
+        },
+        "emails":
+        {
+          "type":"seq",
+          "title":"Email addresses",
+          "sequence":
+          [
+            {
+              "type":"map",
+              "title":"Email",
+              "required":true,
+              "mapping":
+              {
+                "type":
+                {
+                  "type":"str",
+                  "required":true,
+                  "title":"Work/Home/Other",
+                  "enum":
+                  [
+                    "work",
+                    "home",
+                    "other"
+                  ]
+                },
+                "value":
+                {
+                  "type":"str",
+                  "required":true,
+                  "title":"Address"
+                },
+                "primary":
+                {
+                  "type":"bool",
+                  "required":true,
+                  "title":"Primary?"
+                }
+              }
+            }
+          ]
+        },
+        "ims":
+        {
+          "type":"seq",
+          "title":"IMs (Instant Messaging Accounts)",
+          "sequence":
+          [
+            {
+              "type":"map",
+              "title":"Account",
+              "required":true,
+              "mapping":
+              {
+                "type":
+                {
+                  "type":"str",
+                  "required":true,
+                  "title":"Service",
+                  "enum":
+                  [
+                    "aim",
+                    "gtalk",
+                    "icq",
+                    "xmpp",
+                    "msn",
+                    "skype",
+                    "qq",
+                    "yahoo"
+                  ],
+                  "desc_enum":
+                  {
+                    "aim":"AIM (AOL)",
+                    "gtalk":"GTalk (Google)",
+                    "icq":"ICQ",
+                    "xmpp":"XMPP/Jabber",
+                    "msn":"MSN (Microsoft)",
+                    "skype":"Skype",
+                    "qq":"QQ (Tencent)",
+                    "yahoo":"Yahoo!"
+                  }
+                },
+                "value":
+                {
+                  "type":"str",
+                  "required":true,
+                  "title":"Account ID"
                 }
               }
             }

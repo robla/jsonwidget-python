@@ -1,0 +1,36 @@
+#!/usr/bin/python -tt
+# jsonaddress - urwid-based JSON address book editor
+#
+# Copyright (c) 2010, Rob Lanphier
+# All rights reserved.
+# Licensed under BSD-style license.  See LICENSE.txt for details.
+
+import optparse
+import sys
+import jsonwidget.termedit
+
+def run_editor(addressbook):
+    form = jsonwidget.termedit.JsonEditor(jsonfile=addressbook, 
+                                          schemafile="schema/addressbookschema.json",
+                                          program_name="jsonaddress 0.1pre")
+    form.run()
+
+
+def main():
+    '''standard option parsing stuff'''
+    usage = "usage: %prog [options] arg"
+    parser = optparse.OptionParser(usage)
+    (options, args) = parser.parse_args()
+
+    if len(args) > 1:
+        parser.error("Too many arguments." +
+                     "  Just one adddressbook file at a time, please.")
+    if len(args) == 1:
+        addressbook = args[0]
+    else:
+        addressbook = None
+    run_editor(addressbook)
+
+if __name__ == "__main__":
+    main()
+
