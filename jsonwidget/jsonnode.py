@@ -164,6 +164,9 @@ class JsonNode(JsonBaseNode):
     def get_key(self):
         return self.key
 
+    def set_key(self, key):
+        self.key = key
+
     def get_data(self):
         return self.data
 
@@ -256,6 +259,13 @@ class JsonNode(JsonBaseNode):
         self.root.editcount += 1
         self.data.pop(key)
         self.children.pop(key)
+
+        # since children keep track of their own keys, we have to refresh
+        # them
+        if(self.get_type() == 'seq'):
+            for i in range(len(self.children)):
+                self.children[i].set_key(i)
+
         # propogate the change up the tree
         if(self.depth > 0):
             self.parent.set_child_data(self.key, self.data)
