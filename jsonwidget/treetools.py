@@ -84,7 +84,10 @@ class TreeWidget(urwid.WidgetWrap):
     
     def is_selected(self):
         return self.selected
-    
+
+    def set_selected(self, value=True):
+        self.selected = value
+
     def keypress(self, size, key):
         """allow subclasses to intercept keystrokes"""
         w = self.get_w()

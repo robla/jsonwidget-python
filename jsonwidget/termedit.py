@@ -428,13 +428,21 @@ class JsonEditor(PinotFileEditor):
         widget, node = self.listbox.get_focus()
 
         if node.is_deletable():
+            widget.set_selected()
+            widget.update_w()
             def delete_func():
+                widget.set_selected(False)
+                widget.update_w()
                 return editor.handle_delete_node()
+            def cancel_delete():
+                widget.set_selected(False)
+                widget.update_w()
+                editor.cleanup_delete_request()
             msg = "Delete %s? " % node.get_value().get_title()
             self.yes_no_question(msg,
                                  yesfunc=delete_func,
-                                 nofunc=self.cleanup_delete_request,
-                                 cancelfunc=self.cleanup_delete_request)
+                                 nofunc=cancel_delete,
+                                 cancelfunc=cancel_delete)
         else:
             if isinstance(node, FieldAddNode):
                 nodemsg = 'Cannot delete "add field" buttons'

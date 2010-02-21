@@ -1,13 +1,13 @@
 Things to get done before version 0.1
 
 On deck:
-*  Keep item highlighted while deleting
+*  Change "add fields" to "add items" for sequences
 
 Roadmap
 0.1.0:
-*  Change "add fields" to "add items" for sequences
 *  Clean up imports in "jsonedit"
 *  Add alias for editing address books
+*  Graceful error on mismatched schema
 *  Minimal check for urwid and simpleparse (and look for /etc/lsb-release to 
    figure out the right error message)
 *  Improve documentation in __init__.py
@@ -21,6 +21,8 @@ Roadmap
 *  Highlight all children when deleting
 *  Preserve key order in json files when saving
 *  Add a schema selection menu
+*  Add support for configuration files (look into ConfigObj)
+*  Only highlight the "Add Field" buttons rather than the whole row
 
 0.2.0:
 *  Update to urwid 0.9.9 mainloop
@@ -70,4 +72,5 @@ Done:
 **  Ensure that "delete" over "add fields" area doesn't cause crash
 **  Provide alert "foo is a required field"
 *  Rename "delete node" to something less compscinerdy
+*  Keep item highlighted while deleting
 
