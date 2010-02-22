@@ -6,11 +6,27 @@
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
 
-import simpleparse
 import json
 
-from simpleparse.common import strings, numbers
+try:
+    import simpleparse
+    from simpleparse.common import strings, numbers
+except ImportError:
+    import sys
+    msg = """
+  jsonwidget.jsonorder requires simpleparse, which doesn't appear to be
+  installed.  
+  
+  The latest version of simpleparse for all systems can be found at:
+      http://simpleparse.sourceforge.net/
 
+  ...or in easy_install as "simpleparse"
+
+  On Debian and Ubuntu, simply install 'python-simpleparse'.
+
+"""
+    sys.stderr.writelines(msg)
+    sys.exit(2)
 
 class JsonOrderMapError(RuntimeError):
     pass

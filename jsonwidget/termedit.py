@@ -13,13 +13,31 @@ class JsonEditorError(RuntimeError):
     pass
 
 
-import json
-import urwid.curses_display
-import urwid
 import threading
 import sys
 import os
 import re
+import json
+
+try:
+    import urwid.curses_display
+    import urwid
+except ImportError:
+    msg = """
+  jsonwidget.termedit requires urwid 0.98 or higher, which doesn't appear to be
+  installed.  
+  
+  The latest version of urwid for all systems can be found at:
+    http://excess.org/urwid/
+
+  ...or in easy_install as "urwid"
+
+  On Debian and Ubuntu, simply install 'python-urwid' (and install 
+  'python-simpleparse' while you're at it).
+
+"""
+    sys.stderr.writelines(msg)
+    sys.exit(2)
 
 from jsonwidget.floatedit import FloatEdit
 from jsonwidget.schema import *

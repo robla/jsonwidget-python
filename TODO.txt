@@ -1,12 +1,9 @@
 Things to get done before version 0.1
 
 On deck:
-*  Graceful error on mismatched schema
 
 Roadmap
 0.1.0:
-*  Minimal check for urwid and simpleparse (and look for /etc/lsb-release to 
-   figure out the right error message)
 *  Improve documentation in __init__.py
 *  Put "Add field" over in the data area
 *  "Space" and "enter" should toggle expand/collapse on parent nodes
@@ -73,4 +70,6 @@ Done:
 *  Add alias for editing address books
 *  Remove hardcoded 20 character label column
 *  Remove hardcoded 13 character "Add field" button width
+*  Graceful error on mismatched schema
+*  Minimal check for urwid and simpleparse
 
