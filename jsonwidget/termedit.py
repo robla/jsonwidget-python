@@ -428,7 +428,12 @@ class JsonEditor(PinotFileEditor):
     """
     def __init__(self, jsonfile=None, schemafile=None, 
                  program_name="JsonWidget", monochrome=True):
-        self.file = JsonPinotFile(jsonfile=jsonfile, schemafile=schemafile)
+        try:
+            self.file = JsonPinotFile(jsonfile=jsonfile, schemafile=schemafile)
+        except JsonNodeError as inst:
+            sys.stderr.writelines(program_name + " error:\n")
+            sys.stderr.writelines(str(inst) + "\n\n")
+            sys.exit(2)
         self.json = self.file.get_json()
         self.schema = self.json.get_schema_node()
         self.listbox = JsonFrame(self.json)

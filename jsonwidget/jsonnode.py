@@ -26,7 +26,11 @@ class JsonNode(JsonBaseNode):
         self.filename = filename
         if self.filename is not None:
             if data is None:
-                self.load_from_file()
+                try:
+                    self.load_from_file()
+                except ValueError as inst:
+                    raise JsonNodeError("Error in %s: %s" % (self.filename, 
+                                                            inst))
         else:
             self.data = data
 
@@ -60,11 +64,15 @@ class JsonNode(JsonBaseNode):
             self.root = self.parent.get_root()
 
         if not self.is_type_match(schemanode):
-            raise JsonNodeError("Validation error: type mismatch -" +
-                                " key: " + self.key +
-                                " data: " + str(self.data) +
-                                " jsontype: " + self.get_type() +
-                                " schematype: " + schemanode.get_type())
+            idstring = self.get_id_string()
+            filename = self.get_filename()
+            jsontype = self.get_type()
+            schematype = schemanode.get_type()
+            schemaname = schemanode.get_filename()
+            raise JsonNodeError(
+                ("Type mismatch in %s%s - jsontype: %s schematype: %s\n" +
+                 "Schema: %s\nTry using a different schema") %
+                (filename, idstring, jsontype, schematype, schemaname))
         else:
             self.attach_schema_node(schemanode)
         if self.depth == 0:
@@ -113,14 +121,25 @@ class JsonNode(JsonBaseNode):
             # from our local schemakeys array so that we can iterate through 
             # the schema keys we miss in this pass
             for subkey, subdata in self.data.items():
-                subschemanode = self.schemanode.get_child(subkey)
+                try:
+                    subschemanode = self.schemanode.get_child(subkey)
+                except KeyError:
+                    idstring = self.get_id_string()
+                    validkeys = self.schemanode.get_child_keys()
+                    validkeystring = ", ".join(validkeys)
+                    filename = self.get_filename()
+                    raise JsonNodeError(
+                        "Invalid key: \"%s\" in %s%s.  Valid keys: %s" % 
+                        (subkey, filename, idstring, validkeystring))
                 if subschemanode is None:
-                    raise("Validation error: %s not a valid key in %s" %
-                          (subkey, self.schemanode.get_key()))
+                    raise JsonNodeError(
+                        "Validation error: %s not a valid key in %s" %
+                        (subkey, self.schemanode.get_key()))
                 schemakeys.remove(subkey)
                 self.children[subkey] = JsonNode(key=subkey, data=subdata,
                     parent=self, schemanode=subschemanode, 
                     ordermap=self.ordermap['children'][subkey])
+              
             # iterate through the unpopulated schema keys and add subnodes if 
             # the nodes are required
             for subkey in schemakeys:
@@ -335,4 +354,12 @@ class JsonNode(JsonBaseNode):
                 return not self.schemanode.is_required()
         else:
             return not self.schemanode.is_required()
+
+    def get_id_string(self):
+        idchain = []
+        node = self
+        while node.get_key() is not None:
+            idchain.insert(0, str(node.get_key()))
+            node = node.parent
+        return "[" + "][".join(idchain) + "]"
 

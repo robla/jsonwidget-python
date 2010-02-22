@@ -18,10 +18,14 @@ class JsonBaseNode:
     # TODO: pull more functions in from subclasses
 
     def get_filename(self):
-        return self.filename
+        if self.parent is None:
+            return self.filename
+        else:
+            return self.parent.get_filename()
 
     def get_filename_text(self):
-        if self.filename is None:
+        filename = self.get_filename()
+        if filename is None:
             return "(new file)"
         else:
             return self.filename
