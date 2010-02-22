@@ -56,7 +56,10 @@ class GenericEditWidget(BaseJsonEditWidget):
         jsonnode = self.get_json_node()
         editcaption = urwid.Text(jsonnode.get_title() + ": ")
         editfield = self.get_edit_field_widget()
-        editpair = urwid.Columns([('fixed', 20, editcaption), editfield])
+        parentnode = self.get_node().get_parent()
+        captionmax = max(parentnode.get_title_max_length() + 4, 10)
+        editpair = urwid.Columns([('fixed', captionmax, editcaption), 
+                                 editfield])
         if self.is_selected():
             editpair = urwid.AttrWrap(editpair, 'selected', 
                                       focus_attr='selected focus')
@@ -159,6 +162,7 @@ class EnumEditWidget(GenericEditWidget):
         self._radiolist = []
         jsonnode = self.get_json_node()
         schemanode = jsonnode.get_schema_node()
+        maxlen = 3
         for option in schemanode.enum_options():
             if(jsonnode.get_data() == option):
                 state = True
@@ -169,10 +173,11 @@ class EnumEditWidget(GenericEditWidget):
                 if state:
                     jsonnode.set_data(user_data)
 
+            maxlen = max(len(option), maxlen)
             options.append(urwid.RadioButton(self._radiolist, option,
                                              state=state, user_data=option,
                                              on_state_change=on_state_change))
-        return urwid.GridFlow(options, 13, 3, 1, 'left')
+        return urwid.GridFlow(options, maxlen+6, 2, 0, 'left')
 
 
 class FieldAddButtons(BaseJsonEditWidget):
@@ -197,11 +202,12 @@ class FieldAddButtons(BaseJsonEditWidget):
             parentnode.add_child_node(user_data['key'])
 
         jsonnode = self.get_node().get_parent().get_value()
+        maxlen = 3
         for key in jsonnode.get_available_keys():
             fieldname = jsonnode.get_child_title(key)
+            maxlen = max(len(fieldname), maxlen)
             buttons.append(urwid.Button(fieldname, on_press, {'key': key}))
-        #TODO: remove hard coded widths
-        return urwid.GridFlow(buttons, 13, 3, 1, 'left')
+        return urwid.GridFlow(buttons, maxlen+4, 2, 0, 'left')
 
 class FieldAddKey(object):
     """
@@ -357,6 +363,15 @@ class JsonWidgetParent(ParentNode):
 
     def is_deletable(self):
         return self.get_value().is_deletable()
+
+    def get_title_max_length(self):
+        """Get max length of child titles (not counting maps and seqs)"""
+        maxlen = 0
+        for child in self.get_value().get_schema_node().get_children():
+            childtype = child.get_type()
+            if not childtype == 'seq' and not childtype == 'map': 
+                maxlen = max(maxlen, len(child.get_title()))
+        return maxlen
 
 class JsonPinotFile(PinotFile):
     '''Glue to between PinotFile and underlying JSON object'''
