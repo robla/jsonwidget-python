@@ -1,10 +1,10 @@
 Things to get done before version 0.1
 
 On deck:
+*  Improve documentation in __init__.py
 
 Roadmap
 0.1.0:
-*  Improve documentation in __init__.py
 *  Put "Add field" over in the data area
 *  "Space" and "enter" should toggle expand/collapse on parent nodes
 

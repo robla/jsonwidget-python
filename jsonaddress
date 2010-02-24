@@ -7,14 +7,7 @@
 
 import optparse
 import sys
-import jsonwidget.termedit
-
-def run_editor(addressbook):
-    form = jsonwidget.termedit.JsonEditor(jsonfile=addressbook, 
-                                          schemafile="schema/addressbookschema.json",
-                                          program_name="jsonaddress 0.1pre")
-    form.run()
-
+import jsonwidget
 
 def main():
     '''standard option parsing stuff'''
@@ -29,7 +22,8 @@ def main():
         addressbook = args[0]
     else:
         addressbook = None
-    run_editor(addressbook)
+    jsonwidget.run_editor(addressbook, 
+                          schemafile="schema/addressbookschema.json")
 
 if __name__ == "__main__":
     main()

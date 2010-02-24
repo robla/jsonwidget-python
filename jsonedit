@@ -7,14 +7,7 @@
 
 import optparse
 import sys
-import jsonwidget.termedit
-
-def run_editor(schemafile, jsonfile):
-    form = jsonwidget.termedit.JsonEditor(jsonfile=jsonfile, 
-                                          schemafile=schemafile,
-                                          program_name="jsonedit 0.1pre")
-    form.run()
-
+import jsonwidget
 
 def main():
     '''standard option parsing stuff'''
@@ -37,7 +30,7 @@ def main():
         jsonfile = args[0]
     else:
         jsonfile = None
-    run_editor(options.schema, jsonfile)
+    jsonwidget.run_editor(jsonfile, schemafile=options.schema)
 
 if __name__ == "__main__":
     main()
