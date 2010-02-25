@@ -1,0 +1,199 @@
+<html>
+<body>
+<h1>JSON Schema Definition</h1>
+
+This document describes the JSON schema format used by 
+<a href="http://robla.net/jsonwidget">jsonwidget</a>.
+
+<h2>Purpose</h2>
+
+<p>JSON is a flexible data format that allows developers to express a wide array
+of data structures.  Sometimes, however, it's helpful to describe a particular
+subset of JSON texts that are valid for a particular problem domain.  A JSON
+schema is a JSON text which in turn allows one to generate or validate a 
+domain-specific subset of all possible JSON texts.</p>
+
+<h2>Definitions</h2>
+
+This document will use the vocabulary defined in 
+<a href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a> unless otherwise 
+noted.  In particular, the following terms are used as described:
+<ul>
+<li>JSON text
+<li>object
+<li>name
+<li>value
+<li>array
+<li>string
+<li>number
+</ul>
+
+
+Some key definitions:
+
+<dl>
+<dt>JSON schema</dt>
+<dd>What this document is describing.  A JSON schema is a JSON text consisting 
+of a single object: a "root schema object".</dd>
+<dt>Root schema object</dt>
+<dd>This is simply the topmost schema object in the JSON schema. The root 
+schema object may in turn contain other schema objects using the "mapping" 
+and/or "sequence" schema object properties described below.</dd>
+<dt>Target JSON text<dt>
+<dd>A JSON text that is being validated by the JSON schema.</dd>
+<dt>Target JSON name</dt>
+<dd>Name (inside a name/value pair) currently being validated inside the target 
+JSON text.</dd>
+<dt>Target JSON value<dt>
+<dd>The portion of the target JSON text that is being compared to a given 
+schema object.  This might be the value inside a name/value pair, it may be a 
+value listed in an array, or it may be the root of the target JSON text.</dd>
+<dl>
+
+Most of the following sections are themselves definitions. 
+
+<h2>Schema Objects</h2>
+
+<p>A schema object is an "object" as described in section 2.2 of RFC 4627.  A
+schema object describes what constitutes a valid value within the target JSON
+text.  The root schema object describes what constitutes a valid value for the 
+target JSON text.  The schema objects within the root schema object are mapped
+to values in the target JSON text as described below.</p>
+
+<p>Schema objects can (and often should) contain name/value pairs with the 
+following names:
+<ul>
+<li>type</li>
+<li>title</li>
+<li>id</li>
+<li>desc</li>
+<li>required</li>
+</ul>
+
+Documentation for these and all other name/value pairs is below, described as
+"Schema object properties".</p>
+
+<p>If "type" is "map" or "seq", then the appropriate one of the following 
+properties must also be present:
+
+<ul>
+<li>mapping</li>
+<li>sequence</li>
+</ul>
+</p>
+
+<p>If you'd like to constrain the values in a particular field to a list of 
+enumerated values, then the following properties are useful:
+<ul>
+<li>enum</li>
+<li>desc_enum</li>
+</ul>
+</p>
+<p>Additionally, the following more advanced properties are available (currently 
+only available in jsonwidget-javascript):
+<ul>
+<li>user_key</li>
+<li>idref</li>
+</ul>
+</p>
+<h2>Schema object properties</h2>
+
+A "schema object property" is a name/value pair inside the schema object.  Each
+valid name is described below.
+
+<h3>type</h3>
+
+This is a <b>required</b> schema object property (and the only one that's 
+required in all  contexts).  The "type" field describes what constitutes a 
+valid value for this particular node of the target JSON text.  Values:
+
+<dl>
+<dt>str</dt>
+<dd>A string as described in section 2.5 of RFC 4627</dd>
+</dl>
+<dt>int</dt>
+<dd>An integer.  This is a number as described in section 2.4 of RFC 4627, but 
+without the optional "frac" and "exp" components.</dd>
+<dt>number</dt>
+<dd>A number as described in section 2.4 of RFC 4627.</dd>
+<dt>bool</dt>
+<dd>A boolean value.  Must be either "true" or "false".</dd>
+<dt>seq</dt>
+<dd>Nested sequence of items ('array' in many languages).  When type="seq" on a 
+schema object, then that object must also have a 'sequence' schema object
+property.
+<dt>map</dt>
+<dd>Nested mapping of key/value pairs (a.k.a. 'properties').  Schema objects 
+containing this type value must also have a 'mapping' schema object 
+property.</dd>
+<dt>idref</dt>
+<dd>Indicates this schema object is a reference to another schema object.
+Schema objects containing this type value must also have an 'idref' schema 
+object property.  This property is currently only supported in 
+jsonwidget-javascript.</dd>
+<dt>any</dt>
+<dd>Any value allowed.  Currently only support in jsonwidget-javascript.</dd>
+</dl>
+
+
+<h3>title</h3>
+
+A user-friendly title for the schema object.  This value will be used as the 
+field title in forms that are generated.
+
+<h3>id</h3>
+
+A globally unique identifier within the schema.  This identifier used to 
+reference this schema object property using the 'idref' schema object property.
+
+<h3>desc</h3>
+
+A description for use in documentation and context help.
+
+<h3>user_key</h3>
+
+Key for name/value pairs where the name is document-specific.   This can be 
+used only when type="map", and there must be a corresponding schema object 
+in the mapping using the name provided in this field.  If the target JSON name
+doesn't match any of the names from the "mapping" schema object property
+
+value
+
+
+<h3>idref</h3>
+
+Reference to a schema object with the given 'id' property.  The 'type' 
+attribute must be set to 'idref'.  An "idref" schema object takes on the
+definition of the object that it references.  This property is only currently
+supported by jsonwidget-javascript.
+
+<h3>enum</h3>
+
+Enumerated sequence of valid values for this schema object.
+
+<h3>desc_enum</h3>
+
+A mapping containing a description for each possible value listed in the 
+enumeration (enum) property.  Used for documentation and context help.
+
+<h3>required</h3>
+If 'true', then this property must always be present.
+
+<h3>mapping</h3>
+
+<p>An object ("mapping object") where each name/value pair describes a valid 
+target JSON name and target JSON value.  Each mapping object name is a valid
+target JSON name, and each mapping object value is a schema object describing 
+valid target JSON values.  If the 'user_key' schema object property is present,
+then a name/value pair describing arbitrary target JSON names may also be
+present.</p>
+
+<p>The 'type' schema object property must be set to 'map' to use this property.
+</p>
+
+<h3>sequence</h3>
+
+<p>A JSON array containing a single schema object which describes valid
+target JSON values.</p>
+
+
