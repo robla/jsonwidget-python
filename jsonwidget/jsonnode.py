@@ -113,6 +113,9 @@ class JsonNode(JsonBaseNode):
         schematype = schemanode.get_type()
         if schematype == 'map':
             self.children = {}
+            if jsontype is 'none':
+                self.set_data({})
+                jsontype = 'map'
         elif schematype == 'seq':
             self.children = []
         if jsontype == 'map':
