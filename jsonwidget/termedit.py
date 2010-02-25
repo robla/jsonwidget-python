@@ -385,10 +385,17 @@ class JsonWidgetParent(ParentNode):
     def get_title_max_length(self):
         """Get max length of child titles (not counting maps and seqs)"""
         maxlen = 0
+        mytype = self.get_value().get_type()
+        if mytype == 'seq':
+            # we need to make room for the " #10" part of "item #10"
+            numchild = len(self.get_value().get_children())
+            addspace = len(str(numchild)) + 2
+        else:
+            addspace = 0
         for child in self.get_value().get_schema_node().get_children():
             childtype = child.get_type()
-            if not childtype == 'seq' and not childtype == 'map': 
-                maxlen = max(maxlen, len(child.get_title()))
+            if not childtype == 'seq' and not childtype == 'map':
+                maxlen = max(maxlen, len(child.get_title())+addspace)
         return maxlen
 
 class JsonPinotFile(PinotFile):
