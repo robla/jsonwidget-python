@@ -3,10 +3,10 @@
 <head>
 <meta name="generator" content=
 "HTML Tidy for Linux (vers 7 December 2008), see www.w3.org">
-<title></title>
+<title>jsonwidget JSON Schema Definition</title>
 </head>
 <body>
-<h1>JSON Schema Definition</h1>
+<h1>jsonwidget JSON Schema Definition</h1>
 This document describes the JSON schema format used by <a href=
 "http://robla.net/jsonwidget">jsonwidget</a>.
 <h2>Purpose</h2>
@@ -166,5 +166,11 @@ this property.</p>
 <h3>sequence</h3>
 <p>A JSON array containing a single schema object which describes
 valid target JSON values.</p>
+<h2>Acknowledgements, etc</h2>
+
+<p>The original design for this is just about a strict subset of the schema format in <a href="http://www.kuwata-lab.com/kwalify/">Kwalify</a> by Makoto Kuwata.  At the time jsonwidget was created (2005), this was the most credible solution in this particular problem space.</p>
+<p>Since that time, there's been work done on <a href="http://json-schema.org/">an IETF Internet draft for JSON schemas</a>.  I haven't done a thorough enough evaluation of this proposal to know if it is a suitable replacement for this schema definition format.</p>
+<hr>
+<i><a href="http://robla.net">Rob Lanphier</a></i>
 </body>
 </html>
