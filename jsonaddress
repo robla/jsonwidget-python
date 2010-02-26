@@ -23,7 +23,8 @@ def main():
     else:
         addressbook = None
     jsonwidget.run_editor(addressbook, 
-                          schemafile="schema/addressbookschema.json")
+                          schemafile="schema/addressbookschema.json",
+                          program_name="jsonaddress 0.1")
 
 if __name__ == "__main__":
     main()

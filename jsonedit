@@ -30,7 +30,8 @@ def main():
         jsonfile = args[0]
     else:
         jsonfile = None
-    jsonwidget.run_editor(jsonfile, schemafile=options.schema)
+    jsonwidget.run_editor(jsonfile, schemafile=options.schema, 
+                          program_name="jsonedit 0.1")
 
 if __name__ == "__main__":
     main()

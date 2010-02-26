@@ -27,7 +27,7 @@ Website: http://robla.net/jsonwidget
 
 import jsonwidget.termedit
 
-def run_editor(jsonfile, schemafile=None):
+def run_editor(jsonfile, schemafile=None, program_name="jsonwidget 0.1"):
     """ 
     Run a simple editor with a given jsonfile and corresponding schema file.
     """
@@ -38,7 +38,7 @@ def run_editor(jsonfile, schemafile=None):
         sys.exit(2)
     form = jsonwidget.termedit.JsonEditor(jsonfile=jsonfile, 
                                           schemafile=schemafile,
-                                          program_name="jsonedit 0.1pre")
+                                          program_name=program_name)
     form.run()
 
 
