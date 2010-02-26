@@ -9,6 +9,9 @@ Roadmap
 *  "Space" and "enter" should toggle expand/collapse on parent nodes
 
 0.1.1:
+*  Package for Ubuntu, possibly Debian and Fedora, too.
+
+0.1.2:
 *  Implement ability to edit arbitrary JSON
 *  Highlight all children when deleting
 *  Preserve key order in json files when saving
