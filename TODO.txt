@@ -9,6 +9,7 @@ Roadmap
 *  "Space" and "enter" should toggle expand/collapse on parent nodes
 
 0.1.1:
+*  Get working with setuptools/easyinstall
 *  Package for Ubuntu, possibly Debian and Fedora, too.
 
 0.1.2:
