@@ -51,7 +51,16 @@ class TreeWidget(urwid.WidgetWrap):
 
         w = urwid.AttrWrap(widget, None)
         self.__super.__init__(w)
+        # Compatibility fix for 0.9.9+
+        if not hasattr(self, 'get_w'):
+            self.get_w = self._retro_get_w
         self.update_w()
+    
+    def _retro_get_w(self):
+        """
+        Implementation of get_w() if the base urwid install doesn't support it.
+        """
+        return self._w
 
     def get_indented_widget(self):
         leftmargin = urwid.Text("")
