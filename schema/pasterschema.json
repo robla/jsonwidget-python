@@ -1,0 +1,56 @@
+{
+  "type":"map",
+  "mapping":
+  {
+    "project_name":
+    {
+      "type":"str",
+      "title":"Project name"
+    },
+    "version":
+    {
+      "type":"str",
+      "title":"Version"
+    },
+    "description":
+    {
+      "type":"str",
+      "title":"Description (one liner)"
+    },
+    "long_description":
+    {
+      "type":"str",
+      "title":"Long description (multiline reStructuredText)"
+    },
+    "keywords":
+    {
+      "type":"str",
+      "title":"Keywords (space separated)"
+    },
+    "author":
+    {
+      "type":"str",
+      "title":"Author"
+    },
+    "author_email":
+    {
+      "type":"str",
+      "title":"Author email"
+    },
+    "url":
+    {
+      "type":"str",
+      "title":"URL to project page"
+    },
+    "license_name":
+    {
+      "type":"str",
+      "title":"License name"
+    },
+    "zip_safe":
+    {
+      "type":"bool",
+      "title":"Zip safe?"
+    }
+  }
+}
