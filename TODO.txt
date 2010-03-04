@@ -1,18 +1,16 @@
-Things to get done before version 0.1
+Roadmap for future versions
 
 On deck:
-*  Improve documentation in __init__.py
-
-Roadmap
-0.1.0:
-*  Put "Add field" over in the data area
-*  "Space" and "enter" should toggle expand/collapse on parent nodes
 
 0.1.1:
 *  Get working with setuptools/easyinstall
-*  Package for Ubuntu, possibly Debian and Fedora, too.
 
 0.1.2:
+*  Package for Ubuntu
+
+0.1.3:
+*  Put "Add field" over in the data area
+*  "Space" and "enter" should toggle expand/collapse on parent nodes
 *  Implement ability to edit arbitrary JSON
 *  Highlight all children when deleting
 *  Preserve key order in json files when saving
@@ -26,54 +24,11 @@ Roadmap
 *  Look at SitePen internet draft to see if compatibility is feasible
 
 Someday maybe:
+*  Package for Debian
+*  Package for Fedora
 *  Implement undo/redo stack
 *  Implement "File exists.  Overwrite?"
 *  Implement immediate filename prompt when write fails
 *  Implement read-only flag
 
-Done:
-*  Basic editor
-*  Change schemaNode to schemanode
-*  Make jsonedit populate the data
-*  Break up jsonedit.py into jsonedit, jsonforms-urwid.py and jsonschema.py
-*  get rid of wrapEditFieldWidget (roll into getEditFieldWidget)
-*  Fix up the schema data structure
-*  Create function to get the unused fields
-*  Put valid field names on buttons
-*  Make the button display a list
-*  Saving json files
-*  Implement ability to add child nodes
-*  Fix deep mod problem 
-
-    def setChildData(self, key, data):
-        self.data[key]=data
-        # add this line:
-        self.parent.setChildData(self.key, self.data)
-   This will probably bomb out at the top level....figure out how to mitigate
-   that.
-*  Figure out why running with no params fails
-*  Implement title bar at top
-*  Implement help panel on bottom
-*  Implement "save"
-*  change API of GenericEditWidget to only initialize with a valid JsonNode
-*  Update data for booleans and enumerations
-*  Look up proper doc format for python comments, and start using it.
-*  Adapt browse.py from urwid into reusable TreeWalker component, and use that
-*  Implement ability to delete child nodes
-*  Don't render "Add field" row if there's no fields to add
-*  Use schema key order in editor
-*  Autopopulate required fields with blank data
-*  Fix crashing problem with deleting whole address entries in address book
-*  Disable the "delete" option when a field that can't be deleted is selected
-**  Ensure that "delete" over "add fields" area doesn't cause crash
-**  Provide alert "foo is a required field"
-*  Rename "delete node" to something less compscinerdy
-*  Keep item highlighted while deleting
-*  Change "add fields" to "add items" for sequences
-*  Clean up imports in "jsonedit"
-*  Add alias for editing address books
-*  Remove hardcoded 20 character label column
-*  Remove hardcoded 13 character "Add field" button width
-*  Graceful error on mismatched schema
-*  Minimal check for urwid and simpleparse
 

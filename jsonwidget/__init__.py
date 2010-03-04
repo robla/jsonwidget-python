@@ -3,8 +3,8 @@ Library for generating a user interface from a JSON schema.
 
 This library allows an application developer to provide a curses-based user 
 interface for an application using not much more than a JSON schema.  The 
-current JSON schema is a subset of the Kwalify syntax described here:
-http://www.kuwata-lab.com/kwalify/ruby/users-guide.01.html#schema
+JSON schema language is described here:
+http://robla.net/jsonwidget/jsonschema/
 
 However, most people will find it much simpler to use a tool to generate a 
 schema for tweaking.  The tool available here will generate a schema from an
@@ -28,8 +28,10 @@ Website: http://robla.net/jsonwidget
 import jsonwidget.termedit
 import os
 
+__version__ = "0.1.1"
 
-def run_editor(jsonfile, schemafile=None, program_name="jsonwidget 0.1"):
+def run_editor(jsonfile, schemafile=None, program_name="jsonwidget " + 
+               __version__):
     """ 
     Run a simple editor with a given jsonfile and corresponding schema file.
     """

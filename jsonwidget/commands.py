@@ -33,8 +33,9 @@ def jsonedit():
         jsonfile = args[0]
     else:
         jsonfile = None
+    progname = "jsonedit " + jsonwidget.__version__
     jsonwidget.run_editor(jsonfile, schemafile=options.schema, 
-                          program_name="jsonedit 0.1")
+                          program_name=progname)
 
 
 def jsonaddress():
@@ -52,9 +53,9 @@ def jsonaddress():
         addressbook = None
 
     defschema = jsonwidget.find_system_schema("addressbookschema.json")
-    jsonwidget.run_editor(addressbook, 
-                          schemafile=defschema,
-                          program_name="jsonaddress 0.1")
+    progname = "jsonaddress " + jsonwidget.__version__
+    jsonwidget.run_editor(addressbook, schemafile=defschema,
+                          program_name=progname)
 
 
 if __name__ == "__main__":
