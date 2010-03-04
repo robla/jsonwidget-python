@@ -1,13 +1,12 @@
 from setuptools import setup, find_packages
 import sys, os
 
-import jsonwidget
-
-version = jsonwidget.__version__
+version = '0.1.2'
 
 setup(name='jsonwidget',
       version=version,
-      description="Dynamic form creation for JSON data structures from JSON schema file",
+      description="Dynamic terminal window form creation for JSON data \
+structures from JSON schema files",
       long_description="""\
 This library allows an application developer to provide a curses-based user 
 interface for an application using not much more than a JSON schema.  The 

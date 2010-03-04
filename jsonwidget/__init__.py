@@ -28,7 +28,7 @@ Website: http://robla.net/jsonwidget
 import jsonwidget.termedit
 import os
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 def run_editor(jsonfile, schemafile=None, program_name="jsonwidget " + 
                __version__):
