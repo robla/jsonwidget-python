@@ -41,10 +41,12 @@ flexible for many different applications.""",
       license='BSD',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
-      zip_safe=True,
+      zip_safe=False,
       install_requires=["urwid",
                         "simpleparse"],
-      entry_points="""
-      # -*- Entry points: -*-
-      """,
+      entry_points={'console_scripts': 
+                        ['jsonedit = jsonwidget.commands:jsonedit',
+                         'jsonaddress = jsonwidget.commands:jsonaddress'
+                        ]
+                   },
       )
