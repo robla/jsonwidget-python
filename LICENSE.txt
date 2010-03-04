@@ -1,5 +1,9 @@
+Most of jsonwidget is licensed under the BSD license.  Portions were
+derived from urwid, and thus are LGPL.  Copies of both licenses can 
+be found in the docs directory.
+
 Unless otherwise indicated, all files in this distribution are under the
-following license:
+following license (BSD):
 -----
 Copyright (c) 2010, Rob Lanphier
 All rights reserved.
