@@ -548,4 +548,12 @@ class JsonEditor(PinotFileEditor):
         else:
             return input
 
+    def get_center_header_text(self):
+        filename = self.file.get_filename_text()
+        if self.file.is_saved() is False:
+            filename += " (modified)"
+        return filename
+
+    def get_right_header_text(self):
+        return "schema: " + self.schema.get_filename_text()
 

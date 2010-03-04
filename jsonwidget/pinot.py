@@ -131,13 +131,10 @@ class PinotUserInterface(RetroMainLoop):
         RetroMainLoop.__init__(self, **kwargs)
 
     def get_header(self):
-        headerleft = urwid.Text(self.progname, align='left')
-        filename = self.file.get_filename_text()
-        if self.file.is_saved() is False:
-            filename += " (modified)"
-        headercenter = urwid.Text(filename, align='center')
-        headerright = urwid.Text("schema: " + self.schema.get_filename_text(),
-                                 align='right')
+        headerleft = urwid.Text(self.get_left_header_text(), align='left')
+        headercenter = urwid.Text(self.get_center_header_text(), 
+                                  align='center')
+        headerright = urwid.Text(self.get_right_header_text(), align='right')
 
         header1columns = urwid.Columns([headerleft, headercenter, headerright])
         header1padded = urwid.Padding(header1columns, ('fixed left', 2),
@@ -145,6 +142,20 @@ class PinotUserInterface(RetroMainLoop):
         header1 = urwid.AttrWrap(header1padded, "header")
         header2 = urwid.Text("")
         return urwid.Pile([header1, header2])
+
+    def get_left_header_text(self):
+        return self.progname
+
+    def get_center_header_text(self):
+        filename = self.file.get_filename_text()
+        return filename
+
+    def get_right_header_text(self):
+        if self.file.is_saved() is False:
+            righttext = "(modified)"
+        else:
+            righttext = ""
+        return righttext
 
     def set_header(self):
         header = self.get_header()
