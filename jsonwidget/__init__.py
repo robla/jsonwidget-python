@@ -26,6 +26,8 @@ Website: http://robla.net/jsonwidget
 """
 
 import jsonwidget.termedit
+import os
+
 
 def run_editor(jsonfile, schemafile=None, program_name="jsonwidget 0.1"):
     """ 
@@ -41,4 +43,20 @@ def run_editor(jsonfile, schemafile=None, program_name="jsonwidget 0.1"):
                                           program_name=program_name)
     form.run()
 
+
+def find_system_schema(schemaname):
+    """
+    Resolve schemaname to a full path.  This allows referencing
+    one of the bundled schemas without spelling out the full path.
+    """
+    # TODO: implement schemapath config variable.
+    try:
+        import pkg_resources
+    except ImportError:
+        filename = os.path.join("jsonwidget", "schema", schemaname)
+    else:
+        filename = os.path.join("schema", schemaname)
+        filename = pkg_resources.resource_filename("jsonwidget", 
+            filename)
+    return filename
 

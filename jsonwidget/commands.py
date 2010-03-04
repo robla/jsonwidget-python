@@ -14,8 +14,10 @@ def jsonedit():
     '''urwid-based JSON editor'''
     usage = "usage: %prog [options] arg"
     parser = optparse.OptionParser(usage)
+    defschema = jsonwidget.find_system_schema("datatype-example-schema.json")
+ 
     parser.add_option("-s", "--schema", dest="schema",
-                      default="schema/datatype-example-schema.json",
+                      default=defschema,
                       help="use this schema to build the form")
     parser.add_option("--tracebacks", dest="tracebacks",
                       default=False,
@@ -48,8 +50,10 @@ def jsonaddress():
         addressbook = args[0]
     else:
         addressbook = None
+
+    defschema = jsonwidget.find_system_schema("addressbookschema.json")
     jsonwidget.run_editor(addressbook, 
-                          schemafile="schema/addressbookschema.json",
+                          schemafile=defschema,
                           program_name="jsonaddress 0.1")
 
 

@@ -39,7 +39,7 @@ flexible for many different applications.""",
       author_email='robla@robla.net',
       url='http://robla.net/jsonwidget',
       license='BSD',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      packages=['jsonwidget'],
       include_package_data=True,
       zip_safe=False,
       install_requires=["urwid",
@@ -49,4 +49,5 @@ flexible for many different applications.""",
                          'jsonaddress = jsonwidget.commands:jsonaddress'
                         ]
                    },
+      package_data={'schema':['schema/*.json']},
       )
