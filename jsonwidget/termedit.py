@@ -555,5 +555,10 @@ class JsonEditor(PinotFileEditor):
         return filename
 
     def get_right_header_text(self):
-        return "schema: " + self.schema.get_filename_text()
+        filename = self.schema.get_filename()
+        if filename is None:
+            filename = "(new file)"
+        else:
+            filename = os.path.basename(filename)
+        return "schema: " + filename
 
