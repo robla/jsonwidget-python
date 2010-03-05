@@ -21,6 +21,10 @@ http://robla.net/jsonwidget/example.php?sample=byexample&user=normal
 This library currently only operates on a subset of JSON files, but a near-term
 goal is to allow editing of any arbitrary JSON file.
 
+The following utilities are included with jsonwidget:
+jsonedit - a general purpose json editing program
+jsonaddress - an example JSON address book editor
+
 Website: http://robla.net/jsonwidget""",
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=["Development Status :: 3 - Alpha",
