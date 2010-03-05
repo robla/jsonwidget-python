@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.1.2'
+version = '0.1.3dev'
 
 setup(name='jsonwidget',
       version=version,
@@ -44,10 +44,7 @@ Website: http://robla.net/jsonwidget""",
       zip_safe=False,
       install_requires=["urwid",
                         "simpleparse"],
-      entry_points={'console_scripts': 
-                        ['jsonedit = jsonwidget.commands:jsonedit',
-                         'jsonaddress = jsonwidget.commands:jsonaddress'
-                        ]
-                   },
+      entry_points={},
+      scripts=['jsonedit', 'jsonaddress'],
       package_data={'schema':['schema/*.json']},
       )
