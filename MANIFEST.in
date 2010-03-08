@@ -1,7 +1,9 @@
 include *.txt
+include debian/*
 include docs/*
 include examples/*
 include jsonwidget/schema/*
 include jsonedit
 include jsonaddress
+include stdeb.cfg
 

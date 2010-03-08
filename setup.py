@@ -50,5 +50,5 @@ Website: http://robla.net/jsonwidget""",
                         "simpleparse"],
       entry_points={},
       scripts=['jsonedit', 'jsonaddress'],
-      package_data={'schema':['schema/*.json']},
+      package_data={'schema':['jsonwidget/schema/*.json']},
       )
