@@ -8,7 +8,7 @@ XS-Python-Version: current
 
 Package: python-jsonwidget
 Architecture: all
-Depends: ${python:Depends}, python-urwid, python-simpleparse
+Depends: ${python:Depends}, python-urwid, python-simpleparse, python-pkg-resources
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Homepage: http://robla.net/jsonwidget
