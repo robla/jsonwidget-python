@@ -1,5 +1,6 @@
 jsonwidget (0.1.3dev-1) unstable; urgency=low
 
-  * source package automatically created by stdeb 0.5.1+git
+  * Initial .deb package.  Source package created by stdeb 0.5.1+git, then
+    tweaked.
 
  -- Rob Lanphier <robla@robla.net>  Mon, 08 Mar 2010 14:43:10 -0800

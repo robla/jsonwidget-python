@@ -1,0 +1,13 @@
+== Creating a .deb package ==
+
+# Run the following commands:
+export VERSION=(version you are packaging)
+python setup.py sdist
+cd dist
+tar zxvf jsonwidget-${VERSION}.tar.gz
+cd jsonwidget-${VERSION}
+# use "-uc -us" to skip signing
+dpkg-buildpackage -rfakeroot
+
+
+

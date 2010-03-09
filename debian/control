@@ -8,10 +8,11 @@ XS-Python-Version: current
 
 Package: python-jsonwidget
 Architecture: all
-Depends: ${python:Depends}, python-urwid, python-simpleparse, python-urwid
+Depends: ${python:Depends}, python-urwid, python-simpleparse
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
-Description: Dynamic terminal window form creation for JSON data structur
+Homepage: http://robla.net/jsonwidget
+Description: Terminal window form creation from JSON data structures
  This library allows an application developer to provide a curses-based user 
  interface for an application using not much more than a JSON schema.  The 
  JSON schema language is described here:

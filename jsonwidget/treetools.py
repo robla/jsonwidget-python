@@ -1,10 +1,9 @@
 #!/usr/bin/python
 #
-#  Generic TreeWidget/TreeWalker class 
-#    Original version:
-#      Urwid example lazy directory browser / tree view
-#      Copyright (C) 2004-2009  Ian Ward
-#    Copied and adapted by Rob Lanphier
+# Generic TreeWidget/TreeWalker class 
+#    Copyright (c) 2010  Rob Lanphier
+# Derived from Urwid example lazy directory browser / tree view:
+#    Copyright (C) 2004-2009  Ian Ward
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
