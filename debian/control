@@ -1,4 +1,4 @@
-Source: jsonwidget
+Source: python-jsonwidget
 Maintainer: Rob Lanphier <robla@robla.net>
 Section: python
 Priority: optional
