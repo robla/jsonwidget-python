@@ -1,3 +1,10 @@
+== uploading to pypi
+
+# Have a clean checkout so that the manifest wildcards don't pick up anything
+# screwy
+python setup.py sdist upload -s
+
+
 == Creating a .deb package ==
 
 # Run the following commands:
@@ -7,7 +14,12 @@ cd dist
 tar zxvf jsonwidget-${VERSION}.tar.gz
 cd jsonwidget-${VERSION}
 # use "-uc -us" to skip signing
-dpkg-buildpackage -rfakeroot
+# -S is "source only"
+dpkg-buildpackage -rfakeroot -S
+
+== Uploading to the PPA ==
+
+dput ppa:robla/ppa python-jsonwidget_${VERSION}_source.changes
 
 
 
