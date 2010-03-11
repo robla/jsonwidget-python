@@ -13,6 +13,9 @@ On deck:
 *  Add a schema selection menu
 *  Add support for configuration files (look into ConfigObj)
 *  Only highlight the "Add Field" buttons rather than the whole row
+*  Make ordermaps optional
+*  Add ability to load schema from string buffer (so that an ordermap can be 
+   generated)
 
 0.2.0:
 *  Update to urwid 0.9.9 mainloop
