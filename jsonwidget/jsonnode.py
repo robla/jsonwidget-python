@@ -139,9 +139,13 @@ class JsonNode(JsonBaseNode):
                         "Validation error: %s not a valid key in %s" %
                         (subkey, self.schemanode.get_key()))
                 schemakeys.remove(subkey)
+                try:
+                    self.ordermap['children'][subkey]
+                except AttributeError:
+                    ordermap = None
                 self.children[subkey] = JsonNode(key=subkey, data=subdata,
                     parent=self, schemanode=subschemanode, 
-                    ordermap=self.ordermap['children'][subkey])
+                    ordermap=ordermap)
               
             # iterate through the unpopulated schema keys and add subnodes if 
             # the nodes are required
@@ -153,7 +157,10 @@ class JsonNode(JsonBaseNode):
             i = 0
             for subdata in self.data:
                 subschemanode = self.schemanode.get_child(i)
-                ordermap = self.ordermap['children'][i]
+                try:
+                    ordermap = self.ordermap['children'][i]
+                except AttributeError:
+                    ordermap = None
                 self.children.append(JsonNode(key=i, data=subdata, parent=self,
                     schemanode=subschemanode, ordermap=ordermap))
                 i += 1
