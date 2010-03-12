@@ -140,7 +140,7 @@ class JsonNode(JsonBaseNode):
                         (subkey, self.schemanode.get_key()))
                 schemakeys.remove(subkey)
                 try:
-                    self.ordermap['children'][subkey]
+                    ordermap = self.ordermap['children'][subkey]
                 except AttributeError:
                     ordermap = None
                 self.children[subkey] = JsonNode(key=subkey, data=subdata,
