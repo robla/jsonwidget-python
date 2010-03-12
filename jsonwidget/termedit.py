@@ -446,7 +446,8 @@ class JsonFrame(TreeListBox):
         self._size = size
         return self.__super.keypress(size, key)
 
-class JsonEditor(PinotFileEditor):
+
+class JsonFileEditor(PinotFileEditor):
     """
     JSON editor specific commands
     These routines deal with the specifics of a JSON editor.
@@ -561,4 +562,39 @@ class JsonEditor(PinotFileEditor):
         else:
             filename = os.path.basename(filename)
         return "schema: " + filename
+
+
+class JsonDataEditor(JsonFileEditor):
+    """
+    This is an editor for in-memory data instead of a file
+    """
+    def __init__(self, jsondata=None, schemafile=None, 
+                 program_name="JsonWidget", monochrome=True):
+        self.json = JsonNode(data=jsondata, schemafile=schemafile)
+        self.schema = self.json.get_schema_node()
+        self.listbox = JsonFrame(self.json)
+        PinotFileEditor.__init__(self, program_name=program_name, 
+                                 unhandled_input=self.unhandled_input)
+        self.set_default_footer_helpitems([("^W", "Write/Save"), 
+                                           ("^X", "Exit"),
+                                           ("^D", "Delete Item")])
+        if monochrome:
+            urwid.curses_display.curses.has_colors = lambda: False
+
+    def unhandled_input(self, input):
+        """ Attach handlers for keyboard commands here. """
+        if input == 'ctrl x':
+            self.handle_exit()
+        elif input == 'ctrl d':
+            self.handle_delete_node_request()
+            return None
+        else:
+            return input
+
+    def get_center_header_text(self):
+        return ""
+
+    def get_right_header_text(self):
+        return ""
+
 

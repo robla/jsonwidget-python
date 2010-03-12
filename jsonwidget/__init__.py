@@ -40,9 +40,9 @@ def run_editor(jsonfile, schemafile=None, program_name="jsonwidget " +
         import sys
         sys.stderr.write("Sorry, current version requires a schema")
         sys.exit(2)
-    form = jsonwidget.termedit.JsonEditor(jsonfile=jsonfile, 
-                                          schemafile=schemafile,
-                                          program_name=program_name)
+    form = jsonwidget.termedit.JsonFileEditor(jsonfile=jsonfile, 
+                                              schemafile=schemafile,
+                                              program_name=program_name)
     form.run()
 
 
