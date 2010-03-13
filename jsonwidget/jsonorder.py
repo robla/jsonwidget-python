@@ -114,7 +114,19 @@ class JsonOrderMap(object):
 
 if __name__ == "__main__":
     import json
-    foo = "{'a':1,'b':1,'c':{'c1':1,'c2':1}}"
+    import optparse
+
+    usage = "usage: %prog [options] image"
+    parser = optparse.OptionParser(usage)
+    (options, args) = parser.parse_args()
+
+    if len(args) > 1:
+        parser.error("Too many arguments.")
+    if len(args) == 1:
+        foo = open(args[0]).read()
+    else:
+        foo = "{'a':1,'b':1,'c':{'c1':1,'c2':1},'d':['e','f','g']}"
+
     foomap = JsonOrderMap(foo).get_order_map()
     print "Original JSON: ", foo
     print "Order map:\n", json.dumps(foomap, indent=4)
