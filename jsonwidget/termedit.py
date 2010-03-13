@@ -568,9 +568,10 @@ class JsonDataEditor(JsonFileEditor):
     """
     This is an editor for in-memory data instead of a file
     """
-    def __init__(self, jsondata=None, schemafile=None, 
-                 program_name="JsonWidget", monochrome=True):
-        self.json = JsonNode(data=jsondata, schemafile=schemafile)
+    def __init__(self, jsondata=None, schemafile=None, schemadata=None,
+                 schemanode=None, program_name="JsonWidget", monochrome=True):
+        self.json = JsonNode(data=jsondata, schemafile=schemafile, 
+                             schemadata=schemadata, schemanode=schemanode)
         self.schema = self.json.get_schema_node()
         self.listbox = JsonFrame(self.json)
         PinotFileEditor.__init__(self, program_name=program_name, 

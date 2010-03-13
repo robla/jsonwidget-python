@@ -71,4 +71,28 @@ class JsonBaseNode:
             raise JsonBaseError("self.children has invalid type %s" %
                                 type(self.children).__name__)
 
+    def get_data(self):
+        return self.data
+
+
+def get_json_type(data):
+    """Given an arbitrary piece of data, return the type as represented in 
+       json schemas."""
+    if(isinstance(data, basestring)):
+        return 'str'
+    elif(isinstance(data, bool)):
+        return 'bool'
+    elif(isinstance(data, int)):
+        return 'int'
+    elif(isinstance(data, float)):
+        return 'number'
+    elif(isinstance(data, dict)):
+        return 'map'
+    elif(isinstance(data, list)):
+        return 'seq'
+    elif(data is None):
+        return 'none'
+    else:
+        raise JsonNodeError("unknown type: %s" % type(data).__name__)
+
 

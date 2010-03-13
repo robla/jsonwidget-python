@@ -172,32 +172,13 @@ class JsonNode(JsonBaseNode):
 
     def get_type(self):
         """Get type string as defined by the schema language"""
-
-        if(isinstance(self.data, basestring)):
-            return 'str'
-        elif(isinstance(self.data, bool)):
-            return 'bool'
-        elif(isinstance(self.data, int)):
-            return 'int'
-        elif(isinstance(self.data, float)):
-            return 'number'
-        elif(isinstance(self.data, dict)):
-            return 'map'
-        elif(isinstance(self.data, list)):
-            return 'seq'
-        elif(self.data is None):
-            return 'none'
-        else:
-            raise JsonNodeError("unknown type: %s" % type(self.data).__name__)
+        return get_json_type(self.data)
 
     def get_key(self):
         return self.key
 
     def set_key(self, key):
         self.key = key
-
-    def get_data(self):
-        return self.data
 
     def set_data(self, data):
         """Set raw data"""

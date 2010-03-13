@@ -69,11 +69,17 @@ class SchemaNode(JsonBaseNode):
             else:
                 return str(self.key)
 
+    def set_title(self, title):
+        self.data['title'] = title
+
     def get_type(self):
         return self.data['type']
 
     def _get_key_order(self):
         return self.ordermap['children']['mapping']['keys']
+
+    def get_order_map(self):
+        return self.ordermap
 
     def get_children(self):
         """
@@ -127,3 +133,31 @@ class SchemaNode(JsonBaseNode):
         else:
             retval = None
         return retval
+
+
+def generate_schema_from_data(jsondata):
+    schema = {}
+    ordermap = {}
+
+    schema['type'] = get_json_type(jsondata)
+
+    if schema['type'] == 'map':
+        schema['mapping'] = {}
+        ordermap['keys'] = ['type', 'mapping']
+        ordermap['children'] = {"type": {}, "mapping": {}}
+        ordermap['children']['mapping'] = {"keys": [], "children": {}}
+        for name in jsondata:
+            schemaobj = generate_schema_from_data(jsondata[name])
+            schema['mapping'][name] = schemaobj.get_data()
+            ordermap['children']['mapping']['keys'].append(name)
+            ordermap['children']['mapping']['children'][name] = schemaobj.get_order_map()
+    elif schema['type'] == 'seq':
+        schemaobj = generate_schema_from_data(jsondata[0])
+        schema['sequence'] = [schemaobj.get_data()]
+        ordermap['keys'] = ['type', 'sequence']
+        ordermap['children'] = {"type": {}, "sequence": {}}
+        ordermap['children']['sequence'] = {"keys": [0], "children": {}}
+        ordermap['children']['sequence']['children'][0] = schemaobj.get_order_map()
+
+    return SchemaNode(data=schema, ordermap=ordermap)
+
