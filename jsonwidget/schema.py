@@ -78,6 +78,9 @@ class SchemaNode(JsonBaseNode):
     def _get_key_order(self):
         return self.ordermap['children']['mapping']['keys']
 
+    def set_key_order(self, keys):
+        self.ordermap['children']['mapping']['keys'] = keys
+
     def get_order_map(self):
         return self.ordermap
 

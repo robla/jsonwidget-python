@@ -398,6 +398,7 @@ class JsonWidgetParent(ParentNode):
                 maxlen = max(maxlen, len(child.get_title())+addspace)
         return maxlen
 
+
 class JsonPinotFile(PinotFile):
     '''Glue to between PinotFile and underlying JSON object'''
 
@@ -405,6 +406,7 @@ class JsonPinotFile(PinotFile):
         if jsonfile is None or os.access(jsonfile, os.R_OK):
             # file exists, and we can read it (or we're just passing "None")
             self.json = JsonNode(filename=jsonfile, schemafile=schemafile)
+            self.schema = self.json.get_schema_node()
         elif os.access(jsonfile, os.F_OK):
             # file exists, but can't read it
             sys.stderr.write("Cannot access file \"%s\" (check permissions)\n" %
@@ -413,6 +415,7 @@ class JsonPinotFile(PinotFile):
         else:
             # must be a new file
             self.json = JsonNode(filename=None, schemafile=schemafile)
+            self.schema = self.json.get_schema_node()
             self.set_filename(jsonfile)
 
     def get_json(self):
@@ -433,6 +436,14 @@ class JsonPinotFile(PinotFile):
     def is_saved(self):
         return self.json.is_saved()
 
+    def get_schema_display_text(self):
+        filename = self.schema.get_filename()
+        if filename is None:
+            filename = "(new file)"
+        else:
+            filename = os.path.basename(filename)
+        return "schema: " + filename
+
 
 class JsonFrame(TreeListBox):
     def __init__(self, jsonobj):
@@ -452,14 +463,18 @@ class JsonFileEditor(PinotFileEditor):
     JSON editor specific commands
     These routines deal with the specifics of a JSON editor.
     """
-    def __init__(self, jsonfile=None, schemafile=None, 
+    def __init__(self, jsonfile=None, schemafile=None, fileobj=None,
                  program_name="JsonWidget", monochrome=True):
-        try:
-            self.file = JsonPinotFile(jsonfile=jsonfile, schemafile=schemafile)
-        except JsonNodeError as inst:
-            sys.stderr.writelines(program_name + " error:\n")
-            sys.stderr.writelines(str(inst) + "\n\n")
-            sys.exit(2)
+        if fileobj is None:
+            try:
+                self.file = JsonPinotFile(jsonfile=jsonfile, schemafile=schemafile)
+            except JsonNodeError as inst:
+                sys.stderr.writelines(program_name + " error:\n")
+                sys.stderr.writelines(str(inst) + "\n\n")
+                sys.exit(2)
+        else:
+            self.file = fileobj
+
         self.json = self.file.get_json()
         self.schema = self.json.get_schema_node()
         self.listbox = JsonFrame(self.json)
@@ -556,22 +571,21 @@ class JsonFileEditor(PinotFileEditor):
         return filename
 
     def get_right_header_text(self):
-        filename = self.schema.get_filename()
-        if filename is None:
-            filename = "(new file)"
-        else:
-            filename = os.path.basename(filename)
-        return "schema: " + filename
+        return self.file.get_schema_display_text()
 
 
 class JsonDataEditor(JsonFileEditor):
     """
     This is an editor for in-memory data instead of a file
     """
-    def __init__(self, jsondata=None, schemafile=None, schemadata=None,
-                 schemanode=None, program_name="JsonWidget", monochrome=True):
-        self.json = JsonNode(data=jsondata, schemafile=schemafile, 
-                             schemadata=schemadata, schemanode=schemanode)
+    def __init__(self, jsonnode=None, jsondata=None, schemafile=None, 
+                 schemadata=None, schemanode=None, program_name="JsonWidget", 
+                 monochrome=True):
+        if jsonnode is None:
+            self.json = JsonNode(data=jsondata, schemafile=schemafile, 
+                                 schemadata=schemadata, schemanode=schemanode)
+        else:
+            self.json = jsonnode
         self.schema = self.json.get_schema_node()
         self.listbox = JsonFrame(self.json)
         PinotFileEditor.__init__(self, program_name=program_name, 

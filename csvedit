@@ -1,0 +1,82 @@
+#!/usr/bin/python
+
+import csv
+import optparse
+import os
+import sys
+
+import jsonwidget.termedit
+import jsonwidget.schema
+import jsonwidget.jsonnode
+
+def get_jsonnode_from_csv(filename):
+    csvfile = open(filename)
+    dialect = csv.Sniffer().sniff(csvfile.read(2048))
+    csvfile.seek(0)
+    csvreader = csv.DictReader(csvfile, dialect=dialect)
+    csvdata = [row for row in csvreader]
+    csvschemaobj = jsonwidget.schema.generate_schema_from_data(csvdata)
+    csvschemaobj.set_title(filename)
+    csvschemaobj.get_child(0).set_title("Row")
+    csvschemaobj.get_child(0).set_key_order(csvreader.fieldnames)
+    return jsonwidget.jsonnode.JsonNode(data=csvdata, schemanode=csvschemaobj)
+
+
+class CsvPinotFile(jsonwidget.termedit.JsonPinotFile):
+    '''Glue to between PinotFile and underlying JSON object'''
+
+    #jsonfile=None, schemafile=None
+    def __init__(self, csvfile=None):
+        if csvfile is None or os.access(csvfile, os.R_OK):
+            # file exists, and we can read it (or we're just passing "None")
+            self.json = get_jsonnode_from_csv(csvfile)
+            self.set_filename(csvfile)
+        elif os.access(jsonfile, os.F_OK):
+            # file exists, but can't read it
+            sys.stderr.write("Cannot access file \"%s\" (check permissions)\n" %
+                             csvfile)
+            sys.exit(os.EX_NOINPUT)
+        else:
+            # must be a new file
+            sys.stderr.write("csvfile requires a filename\n")
+            sys.exit(os.EX_NOINPUT)
+
+    def save_to_file(self):
+        self.json.set_saved()
+        return self.json.save_to_file()
+
+    def get_filename(self):
+        return self._filename
+
+    def set_filename(self, name):
+        self._filename = name
+
+    def get_filename_text(self):
+        return self._filename
+
+    def get_schema_display_text(self):
+        return ""
+
+
+if __name__ == "__main__":
+    '''urwid-based image metadata editor'''
+    usage = "usage: %prog [options] image"
+    parser = optparse.OptionParser(usage)
+    (options, args) = parser.parse_args()
+
+    if len(args) > 1:
+        parser.error("Too many arguments.")
+    if len(args) == 1:
+        csvfile = args[0]
+    else:
+        parser.error("Must supply file name")
+
+    fileobj = CsvPinotFile(csvfile)
+
+    form = jsonwidget.termedit.JsonFileEditor(fileobj=fileobj, 
+                            program_name="csvedit")
+    form.run()
+
+
+
+
