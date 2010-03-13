@@ -1,0 +1,12 @@
+{
+    "firstName": "Barack", 
+    "lastName": "Obama", 
+    "streetAddress": "1600 Pennsylvania Avenue NW",
+    "city": "Washington", 
+    "state": "DC", 
+    "postalCode": "20500", 
+    "phoneNumbers": [
+        "202-456-1111", 
+        "202-456-1414"
+    ]
+}
