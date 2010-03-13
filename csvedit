@@ -9,17 +9,6 @@ import jsonwidget.termedit
 import jsonwidget.schema
 import jsonwidget.jsonnode
 
-def get_jsonnode_from_csv(filename):
-    csvfile = open(filename)
-    dialect = csv.Sniffer().sniff(csvfile.read(2048))
-    csvfile.seek(0)
-    csvreader = csv.DictReader(csvfile, dialect=dialect)
-    csvdata = [row for row in csvreader]
-    csvschemaobj = jsonwidget.schema.generate_schema_from_data(csvdata)
-    csvschemaobj.set_title(filename)
-    csvschemaobj.get_child(0).set_title("Row")
-    csvschemaobj.get_child(0).set_key_order(csvreader.fieldnames)
-    return jsonwidget.jsonnode.JsonNode(data=csvdata, schemanode=csvschemaobj)
 
 
 class CsvPinotFile(jsonwidget.termedit.JsonPinotFile):
@@ -29,8 +18,7 @@ class CsvPinotFile(jsonwidget.termedit.JsonPinotFile):
     def __init__(self, csvfile=None):
         if csvfile is None or os.access(csvfile, os.R_OK):
             # file exists, and we can read it (or we're just passing "None")
-            self.json = get_jsonnode_from_csv(csvfile)
-            self.set_filename(csvfile)
+            self._load_csv(csvfile)
         elif os.access(jsonfile, os.F_OK):
             # file exists, but can't read it
             sys.stderr.write("Cannot access file \"%s\" (check permissions)\n" %
@@ -41,9 +29,33 @@ class CsvPinotFile(jsonwidget.termedit.JsonPinotFile):
             sys.stderr.write("csvfile requires a filename\n")
             sys.exit(os.EX_NOINPUT)
 
+    def _load_csv(self, filename):
+        csvfile = open(filename)
+        self._dialect = csv.Sniffer().sniff(csvfile.read(2048))
+        self._dialect.escapechar = '\\'
+        csvfile.seek(0)
+        
+        csvreader = csv.DictReader(csvfile, dialect=self._dialect)
+        csvdata = [row for row in csvreader]
+        csvschemaobj = jsonwidget.schema.generate_schema_from_data(csvdata)
+        csvschemaobj.set_title(filename)
+        csvschemaobj.get_child(0).set_title("Row")
+        csvschemaobj.get_child(0).set_key_order(csvreader.fieldnames)
+        # saving fieldnames ensures we don't scramble the column order
+        self._fieldnames = csvreader.fieldnames
+        self.json = jsonwidget.jsonnode.JsonNode(data=csvdata, 
+                                                 schemanode=csvschemaobj)
+        self.set_filename(filename)
+
     def save_to_file(self):
+        fd = open(self.get_filename(), 'w+')
+        csvwriter = csv.DictWriter(fd, fieldnames=self._fieldnames, 
+                                   dialect=self._dialect)
+        # write the header - see http://bugs.python.org/issue1537721
+        csvwriter.writerow(dict(zip(self._fieldnames, self._fieldnames)))
+        # write everything else
+        csvwriter.writerows(self.json.get_data())
         self.json.set_saved()
-        return self.json.save_to_file()
 
     def get_filename(self):
         return self._filename

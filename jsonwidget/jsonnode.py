@@ -248,7 +248,7 @@ class JsonNode(JsonBaseNode):
     def is_saved(self):
         return self.savededitcount == self.editcount
 
-    def set_saved(self, saved):
+    def set_saved(self, saved=True):
         if(saved):
             self.editcount = 0
         else:
