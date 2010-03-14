@@ -2,9 +2,7 @@ Roadmap for future versions
 
 On deck:
 
-0.1.3:
-
-0.1.4:
+0.1.5:
 *  Put "Add field" over in the data area
 *  "Space" and "enter" should toggle expand/collapse on parent nodes
 *  Implement ability to edit arbitrary JSON
@@ -16,6 +14,7 @@ On deck:
 *  Make ordermaps optional
 *  Add ability to load schema from string buffer (so that an ordermap can be 
    generated)
+*  Add schemagen tool
 
 0.2.0:
 *  Update to urwid 0.9.9 mainloop

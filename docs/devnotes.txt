@@ -12,7 +12,8 @@ export VERSION=(version you are packaging)
 python setup.py sdist
 cd dist
 tar zxvf jsonwidget-${VERSION}.tar.gz
-cd jsonwidget-${VERSION}
+mv jsonwidget-${VERSION} python-jsonwidget-${VERSION}
+cd python-jsonwidget-${VERSION}
 # use "-uc -us" to skip signing
 # -S is "source only"
 dpkg-buildpackage -rfakeroot -S
