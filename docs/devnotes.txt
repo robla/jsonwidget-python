@@ -23,3 +23,6 @@ dput ppa:robla/ppa python-jsonwidget_${VERSION}_source.changes
 
 
 
+== Generating a changelog ==
+
+hg log -rtip:0.1.3 --template '  * {desc}\n'
