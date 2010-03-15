@@ -7,6 +7,7 @@
 
 
 import json
+from jsonwidget.jsonbase import get_json_type
 
 try:
     import simpleparse
@@ -111,6 +112,28 @@ class JsonOrderMap(object):
         (organized into a hierarchy of dicts mirroring the original JSON).
         """
         return self._ordermap
+
+
+def generate_ordermap_from_data(jsondata):
+    ordermap = {}
+
+    datatype = get_json_type(jsondata)
+    if datatype == 'map':
+        ordermap['keys'] = ['type', 'mapping']
+        ordermap['children'] = {"type": {}, "mapping": {}}
+        ordermap['children']['mapping'] = {"keys": [], "children": {}}
+        for name in jsondata:
+            ordermap['children']['mapping']['keys'].append(name)
+            ordermap['children']['mapping']['children'][name] = \
+                generate_ordermap_from_data(jsondata[name])
+    elif datatype == 'seq':
+        ordermap['keys'] = ['type', 'sequence']
+        ordermap['children'] = {"type": {}, "sequence": {}}
+        ordermap['children']['sequence'] = {"keys": [0], "children": {}}
+        ordermap['children']['sequence']['children'][0] = \
+            generate_ordermap_from_data(jsondata[0])
+    return ordermap
+
 
 if __name__ == "__main__":
     import json

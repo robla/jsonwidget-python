@@ -6,6 +6,7 @@
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
 import json
+import jsonwidget.jsonorder
 
 from jsonwidget.jsonbase import *
 
@@ -138,29 +139,23 @@ class SchemaNode(JsonBaseNode):
         return retval
 
 
-def generate_schema_from_data(jsondata):
+def generate_schema_data_from_data(jsondata):
     schema = {}
-    ordermap = {}
 
     schema['type'] = get_json_type(jsondata)
 
     if schema['type'] == 'map':
         schema['mapping'] = {}
-        ordermap['keys'] = ['type', 'mapping']
-        ordermap['children'] = {"type": {}, "mapping": {}}
-        ordermap['children']['mapping'] = {"keys": [], "children": {}}
         for name in jsondata:
-            schemaobj = generate_schema_from_data(jsondata[name])
-            schema['mapping'][name] = schemaobj.get_data()
-            ordermap['children']['mapping']['keys'].append(name)
-            ordermap['children']['mapping']['children'][name] = schemaobj.get_order_map()
+            schema['mapping'][name] = \
+                generate_schema_data_from_data(jsondata[name])
     elif schema['type'] == 'seq':
-        schemaobj = generate_schema_from_data(jsondata[0])
-        schema['sequence'] = [schemaobj.get_data()]
-        ordermap['keys'] = ['type', 'sequence']
-        ordermap['children'] = {"type": {}, "sequence": {}}
-        ordermap['children']['sequence'] = {"keys": [0], "children": {}}
-        ordermap['children']['sequence']['children'][0] = schemaobj.get_order_map()
+        schema['sequence'] = [generate_schema_data_from_data(jsondata[0])]
+    return schema
 
+
+def generate_schema_from_data(jsondata):
+    schema = generate_schema_data_from_data(jsondata)
+    ordermap = jsonwidget.jsonorder.generate_ordermap_from_data(jsondata)
     return SchemaNode(data=schema, ordermap=ordermap)
 
