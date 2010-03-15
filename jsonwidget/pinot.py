@@ -81,6 +81,7 @@ class RetroMainLoop(object):
         footer = self.get_footer()
 
         self.view = urwid.Frame(body, header=header, footer=footer)
+        self.on_init()
 
         try:
             self.ui.run_wrapper(self.run_loop)
@@ -118,6 +119,8 @@ class RetroMainLoop(object):
                     if key is not None:
                         self.view.keypress(size, key)
 
+    def on_init(self):
+        pass
 
 class PinotUserInterface(RetroMainLoop):
     """
@@ -128,6 +131,7 @@ class PinotUserInterface(RetroMainLoop):
 
     def __init__(self, **kwargs):
         self._default_footer_helpitems = None
+        self.set_startup_notification(None)
         RetroMainLoop.__init__(self, **kwargs)
 
     def get_header(self):
@@ -270,6 +274,17 @@ class PinotUserInterface(RetroMainLoop):
     def cleanup_user_question(self):
         self.view.set_focus("body")
         self.set_default_footer()
+
+    def get_startup_notification(self):
+        return self._startup_note
+
+    def set_startup_notification(self, note):
+        self._startup_note = note
+
+    def on_init(self):
+        startupnote = self.get_startup_notification()
+        if startupnote is not None:
+            self.display_notification(startupnote)
 
 
 class PinotFileEditor(PinotUserInterface):

@@ -40,6 +40,9 @@ def run_editor(jsonfile, schemafile=None, schemaobj=None,
                                               schemafile=schemafile,
                                               schemaobj=schemaobj,
                                               program_name=program_name)
+    if schemafile is None:
+        form.set_startup_notification(
+            'Using schema derived from json file.  Use "--schema" at startup to provide custom schema')
     form.run()
 
 

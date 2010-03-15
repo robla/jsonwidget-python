@@ -440,10 +440,9 @@ class JsonPinotFile(PinotFile):
     def get_schema_display_text(self):
         filename = self.schema.get_filename()
         if filename is None:
-            filename = "(new file)"
+            return "(auto-generated schema)"
         else:
-            filename = os.path.basename(filename)
-        return "schema: " + filename
+            return "schema: " + os.path.basename(filename)
 
 
 class JsonFrame(TreeListBox):
@@ -489,8 +488,6 @@ class JsonFileEditor(PinotFileEditor):
         if monochrome:
             urwid.curses_display.curses.has_colors = lambda: False
 
-
-
     def handle_delete_node_request(self):
         """Handle ctrl d - "delete item"."""
         editor = self
@@ -530,7 +527,6 @@ class JsonFileEditor(PinotFileEditor):
                 msg = nodemsg
             self.cleanup_delete_request()
             self.display_notification(msg)
-
 
     def handle_delete_node(self):
         widget, node = self.listbox.get_focus()
