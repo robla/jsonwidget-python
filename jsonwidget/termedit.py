@@ -402,10 +402,11 @@ class JsonWidgetParent(ParentNode):
 class JsonPinotFile(PinotFile):
     '''Glue to between PinotFile and underlying JSON object'''
 
-    def __init__(self, jsonfile=None, schemafile=None):
+    def __init__(self, jsonfile=None, schemafile=None, schemaobj=None):
         if jsonfile is None or os.access(jsonfile, os.R_OK):
             # file exists, and we can read it (or we're just passing "None")
-            self.json = JsonNode(filename=jsonfile, schemafile=schemafile)
+            self.json = JsonNode(filename=jsonfile, schemafile=schemafile,
+                schemanode=schemaobj)
             self.schema = self.json.get_schema_node()
         elif os.access(jsonfile, os.F_OK):
             # file exists, but can't read it
@@ -463,11 +464,13 @@ class JsonFileEditor(PinotFileEditor):
     JSON editor specific commands
     These routines deal with the specifics of a JSON editor.
     """
-    def __init__(self, jsonfile=None, schemafile=None, fileobj=None,
-                 program_name="JsonWidget", monochrome=True):
+    def __init__(self, jsonfile=None, schemafile=None, fileobj=None, 
+                 schemaobj=None, program_name="JsonWidget", monochrome=True):
         if fileobj is None:
             try:
-                self.file = JsonPinotFile(jsonfile=jsonfile, schemafile=schemafile)
+                self.file = JsonPinotFile(jsonfile=jsonfile, 
+                                          schemafile=schemafile,
+                                          schemaobj=schemaobj)
             except JsonNodeError as inst:
                 sys.stderr.writelines(program_name + " error:\n")
                 sys.stderr.writelines(str(inst) + "\n\n")

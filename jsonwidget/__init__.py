@@ -30,18 +30,15 @@ import os
 
 __version__ = "0.1.4"
 
-def run_editor(jsonfile, schemafile=None, program_name="jsonwidget " + 
-               __version__):
+def run_editor(jsonfile, schemafile=None, schemaobj=None, 
+               program_name="jsonwidget " + __version__):
     """ 
     Run a simple editor with a given jsonfile and corresponding schema file.
     """
     
-    if schemafile is None:
-        import sys
-        sys.stderr.write("Sorry, current version requires a schema")
-        sys.exit(2)
     form = jsonwidget.termedit.JsonFileEditor(jsonfile=jsonfile, 
                                               schemafile=schemafile,
+                                              schemaobj=schemaobj,
                                               program_name=program_name)
     form.run()
 
@@ -62,3 +59,19 @@ def find_system_schema(schemaname):
             filename)
     return filename
 
+def generate_schema(filename=None, data=None, jsonstring=None):
+    """
+    Generate a schema from a JSON example.
+    """
+    import json
+    import jsonwidget.jsonorder
+    if filename is not None:
+        with open(filename, 'r') as f:
+            jsonbuffer = f.read()
+        jsondata = json.loads(jsonbuffer)
+        jsonordermap = \
+            jsonwidget.jsonorder.JsonOrderMap(jsonbuffer).get_order_map()
+        return jsonwidget.schema.generate_schema_from_data(jsondata, 
+            jsonordermap=jsonordermap)
+    else:
+        raise RuntimeError("only filename-based generation is supported")

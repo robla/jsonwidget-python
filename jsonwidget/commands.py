@@ -17,24 +17,41 @@ def jsonedit():
     defschema = jsonwidget.find_system_schema("datatype-example-schema.json")
  
     parser.add_option("-s", "--schema", dest="schema",
-                      default=defschema,
+                      default=None,
                       help="use this schema to build the form")
     parser.add_option("--tracebacks", dest="tracebacks",
                       default=False,
                       help="See full tracebacks")
+    parser.add_option("--schemagen", dest="schemagen", action="store_true",
+                      default=False,
+                      help="Print generated schema to standard output and exit")
+    
     (options, args) = parser.parse_args()
     if not options.tracebacks:
         sys.tracebacklimit = 1000
+
+    schemafile = options.schema
+    schemaobj = None
 
     if len(args) > 1:
         parser.error("Too many arguments." +
                      "  Just one .json file at a time, please.")
     if len(args) == 1:
         jsonfile = args[0]
+        if schemafile is None:
+            schemaobj = jsonwidget.generate_schema(jsonfile)
     else:
         jsonfile = None
+        if schemafile is None:
+            schemafile = defschema
+
+    if options.schemagen == True:
+        schemaobj = jsonwidget.generate_schema(jsonfile)
+        print schemaobj.dumps()
+        sys.exit(0)
+
     progname = "jsonedit " + jsonwidget.__version__
-    jsonwidget.run_editor(jsonfile, schemafile=options.schema, 
+    jsonwidget.run_editor(jsonfile, schemafile=schemafile, schemaobj=schemaobj,
                           program_name=progname)
 
 
