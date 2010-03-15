@@ -143,7 +143,63 @@ class SchemaNode(JsonBaseNode):
         return retval
 
     def dumps(self):
-        return json.dumps(self.data, indent=4)
+        retval = ""
+        indent = " " * 4 
+        indentlevel = self.get_depth() * 2
+        if self.get_type() == jsontypes.OBJECT_TYPE:
+            retval += "{\n"
+            indentlevel += 1
+            retval += indent * indentlevel
+            retval += '"type": "%s", \n' % jsontypes.OBJECT_TYPE
+            retval += indent * indentlevel
+            retval += '"mapping": {'
+            addcomma = False
+            indentlevel += 1
+            for child in self.get_children():
+                if addcomma:
+                    retval += ", "
+                retval += "\n"
+                retval += indent * indentlevel
+                addcomma = True
+                retval += '"%s": ' % child.get_key()
+                retval += child.dumps()
+                #retval += "\n"
+            retval += "\n"
+            indentlevel -= 1
+            retval += indent * indentlevel
+            retval += "}\n"
+            indentlevel -= 1
+            retval += indent * indentlevel
+            retval += "}"
+        elif self.get_type() == jsontypes.ARRAY_TYPE:
+            retval += "{\n"
+            indentlevel += 1
+            retval += indent * indentlevel
+            retval += '"type": "%s", \n' % jsontypes.ARRAY_TYPE
+            retval += indent * indentlevel
+            retval += '"sequence": ['
+            indentlevel += 1
+            addcomma = False
+            for child in self.get_children():
+                if addcomma:
+                    retval += ","
+                retval += "\n"
+                retval += indent * indentlevel
+                addcomma = True
+                retval += child.dumps()
+                #retval += "\n"
+            retval += "\n"
+            indentlevel -= 1
+            retval += indent * indentlevel
+            retval += "]\n"
+            indentlevel -= 1
+            retval += indent * indentlevel
+            retval += "}"
+        else:
+            encoder = json.JSONEncoder(indent=4)
+            encoder.current_indent_level = self.get_depth() * 2
+            retval = encoder.encode(self.get_data())
+        return retval
 
 
 def generate_schema_data_from_data(jsondata):
