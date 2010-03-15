@@ -204,7 +204,7 @@ class FieldAddButtons(BaseJsonEditWidget):
     def load_inner_widget(self):
         jsonnode = self.get_node().get_parent().get_value()
 
-        if jsonnode.get_schema_node().get_type() == 'seq':
+        if jsonnode.get_schema_node().get_type() == jsontypes.ARRAY_TYPE:
             caption = urwid.Text("Add item: ")
         else:
             caption = urwid.Text("Add field(s): ")
@@ -258,16 +258,16 @@ class JsonWidgetNode(TreeNode):
         # don't use jsonnode.get_type() directly.
         schemanode = jsonnode.get_schema_node()
 
-        if(schemanode.get_type() == 'str'):
+        if(schemanode.get_type() == jsontypes.STRING_TYPE):
             if(schemanode.is_enum()):
                 return EnumEditWidget(self)
             else:
                 return GenericEditWidget(self)
-        elif(schemanode.get_type() == 'int'):
+        elif(schemanode.get_type() == jsontypes.INTEGER_TYPE):
             return IntEditWidget(self)
-        elif(schemanode.get_type() == 'number'):
+        elif(schemanode.get_type() == jsontypes.NUMBER_TYPE):
             return NumberEditWidget(self)
-        elif(schemanode.get_type() == 'bool'):
+        elif(schemanode.get_type() == jsontypes.BOOLEAN_TYPE):
             return BoolEditWidget(self)
         else:
             return GenericEditWidget(self)
@@ -313,7 +313,7 @@ class JsonWidgetParent(ParentNode):
             jsonnode = self.get_value().get_child(key)
             schemanode = jsonnode.get_schema_node()
             nodetype = schemanode.get_type()
-            if (nodetype == 'map') or (nodetype == 'seq'):
+            if (nodetype == jsontypes.OBJECT_TYPE) or (nodetype == jsontypes.ARRAY_TYPE):
                 return JsonWidgetParent(jsonnode, parent=self, key=key, 
                                         depth=depth, listbox=self._listbox)
             else:
@@ -386,7 +386,7 @@ class JsonWidgetParent(ParentNode):
         """Get max length of child titles (not counting maps and seqs)"""
         maxlen = 0
         mytype = self.get_value().get_type()
-        if mytype == 'seq':
+        if mytype == jsontypes.ARRAY_TYPE:
             # we need to make room for the " #10" part of "item #10"
             numchild = len(self.get_value().get_children())
             addspace = len(str(numchild)) + 2
@@ -394,7 +394,7 @@ class JsonWidgetParent(ParentNode):
             addspace = 0
         for child in self.get_value().get_schema_node().get_children():
             childtype = child.get_type()
-            if not childtype == 'seq' and not childtype == 'map':
+            if not childtype == jsontypes.ARRAY_TYPE and not childtype == jsontypes.OBJECT_TYPE:
                 maxlen = max(maxlen, len(child.get_title())+addspace)
         return maxlen
 

@@ -8,10 +8,10 @@
 import json
 
 from jsonwidget.jsonbase import *
+from jsonwidget.jsontypes import jsontypes, get_json_type
 
 class Error(RuntimeError):
     pass
-
 
 class SchemaNode(JsonBaseNode):
     """
@@ -41,7 +41,7 @@ class SchemaNode(JsonBaseNode):
         else:
             self.depth = self.parent.get_depth() + 1
             self.rootschema = self.parent.get_root_schema()
-        if(self.data['type'] == 'map'):
+        if(self.data['type'] == jsontypes.OBJECT_TYPE):
             self.children = {}
             
             for subkey, subdata in self.data['mapping'].items():
@@ -50,7 +50,7 @@ class SchemaNode(JsonBaseNode):
                 self.children[subkey] = SchemaNode(key=subkey, data=subdata,
                                                    parent=self, 
                                                    ordermap=ordermap)
-        elif(self.data['type'] == 'seq'):
+        elif(self.data['type'] == jsontypes.ARRAY_TYPE):
             ordermap = self.ordermap['children']['sequence']['children'][0]
             self.children = [SchemaNode(key=0, data=self.data['sequence'][0],
                                         parent=self, ordermap=ordermap)]
@@ -65,11 +65,11 @@ class SchemaNode(JsonBaseNode):
         if 'title' in self.data:
             return self.data['title']
         else:
-            if self.depth > 0 and self.parent.get_type() == 'seq':
+            if self.depth > 0 and self.parent.get_type() == jsontypes.ARRAY_TYPE:
                 return self.parent.get_title() + " item"
             elif self.key is not None:
                 return str(self.key)
-            elif self.get_type() == 'seq':
+            elif self.get_type() == jsontypes.ARRAY_TYPE:
                 return "Array"
             else:
                 return str(self.get_type())
@@ -107,9 +107,9 @@ class SchemaNode(JsonBaseNode):
 
     def get_child(self, key):
         type = self.get_type()
-        if(type == 'map'):
+        if(type == jsontypes.OBJECT_TYPE):
             return self.children[key]
-        elif(type == 'seq'):
+        elif(type == jsontypes.ARRAY_TYPE):
             return self.children[0]
         else:
             raise Error("self.children has invalid type %s" % type)
@@ -128,15 +128,15 @@ class SchemaNode(JsonBaseNode):
 
     def get_blank_value(self):
         type = self.get_type()
-        if(type == 'map'):
+        if(type == jsontypes.OBJECT_TYPE):
             retval = {}
-        elif(type == 'seq'):
+        elif(type == jsontypes.ARRAY_TYPE):
             retval = []
-        elif(type == 'int' or type == 'number'):
+        elif(type == jsontypes.INTEGER_TYPE or type == jsontypes.NUMBER_TYPE):
             retval = 0
-        elif(type == 'bool'):
+        elif(type == jsontypes.BOOLEAN_TYPE):
             retval = False
-        elif(type == 'str'):
+        elif(type == jsontypes.STRING_TYPE):
             retval = ""
         else:
             retval = None
@@ -151,12 +151,12 @@ def generate_schema_data_from_data(jsondata):
 
     schema['type'] = get_json_type(jsondata)
 
-    if schema['type'] == 'map':
+    if schema['type'] == jsontypes.OBJECT_TYPE:
         schema['mapping'] = {}
         for name in jsondata:
             schema['mapping'][name] = \
                 generate_schema_data_from_data(jsondata[name])
-    elif schema['type'] == 'seq':
+    elif schema['type'] == jsontypes.ARRAY_TYPE:
         schema['sequence'] = [generate_schema_data_from_data(jsondata[0])]
     return schema
 
@@ -165,7 +165,7 @@ def generate_schema_ordermap(jsondata, jsonordermap=None):
     ordermap = {}
 
     datatype = get_json_type(jsondata)
-    if datatype == 'map':
+    if datatype == jsontypes.OBJECT_TYPE:
         ordermap['keys'] = ['type', 'mapping']
         ordermap['children'] = {"type": {}, "mapping": {}}
         ordermap['children']['mapping'] = {"keys": [], "children": {}}
@@ -175,7 +175,7 @@ def generate_schema_ordermap(jsondata, jsonordermap=None):
                 generate_schema_ordermap(jsondata[name])
         if jsonordermap is not None:
             ordermap['children']['mapping']['keys'] = jsonordermap['keys']
-    elif datatype == 'seq':
+    elif datatype == jsontypes.ARRAY_TYPE:
         ordermap['keys'] = ['type', 'sequence']
         ordermap['children'] = {"type": {}, "sequence": {}}
         ordermap['children']['sequence'] = {"keys": [0], "children": {}}

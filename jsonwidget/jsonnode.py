@@ -9,6 +9,7 @@ import json
 
 from jsonwidget.schema import *
 from jsonwidget.jsonbase import *
+from jsonwidget.jsontypes import jsontypes, get_json_type
 
 class JsonNodeError(RuntimeError):
     pass
@@ -98,10 +99,11 @@ class JsonNode(JsonBaseNode):
         schematype = schemanode.get_type()
 
         # is the json type appropriate for the expected schema type?
-        is_type_match = (schematype == 'any' or
+        is_type_match = (schematype == jsontypes.ANY_TYPE or
                        schematype == jsontype or
-                       jsontype == 'none' or
-                       (jsontype == 'int' and schematype == 'number'))
+                       jsontype == jsontypes.NULL_TYPE or
+                       (jsontype == jsontypes.INTEGER_TYPE and 
+                        schematype == jsontypes.NUMBER_TYPE))
 
         return is_type_match
 
@@ -111,14 +113,14 @@ class JsonNode(JsonBaseNode):
 
         jsontype = self.get_type()
         schematype = schemanode.get_type()
-        if schematype == 'map':
+        if schematype == jsontypes.OBJECT_TYPE:
             self.children = {}
-            if jsontype is 'none':
+            if jsontype is jsontypes.NULL_TYPE:
                 self.set_data({})
-                jsontype = 'map'
-        elif schematype == 'seq':
+                jsontype = jsontypes.OBJECT_TYPE
+        elif schematype == jsontypes.ARRAY_TYPE:
             self.children = []
-        if jsontype == 'map':
+        if jsontype == jsontypes.OBJECT_TYPE:
             schemakeys = self.schemanode.get_child_keys()
             # first add all nodes for which there is JSON data, removing them
             # from our local schemakeys array so that we can iterate through 
@@ -153,7 +155,7 @@ class JsonNode(JsonBaseNode):
                 subschemanode = self.schemanode.get_child(subkey)
                 if subschemanode.is_required():
                     self.add_child(subkey)
-        elif jsontype == 'seq':
+        elif jsontype == jsontypes.ARRAY_TYPE:
             i = 0
             for subdata in self.data:
                 subschemanode = self.schemanode.get_child(i)
@@ -221,13 +223,13 @@ class JsonNode(JsonBaseNode):
         json child nodes associated with them.
         """
 
-        if(self.schemanode.get_type() == 'map'):
+        if(self.schemanode.get_type() == jsontypes.OBJECT_TYPE):
             schemakeys = set(self.schemanode.get_child_keys())
             jsonkeys = set(self.get_child_keys())
             unusedkeys = schemakeys.difference(jsonkeys)
             sortedkeys = self.sort_keys(list(unusedkeys))
             return sortedkeys
-        elif(self.schemanode.get_type() == 'seq'):
+        elif(self.schemanode.get_type() == jsontypes.ARRAY_TYPE):
             return [len(self.children)]
         else:
             raise JsonNodeError("type %s not implemented" % self.get_type())
@@ -237,7 +239,7 @@ class JsonNode(JsonBaseNode):
             type = self.schemanode.get_type()
             self.data = self.schemanode.get_blank_value()
             self.root.editcount += 1
-        if(self.get_type() == 'seq' and key == len(self.data)):
+        if(self.get_type() == jsontypes.ARRAY_TYPE and key == len(self.data)):
             self.data.append(data)
             self.root.editcount += 1
         else:
@@ -260,7 +262,7 @@ class JsonNode(JsonBaseNode):
         newnode = JsonNode(key=key, data=schemanode.get_blank_value(),
                            parent=self, schemanode=schemanode)
         self.set_child_data(key, newnode.get_data())
-        if(self.get_type() == 'seq'):
+        if(self.get_type() == jsontypes.ARRAY_TYPE):
             self.children.insert(key, newnode)
         else:
             self.children[key] = newnode
@@ -272,7 +274,7 @@ class JsonNode(JsonBaseNode):
 
         # since children keep track of their own keys, we have to refresh
         # them
-        if(self.get_type() == 'seq'):
+        if(self.get_type() == jsontypes.ARRAY_TYPE):
             for i in range(len(self.children)):
                 self.children[i].set_key(i)
 
@@ -293,7 +295,8 @@ class JsonNode(JsonBaseNode):
     def print_tree(self):
         """Debugging function"""
         jsontype = self.get_type()
-        if jsontype == 'map' or jsontype == 'seq':
+        if (jsontype == jsontypes.OBJECT_TYPE or 
+            jsontype == jsontypes.ARRAY_TYPE):
             print self.schemanode.get_title()
             for child in self.get_children():
                 child.print_tree()
@@ -302,7 +305,8 @@ class JsonNode(JsonBaseNode):
 
     def get_title(self):
         schematitle = self.schemanode.get_title()
-        if(self.depth > 0 and self.parent.schemanode.get_type() == 'seq'):
+        if(self.depth > 0 and 
+            self.parent.schemanode.get_type() == jsontypes.ARRAY_TYPE):
             title = "%s #%i" % (schematitle, self.get_key() + 1)
         else:
             title = schematitle
@@ -311,7 +315,7 @@ class JsonNode(JsonBaseNode):
     def get_child_title(self, key):
         childschema = self.schemanode.get_child(key)
         schematitle = childschema.get_title()
-        if(self.schemanode.get_type() == 'seq'):
+        if(self.schemanode.get_type() == jsontypes.ARRAY_TYPE):
             title = "%s #%i" % (schematitle, key + 1)
         else:
             title = schematitle
@@ -338,7 +342,7 @@ class JsonNode(JsonBaseNode):
             
     def is_deletable(self):
         parent = self.parent
-        if parent is not None and parent.get_type()=='seq':
+        if parent is not None and parent.get_type()==jsontypes.ARRAY_TYPE:
             if len(parent.get_children()) > 1:
                 return True
             else:
