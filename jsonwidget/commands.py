@@ -47,6 +47,8 @@ def jsonedit():
             schemafile = defschema
 
     if options.schemagen == True:
+        if jsonfile is None:
+            parser.error("JSON-formatted required with --schemagen")
         schemaobj = jsonwidget.generate_schema(jsonfile)
         print schemaobj.dumps()
         sys.exit(0)
