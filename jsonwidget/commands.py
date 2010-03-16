@@ -80,8 +80,13 @@ def jsonaddress():
 
     defschema = jsonwidget.find_system_schema("addressbookschema.json")
     progname = "jsonaddress " + jsonwidget.__version__
-    jsonwidget.run_editor(addressbook, schemafile=defschema,
-                          program_name=progname)
+    try:
+        jsonwidget.run_editor(addressbook, schemafile=defschema,
+                              program_name=progname)
+    except JsonNodeError as inst:
+        sys.stderr.writelines(parser.get_prog_name() + " error:\n")
+        sys.stderr.writelines(str(inst) + "\n\n")
+        sys.exit(2)
 
 
 if __name__ == "__main__":
