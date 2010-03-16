@@ -466,14 +466,9 @@ class JsonFileEditor(PinotFileEditor):
     def __init__(self, jsonfile=None, schemafile=None, fileobj=None, 
                  schemaobj=None, program_name="JsonWidget", monochrome=True):
         if fileobj is None:
-            try:
-                self.file = JsonPinotFile(jsonfile=jsonfile, 
-                                          schemafile=schemafile,
-                                          schemaobj=schemaobj)
-            except JsonNodeError as inst:
-                sys.stderr.writelines(program_name + " error:\n")
-                sys.stderr.writelines(str(inst) + "\n\n")
-                sys.exit(2)
+            self.file = JsonPinotFile(jsonfile=jsonfile, 
+                                      schemafile=schemafile,
+                                      schemaobj=schemaobj)
         else:
             self.file = fileobj
 

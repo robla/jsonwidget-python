@@ -9,6 +9,7 @@ import optparse
 import sys
 import jsonwidget
 
+from jsonwidget.jsonnode import JsonNodeError
 
 def jsonedit():
     '''urwid-based JSON editor'''
@@ -51,8 +52,16 @@ def jsonedit():
         sys.exit(0)
 
     progname = "jsonedit " + jsonwidget.__version__
-    jsonwidget.run_editor(jsonfile, schemafile=schemafile, schemaobj=schemaobj,
-                          program_name=progname)
+    try:
+        jsonwidget.run_editor(jsonfile, schemafile=schemafile, schemaobj=schemaobj,
+                              program_name=progname)
+    except JsonNodeError as inst:
+        sys.stderr.writelines(parser.get_prog_name() + " error:\n")
+        sys.stderr.writelines(str(inst) + "\n")
+        if schemafile is None:
+            print "  Try using --schemagen to generate a schema, edit it to " +\
+                "add valid keys, then relaunch with --schema\n"
+        sys.exit(2)
 
 
 def jsonaddress():

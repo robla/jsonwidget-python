@@ -155,14 +155,14 @@ class SchemaNode(JsonBaseNode):
             retval += '"mapping": {'
             addcomma = False
             indentlevel += 1
-            for child in self.get_children():
+            for key in self._get_key_order():
                 if addcomma:
                     retval += ", "
                 retval += "\n"
                 retval += indent * indentlevel
                 addcomma = True
-                retval += '"%s": ' % child.get_key()
-                retval += child.dumps()
+                retval += '"%s": ' % key
+                retval += self.get_child(key).dumps()
                 #retval += "\n"
             retval += "\n"
             indentlevel -= 1
@@ -227,16 +227,24 @@ def generate_schema_ordermap(jsondata, jsonordermap=None):
         ordermap['children']['mapping'] = {"keys": [], "children": {}}
         for name in jsondata:
             ordermap['children']['mapping']['keys'].append(name)
+            if jsonordermap is None:
+                childmap = None
+            else:
+                childmap = jsonordermap['children'][name]
             ordermap['children']['mapping']['children'][name] = \
-                generate_schema_ordermap(jsondata[name])
+                generate_schema_ordermap(jsondata[name], jsonordermap=childmap)
         if jsonordermap is not None:
             ordermap['children']['mapping']['keys'] = jsonordermap['keys']
     elif datatype == jsontypes.ARRAY_TYPE:
         ordermap['keys'] = ['type', 'sequence']
         ordermap['children'] = {"type": {}, "sequence": {}}
         ordermap['children']['sequence'] = {"keys": [0], "children": {}}
+        if jsonordermap is None:
+            childmap = None
+        else:
+            childmap = jsonordermap['children'][0]
         ordermap['children']['sequence']['children'][0] = \
-            generate_schema_ordermap(jsondata[0])
+            generate_schema_ordermap(jsondata[0], jsonordermap=childmap)
     return ordermap
 
 
