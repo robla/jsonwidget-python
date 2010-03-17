@@ -8,7 +8,7 @@
 import json
 
 from jsonwidget.jsonorder import *
-from jsonwidget.jsontypes import jsontypes
+
 
 class JsonBaseError(RuntimeError):
     pass

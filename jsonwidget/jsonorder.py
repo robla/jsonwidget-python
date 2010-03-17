@@ -7,7 +7,7 @@
 
 
 import json
-from jsonwidget.jsontypes import jsontypes, get_json_type
+from jsonwidget.jsontypes import get_json_type
 
 try:
     import simpleparse

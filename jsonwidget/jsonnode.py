@@ -9,7 +9,7 @@ import json
 
 from jsonwidget.schema import *
 from jsonwidget.jsonbase import *
-from jsonwidget.jsontypes import jsontypes, get_json_type
+from jsonwidget.jsontypes import schemaformat, get_json_type
 
 class JsonNodeError(RuntimeError):
     pass
@@ -35,11 +35,11 @@ class JsonNode(JsonBaseNode):
         else:
             self.data = data
 
-        if schemanode is not None:
-            self.schemanode = schemanode
-        else:
+        if schemanode is None:
             schemanode = SchemaNode(key=key, data=schemadata,
-                                  filename=schemafile)
+                                    filename=schemafile)
+
+        self.schemanode = schemanode
 
         if ordermap is not None:
             self.ordermap = ordermap
@@ -95,15 +95,12 @@ class JsonNode(JsonBaseNode):
         self.savededitcount = self.editcount
 
     def is_type_match(self, schemanode):
-        jsontype = self.get_type()
-        schematype = schemanode.get_type()
-
         # is the json type appropriate for the expected schema type?
-        is_type_match = (schematype == jsontypes.ANY_TYPE or
-                       schematype == jsontype or
-                       jsontype == jsontypes.NULL_TYPE or
-                       (jsontype == jsontypes.INTEGER_TYPE and 
-                        schematype == jsontypes.NUMBER_TYPE))
+        is_type_match = (schemanode.is_type('any') or
+                         self.get_type() == schemanode.get_type() or
+                         self.is_type('null') or
+                         (self.is_type('integer') and 
+                          schemanode.is_type('number')))
 
         return is_type_match
 
@@ -111,16 +108,14 @@ class JsonNode(JsonBaseNode):
         '''Pair this data node to the corresponding part of the schema'''
         self.schemanode = schemanode
 
-        jsontype = self.get_type()
-        schematype = schemanode.get_type()
-        if schematype == jsontypes.OBJECT_TYPE:
+        if schemanode.is_type('object'):
             self.children = {}
-            if jsontype is jsontypes.NULL_TYPE:
+            if self.is_type('null'):
                 self.set_data({})
-                jsontype = jsontypes.OBJECT_TYPE
-        elif schematype == jsontypes.ARRAY_TYPE:
+                self.set_type('object')
+        elif schemanode.is_type('array'):
             self.children = []
-        if jsontype == jsontypes.OBJECT_TYPE:
+        if self.is_type('object'):
             schemakeys = self.schemanode.get_child_keys()
             # first add all nodes for which there is JSON data, removing them
             # from our local schemakeys array so that we can iterate through 
@@ -155,7 +150,7 @@ class JsonNode(JsonBaseNode):
                 subschemanode = self.schemanode.get_child(subkey)
                 if subschemanode.is_required():
                     self.add_child(subkey)
-        elif jsontype == jsontypes.ARRAY_TYPE:
+        elif self.is_type('array'):
             i = 0
             for subdata in self.data:
                 subschemanode = self.schemanode.get_child(i)
@@ -174,7 +169,11 @@ class JsonNode(JsonBaseNode):
 
     def get_type(self):
         """Get type string as defined by the schema language"""
-        return get_json_type(self.data)
+        return get_json_type(self.data, fmt=self.schemanode.get_format())
+
+    def is_type(self, cmptype):
+        fmt = self.schemanode.get_format()
+        return fmt.typemap_rev[self.get_type()] == cmptype
 
     def get_key(self):
         return self.key
@@ -222,14 +221,15 @@ class JsonNode(JsonBaseNode):
         This function returns the list of keys that don't yet have associated
         json child nodes associated with them.
         """
+        typemap = self.schemanode
 
-        if(self.schemanode.get_type() == jsontypes.OBJECT_TYPE):
+        if(self.schemanode.is_type('object')):
             schemakeys = set(self.schemanode.get_child_keys())
             jsonkeys = set(self.get_child_keys())
             unusedkeys = schemakeys.difference(jsonkeys)
             sortedkeys = self.sort_keys(list(unusedkeys))
             return sortedkeys
-        elif(self.schemanode.get_type() == jsontypes.ARRAY_TYPE):
+        elif(self.schemanode.is_type('array')):
             return [len(self.children)]
         else:
             raise JsonNodeError("type %s not implemented" % self.get_type())
@@ -239,7 +239,7 @@ class JsonNode(JsonBaseNode):
             type = self.schemanode.get_type()
             self.data = self.schemanode.get_blank_value()
             self.root.editcount += 1
-        if(self.get_type() == jsontypes.ARRAY_TYPE and key == len(self.data)):
+        if(self.is_type('array') and key == len(self.data)):
             self.data.append(data)
             self.root.editcount += 1
         else:
@@ -262,7 +262,7 @@ class JsonNode(JsonBaseNode):
         newnode = JsonNode(key=key, data=schemanode.get_blank_value(),
                            parent=self, schemanode=schemanode)
         self.set_child_data(key, newnode.get_data())
-        if(self.get_type() == jsontypes.ARRAY_TYPE):
+        if(self.is_type('array')):
             self.children.insert(key, newnode)
         else:
             self.children[key] = newnode
@@ -274,7 +274,7 @@ class JsonNode(JsonBaseNode):
 
         # since children keep track of their own keys, we have to refresh
         # them
-        if(self.get_type() == jsontypes.ARRAY_TYPE):
+        if(self.is_type('array')):
             for i in range(len(self.children)):
                 self.children[i].set_key(i)
 
@@ -294,9 +294,7 @@ class JsonNode(JsonBaseNode):
 
     def print_tree(self):
         """Debugging function"""
-        jsontype = self.get_type()
-        if (jsontype == jsontypes.OBJECT_TYPE or 
-            jsontype == jsontypes.ARRAY_TYPE):
+        if (self.is_type('object') or self.is_type('array')):
             print self.schemanode.get_title()
             for child in self.get_children():
                 child.print_tree()
@@ -305,8 +303,7 @@ class JsonNode(JsonBaseNode):
 
     def get_title(self):
         schematitle = self.schemanode.get_title()
-        if(self.depth > 0 and 
-            self.parent.schemanode.get_type() == jsontypes.ARRAY_TYPE):
+        if(self.depth > 0 and self.parent.schemanode.is_type('array')):
             title = "%s #%i" % (schematitle, self.get_key() + 1)
         else:
             title = schematitle
@@ -315,7 +312,7 @@ class JsonNode(JsonBaseNode):
     def get_child_title(self, key):
         childschema = self.schemanode.get_child(key)
         schematitle = childschema.get_title()
-        if(self.schemanode.get_type() == jsontypes.ARRAY_TYPE):
+        if(self.schemanode.is_type('array')):
             title = "%s #%i" % (schematitle, key + 1)
         else:
             title = schematitle
@@ -342,7 +339,7 @@ class JsonNode(JsonBaseNode):
             
     def is_deletable(self):
         parent = self.parent
-        if parent is not None and parent.get_type()==jsontypes.ARRAY_TYPE:
+        if parent is not None and parent.is_type('array'):
             if len(parent.get_children()) > 1:
                 return True
             else:

@@ -1,43 +1,58 @@
-class jsontypes_v1:
-    STRING_TYPE = "str"
-    OBJECT_TYPE = "map"
-    ARRAY_TYPE = "seq"
-    BOOLEAN_TYPE = "bool"
-    NUMBER_TYPE = "num"
-    INTEGER_TYPE = "int"
-    ANY_TYPE = "any"
-    NULL_TYPE = "none"
-        
-class jsontypes_v2:
-    STRING_TYPE = "string"
-    OBJECT_TYPE = "object"
-    ARRAY_TYPE = "array"
-    BOOLEAN_TYPE = "boolean"
-    NUMBER_TYPE = "number"
-    INTEGER_TYPE = "integer"
-    ANY_TYPE = "any"
-    NULL_TYPE = "null"
+class schemaformat_v1:
+    version = 1
+    typemap = {"string":"str",
+               "object":"map",
+               "array":"seq",
+               "boolean":"bool",
+               "number":"number",
+               "integer":"int",
+               "any":"any",
+               "null":"none"}
+    typemap_rev = dict([(typemap[key], key) for key in typemap])
+    idmap = {"properties":"mapping",
+             "items":"sequence",
+             "options":"enum"}
 
-jsontypes = jsontypes_v1
+class schemaformat_v2:
+    version = 2
+    typemap = {"string":"string",
+               "object":"object",
+               "array":"array",
+               "boolean":"boolean",
+               "number":"number",
+               "integer":"integer",
+               "any":"any",
+               "null":"null"}
+    typemap_rev = dict([(typemap[key], key) for key in typemap])
+    idmap = {"properties":"properties",
+             "items":"items",
+             "options":"options"}
+
+schemaformat = schemaformat_v1
 
 
-def get_json_type(data):
+def get_json_type(data, fmt=schemaformat):
     """Given an arbitrary piece of data, return the type as represented in 
        json schemas."""
     if(isinstance(data, basestring)):
-        return jsontypes.STRING_TYPE
+        return fmt.typemap['string']
     elif(isinstance(data, bool)):
-        return jsontypes.BOOLEAN_TYPE
+        return fmt.typemap['boolean']
     elif(isinstance(data, int)):
-        return jsontypes.INTEGER_TYPE
+        return fmt.typemap['integer']
     elif(isinstance(data, float)):
-        return jsontypes.NUMBER_TYPE
+        return fmt.typemap['number']
     elif(isinstance(data, dict)):
-        return jsontypes.OBJECT_TYPE
+        return fmt.typemap['object']
     elif(isinstance(data, list)):
-        return jsontypes.ARRAY_TYPE
+        return fmt.typemap['array']
     elif(data is None):
-        return jsontypes.NULL_TYPE
+        return fmt.typemap['null']
     else:
         raise JsonNodeError("unknown type: %s" % type(data).__name__)
+
+
+def convert_type(oldtype=None, oldfmt=schemaformat_v1, newfmt=schemaformat_v2):
+    return newfmt.typemap[oldfmt.typemap_rev[oldtype]]
+
 

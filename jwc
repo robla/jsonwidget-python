@@ -1,0 +1,20 @@
+#!/usr/bin/python
+""" Utility functions for jsonwidget"""
+import optparse
+
+import jsonwidget.commands
+
+if __name__ == "__main__":
+    '''urwid-based image metadata editor'''
+    usage = "usage: %prog [options] image"
+    parser = optparse.OptionParser(usage)
+    (options, args) = parser.parse_args()
+
+    if args[0] == 'upgradeschema':
+        jsonwidget.commands.upgrade_schema(args[1])
+    
+    
+
+
+
+

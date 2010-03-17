@@ -90,6 +90,13 @@ def jsonaddress():
         sys.stderr.writelines(str(inst) + "\n\n")
         sys.exit(2)
 
+def upgrade_schema(filename):
+    import jsonwidget.schema
+    import jsonwidget.jsontypes
+    
+    schemanode = jsonwidget.schema.SchemaNode(filename=filename)
+    schemanode.convert(jsonwidget.jsontypes.schemaformat_v2)
+    print schemanode.dumps()
 
 if __name__ == "__main__":
     jsonedit()

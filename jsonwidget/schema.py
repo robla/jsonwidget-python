@@ -8,7 +8,7 @@
 import json
 
 from jsonwidget.jsonbase import *
-from jsonwidget.jsontypes import jsontypes, get_json_type
+from jsonwidget.jsontypes import schemaformat, get_json_type, convert_type
 
 class Error(RuntimeError):
     pass
@@ -21,7 +21,10 @@ class SchemaNode(JsonBaseNode):
     """
 
     def __init__(self, key=None, data=None, filename=None, parent=None, 
-                 ordermap=None):
+                 ordermap=None, fmt=schemaformat):
+        properties_id = fmt.idmap['properties']
+        items_id = fmt.idmap['items']
+        self.schemaformat = fmt
         if filename is not None:
             self.filename = filename
             if data is None:
@@ -41,16 +44,16 @@ class SchemaNode(JsonBaseNode):
         else:
             self.depth = self.parent.get_depth() + 1
             self.rootschema = self.parent.get_root_schema()
-        if(self.data['type'] == jsontypes.OBJECT_TYPE):
+        if(self.data['type'] == fmt.typemap['object']):
             self.children = {}
             
-            for subkey, subdata in self.data['mapping'].items():
+            for subkey, subdata in self.data[properties_id].items():
                 ordermap = \
-                    self.ordermap['children']['mapping']['children'][subkey]
+                    self.ordermap['children'][properties_id]['children'][subkey]
                 self.children[subkey] = SchemaNode(key=subkey, data=subdata,
                                                    parent=self, 
                                                    ordermap=ordermap)
-        elif(self.data['type'] == jsontypes.ARRAY_TYPE):
+        elif(self.data['type'] == fmt.typemap['array']):
             ordermap = self.ordermap['children']['sequence']['children'][0]
             self.children = [SchemaNode(key=0, data=self.data['sequence'][0],
                                         parent=self, ordermap=ordermap)]
@@ -65,11 +68,11 @@ class SchemaNode(JsonBaseNode):
         if 'title' in self.data:
             return self.data['title']
         else:
-            if self.depth > 0 and self.parent.get_type() == jsontypes.ARRAY_TYPE:
+            if self.depth > 0 and self.parent.is_type('array'):
                 return self.parent.get_title() + " item"
             elif self.key is not None:
                 return str(self.key)
-            elif self.get_type() == jsontypes.ARRAY_TYPE:
+            elif self.is_type('array'):
                 return "Array"
             else:
                 return str(self.get_type())
@@ -79,12 +82,20 @@ class SchemaNode(JsonBaseNode):
 
     def get_type(self):
         return self.data['type']
+    
+    def get_format(self):
+        return self.schemaformat
+
+    def is_type(self, cmptype):
+        return self.get_type() == self.schemaformat.typemap[cmptype]
 
     def _get_key_order(self):
-        return self.ordermap['children']['mapping']['keys']
+        properties_id = schemaformat.idmap['properties']
+        return self.ordermap['children'][properties_id]['keys']
 
     def set_key_order(self, keys):
-        self.ordermap['children']['mapping']['keys'] = keys
+        properties_id = schemaformat.idmap['properties']
+        self.ordermap['children'][properties_id]['keys'] = keys
 
     def get_order_map(self):
         return self.ordermap
@@ -106,10 +117,9 @@ class SchemaNode(JsonBaseNode):
                         type(self.children).__name__)
 
     def get_child(self, key):
-        type = self.get_type()
-        if(type == jsontypes.OBJECT_TYPE):
+        if(self.is_type('object')):
             return self.children[key]
-        elif(type == jsontypes.ARRAY_TYPE):
+        elif(self.is_type('array')):
             return self.children[0]
         else:
             raise Error("self.children has invalid type %s" % type)
@@ -128,31 +138,40 @@ class SchemaNode(JsonBaseNode):
 
     def get_blank_value(self):
         type = self.get_type()
-        if(type == jsontypes.OBJECT_TYPE):
+        if(self.is_type('object')):
             retval = {}
-        elif(type == jsontypes.ARRAY_TYPE):
+        elif(self.is_type('array')):
             retval = []
-        elif(type == jsontypes.INTEGER_TYPE or type == jsontypes.NUMBER_TYPE):
+        elif(self.is_type('integer') or self.is_type('number')):
             retval = 0
-        elif(type == jsontypes.BOOLEAN_TYPE):
+        elif(self.is_type('boolean')):
             retval = False
-        elif(type == jsontypes.STRING_TYPE):
+        elif(self.is_type('string')):
             retval = ""
         else:
             retval = None
         return retval
 
+    def convert(self, newfmt):
+        if(self.is_type('object') or self.is_type('array')):
+            for child in self.get_children():
+                child.convert(newfmt)
+        self.data['type'] = convert_type(oldtype=self.data['type'], 
+                                         oldfmt=self.schemaformat,
+                                         newfmt=newfmt)
+        self.schemaformat = newfmt
+
     def dumps(self):
         retval = ""
         indent = " " * 4 
         indentlevel = self.get_depth() * 2
-        if self.get_type() == jsontypes.OBJECT_TYPE:
+        if self.is_type('object'):
             retval += "{\n"
             indentlevel += 1
             retval += indent * indentlevel
-            retval += '"type": "%s", \n' % jsontypes.OBJECT_TYPE
+            retval += '"type": "%s", \n' % self.schemaformat.typemap['object']
             retval += indent * indentlevel
-            retval += '"mapping": {'
+            retval += '"%s": {' % self.schemaformat.idmap['properties']
             addcomma = False
             indentlevel += 1
             for key in self._get_key_order():
@@ -171,13 +190,13 @@ class SchemaNode(JsonBaseNode):
             indentlevel -= 1
             retval += indent * indentlevel
             retval += "}"
-        elif self.get_type() == jsontypes.ARRAY_TYPE:
+        elif self.is_type('array'):
             retval += "{\n"
             indentlevel += 1
             retval += indent * indentlevel
-            retval += '"type": "%s", \n' % jsontypes.ARRAY_TYPE
+            retval += '"type": "%s", \n' % self.schemaformat.typemap['array']
             retval += indent * indentlevel
-            retval += '"sequence": ['
+            retval += '"%s": [' %  self.schemaformat.idmap['items']
             indentlevel += 1
             addcomma = False
             for child in self.get_children():
@@ -202,54 +221,59 @@ class SchemaNode(JsonBaseNode):
         return retval
 
 
-def generate_schema_data_from_data(jsondata):
+def generate_schema_data_from_data(jsondata, fmt=schemaformat):
     schema = {}
+    properties_id = fmt.idmap['properties']
+    items_id = fmt.idmap['items']
 
     schema['type'] = get_json_type(jsondata)
 
-    if schema['type'] == jsontypes.OBJECT_TYPE:
-        schema['mapping'] = {}
+    if schema['type'] == fmt.typemap['object']:
+        schema[properties_id] = {}
         for name in jsondata:
-            schema['mapping'][name] = \
+            schema[properties_id][name] = \
                 generate_schema_data_from_data(jsondata[name])
-    elif schema['type'] == jsontypes.ARRAY_TYPE:
-        schema['sequence'] = [generate_schema_data_from_data(jsondata[0])]
+    elif schema['type'] == fmt.typemap['array']:
+        schema[items_id] = [generate_schema_data_from_data(jsondata[0])]
     return schema
 
 
-def generate_schema_ordermap(jsondata, jsonordermap=None):
+def generate_schema_ordermap(jsondata, jsonordermap=None, fmt=schemaformat):
     ordermap = {}
+    properties_id = schemaformat.idmap['properties']
+    items_id = schemaformat.idmap['items']
 
     datatype = get_json_type(jsondata)
-    if datatype == jsontypes.OBJECT_TYPE:
-        ordermap['keys'] = ['type', 'mapping']
-        ordermap['children'] = {"type": {}, "mapping": {}}
-        ordermap['children']['mapping'] = {"keys": [], "children": {}}
+    if datatype == fmt.typemap['object']:
+        ordermap['keys'] = ['type', properties_id]
+        ordermap['children'] = {"type": {}, properties_id: {}}
+        ordermap['children'][properties_id] = {"keys": [], "children": {}}
         for name in jsondata:
-            ordermap['children']['mapping']['keys'].append(name)
+            ordermap['children'][properties_id]['keys'].append(name)
             if jsonordermap is None:
                 childmap = None
             else:
                 childmap = jsonordermap['children'][name]
-            ordermap['children']['mapping']['children'][name] = \
+            ordermap['children'][properties_id]['children'][name] = \
                 generate_schema_ordermap(jsondata[name], jsonordermap=childmap)
         if jsonordermap is not None:
-            ordermap['children']['mapping']['keys'] = jsonordermap['keys']
-    elif datatype == jsontypes.ARRAY_TYPE:
-        ordermap['keys'] = ['type', 'sequence']
-        ordermap['children'] = {"type": {}, "sequence": {}}
-        ordermap['children']['sequence'] = {"keys": [0], "children": {}}
+            ordermap['children'][properties_id]['keys'] = jsonordermap['keys']
+    elif datatype == fmt.typemap['array']:
+        ordermap['keys'] = ['type', items_id]
+        ordermap['children'] = {"type": {}, items_id: {}}
+        ordermap['children'][items_id] = {"keys": [0], "children": {}}
         if jsonordermap is None:
             childmap = None
         else:
             childmap = jsonordermap['children'][0]
-        ordermap['children']['sequence']['children'][0] = \
+        ordermap['children'][items_id]['children'][0] = \
             generate_schema_ordermap(jsondata[0], jsonordermap=childmap)
     return ordermap
 
 
-def generate_schema_from_data(jsondata, jsonordermap=None):
-    schema = generate_schema_data_from_data(jsondata)
-    ordermap = generate_schema_ordermap(jsondata, jsonordermap=jsonordermap)
-    return SchemaNode(data=schema, ordermap=ordermap)
+def generate_schema_from_data(jsondata, jsonordermap=None, fmt=schemaformat):
+    schema = generate_schema_data_from_data(jsondata, fmt=fmt)
+    ordermap = generate_schema_ordermap(jsondata, jsonordermap=jsonordermap,
+                                        fmt=fmt)
+    return SchemaNode(data=schema, ordermap=ordermap, fmt=fmt)
 
