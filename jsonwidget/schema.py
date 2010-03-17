@@ -54,9 +54,14 @@ class SchemaNode(JsonBaseNode):
                                                    parent=self, 
                                                    ordermap=ordermap)
         elif(self.data['type'] == fmt.typemap['array']):
-            ordermap = self.ordermap['children']['sequence']['children'][0]
-            self.children = [SchemaNode(key=0, data=self.data['sequence'][0],
-                                        parent=self, ordermap=ordermap)]
+            if fmt.version == 1:
+                ordermap = self.ordermap['children'][items_id]['children'][0]
+                self.children = [SchemaNode(key=0, data=self.data[items_id][0],
+                                            parent=self, ordermap=ordermap)]
+            elif fmt.version == 2:
+                ordermap = self.ordermap['children'][items_id]['children'][0]
+                self.children = [SchemaNode(key=0, data=self.data[items_id][0],
+                                            parent=self, ordermap=ordermap)]
 
     def get_depth(self):
         return self.depth
