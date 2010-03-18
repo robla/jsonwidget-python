@@ -8,7 +8,8 @@
 import json
 
 from jsonwidget.jsonbase import *
-from jsonwidget.jsontypes import schemaformat, get_json_type, convert_type
+from jsonwidget.jsontypes import schemaformat, schemaformat_v1, \
+    schemaformat_v2, get_json_type, convert_type
 
 class Error(RuntimeError):
     pass
@@ -21,10 +22,8 @@ class SchemaNode(JsonBaseNode):
     """
 
     def __init__(self, key=None, data=None, filename=None, parent=None, 
-                 ordermap=None, fmt=schemaformat):
-        properties_id = fmt.idmap['properties']
-        items_id = fmt.idmap['items']
-        self.schemaformat = fmt
+                 ordermap=None, fmt=None):
+
         if filename is not None:
             self.filename = filename
             if data is None:
@@ -33,6 +32,19 @@ class SchemaNode(JsonBaseNode):
             self.data = data
             self.ordermap = ordermap
             self.filename = None
+
+        if fmt is not None:
+            self.schemaformat = fmt
+        elif parent is not None:
+            self.schemaformat = parent.get_format()
+        elif self.data['type'] in ['seq', 'map']:
+            self.schemaformat = schemaformat_v1
+        else:
+            self.schemaformat = schemaformat_v2
+
+        fmt = self.schemaformat
+        properties_id = fmt.idmap['properties']
+        items_id = fmt.idmap['items']
 
         # object ref for the parent
         self.parent = parent
@@ -95,11 +107,11 @@ class SchemaNode(JsonBaseNode):
         return self.get_type() == self.schemaformat.typemap[cmptype]
 
     def _get_key_order(self):
-        properties_id = schemaformat.idmap['properties']
+        properties_id = self.schemaformat.idmap['properties']
         return self.ordermap['children'][properties_id]['keys']
 
     def set_key_order(self, keys):
-        properties_id = schemaformat.idmap['properties']
+        properties_id = self.schemaformat.idmap['properties']
         self.ordermap['children'][properties_id]['keys'] = keys
 
     def get_order_map(self):
@@ -158,9 +170,21 @@ class SchemaNode(JsonBaseNode):
         return retval
 
     def convert(self, newfmt):
-        if(self.is_type('object') or self.is_type('array')):
+        if self.is_type('object'):
+            old_child_id = self.schemaformat.idmap['properties']
+            new_child_id = newfmt.idmap['properties']
+        if self.is_type('array'):
+            old_child_id = self.schemaformat.idmap['items']
+            new_child_id = newfmt.idmap['items']
+        if self.is_type('object') or self.is_type('array'):
             for child in self.get_children():
                 child.convert(newfmt)
+            self.data[new_child_id] = self.data[old_child_id]
+            del self.data[old_child_id]
+            self.ordermap['children'][new_child_id] = \
+                self.ordermap['children'][old_child_id]
+            del self.ordermap['children'][old_child_id]
+
         self.data['type'] = convert_type(oldtype=self.data['type'], 
                                          oldfmt=self.schemaformat,
                                          newfmt=newfmt)

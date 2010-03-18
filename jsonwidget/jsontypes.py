@@ -10,8 +10,7 @@ class schemaformat_v1:
                "null":"none"}
     typemap_rev = dict([(typemap[key], key) for key in typemap])
     idmap = {"properties":"mapping",
-             "items":"sequence",
-             "options":"enum"}
+             "items":"sequence"}
 
 class schemaformat_v2:
     version = 2
@@ -25,8 +24,7 @@ class schemaformat_v2:
                "null":"null"}
     typemap_rev = dict([(typemap[key], key) for key in typemap])
     idmap = {"properties":"properties",
-             "items":"items",
-             "options":"options"}
+             "items":"items"}
 
 schemaformat = schemaformat_v1
 
