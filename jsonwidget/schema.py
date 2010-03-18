@@ -148,7 +148,15 @@ class SchemaNode(JsonBaseNode):
         return ('enum' in self.data)
         
     def is_required(self):
-        return ('required' in self.data and self.data['required'])
+        if self.schemaformat.version == 1:
+            return ('required' in self.data and self.data['required'])
+        if self.schemaformat.version == 2:
+            if 'optional' in self.data:
+                return not self.data['optional']
+            else:
+                return False
+        else:
+            raise Error("unhandled schema format")
 
     def enum_options(self):
         return self.data['enum']
@@ -188,6 +196,9 @@ class SchemaNode(JsonBaseNode):
         self.data['type'] = convert_type(oldtype=self.data['type'], 
                                          oldfmt=self.schemaformat,
                                          newfmt=newfmt)
+        self.data['optional'] = not self.is_required()
+        if 'required' in self.data:
+            del self.data['required']
         self.schemaformat = newfmt
 
     def dumps(self):
