@@ -28,6 +28,8 @@ Website: http://robla.net/jsonwidget
 import jsonwidget.termedit
 import os
 
+from jsontypes import schemaformat
+
 __version__ = "0.1.5"
 
 def run_editor(jsonfile, schemafile=None, schemaobj=None, 
@@ -62,7 +64,8 @@ def find_system_schema(schemaname):
             filename)
     return filename
 
-def generate_schema(filename=None, data=None, jsonstring=None):
+def generate_schema(filename=None, data=None, jsonstring=None, 
+                    version=schemaformat.version):
     """
     Generate a schema from a JSON example.
     """
@@ -75,6 +78,6 @@ def generate_schema(filename=None, data=None, jsonstring=None):
         jsonordermap = \
             jsonwidget.jsonorder.JsonOrderMap(jsonbuffer).get_order_map()
         return jsonwidget.schema.generate_schema_from_data(jsondata, 
-            jsonordermap=jsonordermap)
+            jsonordermap=jsonordermap, version=version)
     else:
         raise RuntimeError("only filename-based generation is supported")

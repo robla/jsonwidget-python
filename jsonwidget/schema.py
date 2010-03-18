@@ -37,10 +37,10 @@ class SchemaNode(JsonBaseNode):
             self.schemaformat = fmt
         elif parent is not None:
             self.schemaformat = parent.get_format()
-        elif self.data['type'] in ['seq', 'map']:
-            self.schemaformat = schemaformat_v1
-        else:
+        elif self.data['type'] in ['object', 'array']:
             self.schemaformat = schemaformat_v2
+        else:
+            self.schemaformat = schemaformat_v1
 
         fmt = self.schemaformat
         properties_id = fmt.idmap['properties']
@@ -255,24 +255,25 @@ def generate_schema_data_from_data(jsondata, fmt=schemaformat):
     properties_id = fmt.idmap['properties']
     items_id = fmt.idmap['items']
 
-    schema['type'] = get_json_type(jsondata)
+    schema['type'] = get_json_type(jsondata, fmt=fmt)
 
     if schema['type'] == fmt.typemap['object']:
         schema[properties_id] = {}
         for name in jsondata:
             schema[properties_id][name] = \
-                generate_schema_data_from_data(jsondata[name])
+                generate_schema_data_from_data(jsondata[name], fmt=fmt)
     elif schema['type'] == fmt.typemap['array']:
-        schema[items_id] = [generate_schema_data_from_data(jsondata[0])]
+        schema[items_id] = [generate_schema_data_from_data(jsondata[0], 
+                                                           fmt=fmt)]
     return schema
 
 
 def generate_schema_ordermap(jsondata, jsonordermap=None, fmt=schemaformat):
     ordermap = {}
-    properties_id = schemaformat.idmap['properties']
-    items_id = schemaformat.idmap['items']
+    properties_id = fmt.idmap['properties']
+    items_id = fmt.idmap['items']
 
-    datatype = get_json_type(jsondata)
+    datatype = get_json_type(jsondata, fmt=fmt)
     if datatype == fmt.typemap['object']:
         ordermap['keys'] = ['type', properties_id]
         ordermap['children'] = {"type": {}, properties_id: {}}
@@ -284,7 +285,8 @@ def generate_schema_ordermap(jsondata, jsonordermap=None, fmt=schemaformat):
             else:
                 childmap = jsonordermap['children'][name]
             ordermap['children'][properties_id]['children'][name] = \
-                generate_schema_ordermap(jsondata[name], jsonordermap=childmap)
+                generate_schema_ordermap(jsondata[name], jsonordermap=childmap,
+                                         fmt=fmt)
         if jsonordermap is not None:
             ordermap['children'][properties_id]['keys'] = jsonordermap['keys']
     elif datatype == fmt.typemap['array']:
@@ -296,11 +298,20 @@ def generate_schema_ordermap(jsondata, jsonordermap=None, fmt=schemaformat):
         else:
             childmap = jsonordermap['children'][0]
         ordermap['children'][items_id]['children'][0] = \
-            generate_schema_ordermap(jsondata[0], jsonordermap=childmap)
+            generate_schema_ordermap(jsondata[0], jsonordermap=childmap, 
+                                     fmt=fmt)
     return ordermap
 
 
-def generate_schema_from_data(jsondata, jsonordermap=None, fmt=schemaformat):
+def generate_schema_from_data(jsondata, jsonordermap=None, fmt=None,
+                             version=schemaformat.version):
+    if fmt is None:
+        if version == 1:
+            fmt = schemaformat_v1
+        elif version == 2:
+            fmt = schemaformat_v2
+        else:
+            raise RuntimeError("Invalid version")
     schema = generate_schema_data_from_data(jsondata, fmt=fmt)
     ordermap = generate_schema_ordermap(jsondata, jsonordermap=jsonordermap,
                                         fmt=fmt)

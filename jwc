@@ -1,17 +1,64 @@
 #!/usr/bin/python
 """ Utility functions for jsonwidget"""
 import optparse
+import sys
 
 import jsonwidget.commands
 
+from jsonwidget.jsontypes import schemaformat
+
 if __name__ == "__main__":
     '''urwid-based image metadata editor'''
-    usage = "usage: %prog [options] image"
-    parser = optparse.OptionParser(usage)
-    (options, args) = parser.parse_args()
+    usage = """\
+usage: %prog command filename
+  Valid commands:
+    upgradeschema: create a version 2 schema from a version 1 schema
+    schemagen: create a schema from an example json file\
+"""
+    cmdparser = optparse.OptionParser(usage)
+    cmdparser.disable_interspersed_args()
+    (options, args) = cmdparser.parse_args()
 
-    if args[0] == 'upgradeschema':
-        jsonwidget.commands.upgrade_schema(args[1])
+
+    if len(args)<1:
+        cmdparser.error("no command given")
+    elif args[0] == 'upgradeschema':
+        usage = """\
+Create a version 2 schema from a version 1 schema
+  usage: %prog upgradeschema oldschema\
+"""
+        subparser = optparse.OptionParser(usage=usage)
+        (options, subargs) = subparser.parse_args(args[1:])
+        if len(subargs)==1:
+            jsonwidget.commands.upgrade_schema(subargs[0])
+            sys.exit(0)
+        elif len(subargs)<1:
+            subparser.error("old schema file required")
+        else:
+            subparser.error("only one file at a time")
+    elif args[0] == 'schemagen':
+        usage = """\
+Create a schema from an example json file
+  usage: %prog schemagen [options] jsonfile\
+"""
+        subparser = optparse.OptionParser(usage=usage)
+        versionhelp = "schema format version to use.  Default: %i" % \
+                      schemaformat.version
+        subparser.add_option("-v", "--version", dest="version", type="int",
+                             default=schemaformat.version,
+                             help=versionhelp)
+        (options, subargs) = subparser.parse_args(args[1:])
+        if len(subargs)==1:
+            schemaobj = jsonwidget.generate_schema(subargs[0], 
+                                                   version=options.version)
+            print schemaobj.dumps()
+            sys.exit(0)
+        elif len(subargs)<1:
+            subparser.error("jsonfile required")
+        else:
+            subparser.error("only one file at a time")
+    else:
+        cmdparser.error(args[0] + ' is not a valid command.')
     
     
 

@@ -1,3 +1,8 @@
+#!/usr/bin/python
+"""Schema format definitions and other json type functions"""
+
+# Version 1 is the version supported by jsonwidget-javascript
+# Specification: http://robla.net/jsonwidget/jsonschema/
 class schemaformat_v1:
     version = 1
     typemap = {"string":"str",
@@ -12,6 +17,9 @@ class schemaformat_v1:
     idmap = {"properties":"mapping",
              "items":"sequence"}
 
+# Version 2 support is still incomplete, so it's not the default yet
+# v2 is defined by the IETF Internet Draft specification at:
+# http://json-schema.org
 class schemaformat_v2:
     version = 2
     typemap = {"string":"string",

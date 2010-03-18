@@ -6,5 +6,6 @@ include jsonwidget/schema/*
 include csvedit
 include jsonedit
 include jsonaddress
+include jwc
 include stdeb.cfg
 

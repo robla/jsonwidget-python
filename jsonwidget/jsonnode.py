@@ -9,7 +9,7 @@ import json
 
 from jsonwidget.schema import *
 from jsonwidget.jsonbase import *
-from jsonwidget.jsontypes import schemaformat, get_json_type
+from jsonwidget.jsontypes import get_json_type
 
 class JsonNodeError(RuntimeError):
     pass

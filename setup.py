@@ -49,6 +49,6 @@ Website: http://robla.net/jsonwidget""",
       install_requires=["urwid",
                         "simpleparse"],
       entry_points={},
-      scripts=['jsonedit', 'jsonaddress', 'csvedit'],
+      scripts=['jsonedit', 'jsonaddress', 'csvedit', 'jwc'],
       package_data={'schema':['jsonwidget/schema/*.json']},
       )
