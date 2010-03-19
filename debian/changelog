@@ -5,13 +5,12 @@ python-jsonwidget (0.1.5) karmic; urgency=low
   * New 'jwc' command line utility
   * Adding csvedit to manifest
 
- -- Rob Lanphier <robla@robla.net>  Tue, 17 Mar 2010 22:49:02 -0800
-
 python-jsonwidget (0.1.4) karmic; urgency=low
 
   * csvedit now can read and write files
   * Made commandline mode for jsonorder.py a little more useful
-  * New schema functions: set_title, generate_schema_from_data, get_order_map, get_json_type
+  * New schema functions: set_title, generate_schema_from_data, get_order_map, 
+    get_json_type
   * Split JsonEditor into JsonFileEditor and JsonDataEditor
 
  -- Rob Lanphier <robla@robla.net>  Tue, 13 Mar 2010 14:51:00 -0800
