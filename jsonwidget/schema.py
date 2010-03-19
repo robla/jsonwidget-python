@@ -196,66 +196,74 @@ class SchemaNode(JsonBaseNode):
         self.data['type'] = convert_type(oldtype=self.data['type'], 
                                          oldfmt=self.schemaformat,
                                          newfmt=newfmt)
+
+        # this stuff is all very specific to v1->v2 conversion, which is
+        # unfortunate, because the calling convention implies much more 
+        # flexibility
         self.data['optional'] = not self.is_required()
         if 'required' in self.data:
             del self.data['required']
         self.schemaformat = newfmt
 
     def dumps(self):
+        encoder = json.JSONEncoder(indent=4)
         retval = ""
         indent = " " * 4 
         indentlevel = self.get_depth() * 2
-        if self.is_type('object'):
+        if self.is_type('object') or self.is_type('array'):
             retval += "{\n"
             indentlevel += 1
-            retval += indent * indentlevel
-            retval += '"type": "%s", \n' % self.schemaformat.typemap['object']
-            retval += indent * indentlevel
-            retval += '"%s": {' % self.schemaformat.idmap['properties']
-            addcomma = False
-            indentlevel += 1
-            for key in self._get_key_order():
-                if addcomma:
-                    retval += ", "
-                retval += "\n"
+            data = self.get_data()
+            props = sorted(data.keys())
+            if self.is_type('object'):
+                props.remove(self.schemaformat.idmap['properties'])
+                for prop in props:
+                    retval += indent * indentlevel
+                    encprop = encoder.encode(prop)
+                    val = encoder.encode(data[prop])
+                    retval += '%s: %s, \n' % (encprop, val)
                 retval += indent * indentlevel
-                addcomma = True
-                retval += '"%s": ' % key
-                retval += self.get_child(key).dumps()
-                #retval += "\n"
-            retval += "\n"
-            indentlevel -= 1
-            retval += indent * indentlevel
-            retval += "}\n"
-            indentlevel -= 1
-            retval += indent * indentlevel
-            retval += "}"
-        elif self.is_type('array'):
-            retval += "{\n"
-            indentlevel += 1
-            retval += indent * indentlevel
-            retval += '"type": "%s", \n' % self.schemaformat.typemap['array']
-            retval += indent * indentlevel
-            retval += '"%s": [' %  self.schemaformat.idmap['items']
-            indentlevel += 1
-            addcomma = False
-            for child in self.get_children():
-                if addcomma:
-                    retval += ","
+                retval += '"%s": {' % self.schemaformat.idmap['properties']
+                addcomma = False
+                indentlevel += 1
+                for key in self._get_key_order():
+                    if addcomma:
+                        retval += ", "
+                    retval += "\n"
+                    retval += indent * indentlevel
+                    addcomma = True
+                    retval += '"%s": ' % key
+                    retval += self.get_child(key).dumps()
                 retval += "\n"
+                indentlevel -= 1
                 retval += indent * indentlevel
-                addcomma = True
-                retval += child.dumps()
-                #retval += "\n"
-            retval += "\n"
-            indentlevel -= 1
-            retval += indent * indentlevel
-            retval += "]\n"
+                retval += "}\n"
+            elif self.is_type('array'):
+                props.remove(self.schemaformat.idmap['items'])
+                for prop in props:
+                    retval += indent * indentlevel
+                    encprop = encoder.encode(prop)
+                    val = encoder.encode(data[prop])
+                    retval += '%s: %s, \n' % (encprop, val)
+                retval += indent * indentlevel
+                retval += '"%s": [' %  self.schemaformat.idmap['items']
+                indentlevel += 1
+                addcomma = False
+                for child in self.get_children():
+                    if addcomma:
+                        retval += ","
+                    retval += "\n"
+                    retval += indent * indentlevel
+                    addcomma = True
+                    retval += child.dumps()
+                retval += "\n"
+                indentlevel -= 1
+                retval += indent * indentlevel
+                retval += "]\n"
             indentlevel -= 1
             retval += indent * indentlevel
             retval += "}"
         else:
-            encoder = json.JSONEncoder(indent=4)
             encoder.current_indent_level = self.get_depth() * 2
             retval = encoder.encode(self.get_data())
         return retval
