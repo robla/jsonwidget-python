@@ -11,7 +11,7 @@ from jsonwidget.jsonbase import *
 from jsonwidget.jsontypes import schemaformat, schemaformat_v1, \
     schemaformat_v2, get_json_type, convert_type
 
-class Error(RuntimeError):
+class JsonSchemaError(RuntimeError):
     pass
 
 class SchemaNode(JsonBaseNode):
@@ -130,8 +130,8 @@ class SchemaNode(JsonBaseNode):
         elif(isinstance(self.children, list)):
             return self.children
         else:
-            raise Error("self.children has invalid type %s" %
-                        type(self.children).__name__)
+            raise JsonSchemaError("self.children has invalid type %s" %
+                                  type(self.children).__name__)
 
     def get_child(self, key):
         if(self.is_type('object')):
@@ -139,7 +139,7 @@ class SchemaNode(JsonBaseNode):
         elif(self.is_type('array')):
             return self.children[0]
         else:
-            raise Error("self.children has invalid type %s" % type)
+            raise JsonSchemaError("self.children has invalid type %s" % type)
 
     def get_key(self):
         return self.key
@@ -156,7 +156,7 @@ class SchemaNode(JsonBaseNode):
             else:
                 return False
         else:
-            raise Error("unhandled schema format")
+            raise JsonSchemaError("unhandled schema format")
 
     def enum_options(self):
         return self.data['enum']
@@ -206,6 +206,8 @@ class SchemaNode(JsonBaseNode):
         self.schemaformat = newfmt
 
     def dumps(self):
+        """ Version of dumps that more or less respects the originally-written
+            key order."""
         encoder = json.JSONEncoder(indent=4)
         retval = ""
         indent = " " * 4 
@@ -330,7 +332,7 @@ def generate_schema_from_data(jsondata, jsonordermap=None, fmt=None,
         elif version == 2:
             fmt = schemaformat_v2
         else:
-            raise RuntimeError("Invalid version")
+            raise JsonSchemaError("Invalid version")
     schema = generate_schema_data_from_data(jsondata, fmt=fmt)
     ordermap = generate_schema_ordermap(jsondata, jsonordermap=jsonordermap,
                                         fmt=fmt)
