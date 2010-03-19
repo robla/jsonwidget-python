@@ -14,6 +14,17 @@ from jsonwidget.jsontypes import schemaformat, schemaformat_v1, \
 class JsonSchemaError(RuntimeError):
     pass
 
+
+
+class AdditionalPropertiesKey(object):
+    """
+    Dummy class used as a key for additionalProperties nodes.  This library 
+    uses an object instance rather than a string as a key to prevent collisions
+    with valid JSON keys.
+    """
+    pass
+
+
 class SchemaNode(JsonBaseNode):
     """
     Each SchemaNode instance represents one node in the data tree.  Each
@@ -158,6 +169,45 @@ class SchemaNode(JsonBaseNode):
         else:
             raise JsonSchemaError("unhandled schema format")
 
+    def allow_additional_properties(self):
+        if self.schemaformat.version == 1:
+            return 'user_key' in self.data
+        elif self.schemaformat.version == 2:
+            if 'additionalProperties' in self.data:
+                return not self.data['additionalProperties'] == False
+            else:
+                return True
+        else:
+            raise JsonSchemaError("unhandled schema format")
+
+    def get_additional_props_node(self):
+        if self.allow_additional_properties():
+            if self.schemaformat.version == 1:
+                userkey = self.data['user_key']
+                return self.data['mapping'][userkey]
+            elif self.schemaformat.version == 2:
+                return self.get_additional_props_node_v2()
+            else:
+                raise JsonSchemaError("unhandled schema format")
+        else:
+            raise JsonSchemaError("additional properties not allowed")
+
+    def get_additional_props_node_v2(self):
+        if not hasattr(self, 'additional_props'):
+            if 'additionalProperties' in self.data:
+                propdata = self.data['additionalProperties']
+                ordermap = self.ordermap['children']['additionalProperties']
+            else:
+                propdata = {}
+                ordermap = {'keys':[], 'children':{}}
+            key = AdditionalPropertiesKey()
+            self.additional_props = SchemaNode(data=propdata, parent=self, 
+                                               ordermap=ordermap, key=key)
+        return self.additional_props
+        
+    def is_additional_props_node(self):
+        return isinstance(self.key, AdditionalPropertiesKey)
+
     def enum_options(self):
         return self.data['enum']
 
@@ -177,7 +227,9 @@ class SchemaNode(JsonBaseNode):
             retval = None
         return retval
 
-    def convert(self, newfmt):
+
+
+    def convert_types(self, newfmt):
         if self.is_type('object'):
             old_child_id = self.schemaformat.idmap['properties']
             new_child_id = newfmt.idmap['properties']
@@ -197,21 +249,42 @@ class SchemaNode(JsonBaseNode):
                                          oldfmt=self.schemaformat,
                                          newfmt=newfmt)
 
+    def convert(self, newfmt):
         # this stuff is all very specific to v1->v2 conversion, which is
         # unfortunate, because the calling convention implies much more 
         # flexibility
+        if self.is_type('object'):
+            propkey = self.schemaformat.idmap['properties']
+            if self.allow_additional_properties():
+                userkey = self.data['user_key']
+                self.data['additionalProperties'] = \
+                    self.data[propkey][userkey]
+                del self.data['user_key']
+                del self.data[propkey][userkey]
+                self.ordermap['children']['additionalProperties'] = \
+                    self.ordermap['children']['mapping']['children'][userkey]
+                del self.ordermap['children']['mapping']['children'][userkey]
+                self.ordermap['children']['mapping']['keys'].remove(userkey)
+            else:
+                self.data['additionalProperties'] = False
+
+        self.convert_types(newfmt)
         self.data['optional'] = not self.is_required()
         if 'required' in self.data:
             del self.data['required']
         self.schemaformat = newfmt
 
-    def dumps(self):
+    def dumps(self, indentlevel=None):
         """ Version of dumps that more or less respects the originally-written
             key order."""
         encoder = json.JSONEncoder(indent=4)
         retval = ""
-        indent = " " * 4 
-        indentlevel = self.get_depth() * 2
+        indent = " " * 4
+        if indentlevel is None:
+            indentlevel = self.get_depth() * 2
+        if self.is_additional_props_node():
+            indentlevel -= 1
+
         if self.is_type('object') or self.is_type('array'):
             retval += "{\n"
             indentlevel += 1
@@ -219,6 +292,9 @@ class SchemaNode(JsonBaseNode):
             props = sorted(data.keys())
             if self.is_type('object'):
                 props.remove(self.schemaformat.idmap['properties'])
+                if(self.schemaformat.version == 2 and 
+                   'additionalProperties' in props):
+                    props.remove('additionalProperties')
                 for prop in props:
                     retval += indent * indentlevel
                     encprop = encoder.encode(prop)
@@ -235,11 +311,28 @@ class SchemaNode(JsonBaseNode):
                     retval += indent * indentlevel
                     addcomma = True
                     retval += '"%s": ' % key
-                    retval += self.get_child(key).dumps()
-                retval += "\n"
+                    retval += self.get_child(key).dumps(indentlevel=indentlevel)
+
                 indentlevel -= 1
-                retval += indent * indentlevel
-                retval += "}\n"
+                if addcomma:
+                    retval += "\n"
+                    retval += indent * indentlevel
+                retval += "}"
+
+                if(self.schemaformat.version == 2 and 
+                   'additionalProperties' in data):
+                    retval += ", \n"
+                    retval += indent * indentlevel
+                    retval += '"additionalProperties": '
+                    if self.allow_additional_properties():
+                        retval += self.get_additional_props_node().dumps(
+                                    indentlevel=indentlevel+1)
+                    else:
+                        retval += 'false'
+                    retval += "\n"
+                else:
+                    retval += "\n"
+
             elif self.is_type('array'):
                 props.remove(self.schemaformat.idmap['items'])
                 for prop in props:
@@ -257,7 +350,7 @@ class SchemaNode(JsonBaseNode):
                     retval += "\n"
                     retval += indent * indentlevel
                     addcomma = True
-                    retval += child.dumps()
+                    retval += child.dumps(indentlevel=indentlevel)
                 retval += "\n"
                 indentlevel -= 1
                 retval += indent * indentlevel
@@ -266,7 +359,7 @@ class SchemaNode(JsonBaseNode):
             retval += indent * indentlevel
             retval += "}"
         else:
-            encoder.current_indent_level = self.get_depth() * 2
+            encoder.current_indent_level = indentlevel
             retval = encoder.encode(self.get_data())
         return retval
 

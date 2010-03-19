@@ -12,7 +12,8 @@ class schemaformat_v1:
                "number":"number",
                "integer":"int",
                "any":"any",
-               "null":"none"}
+               "null":"none",
+               "idref":"idref"}
     typemap_rev = dict([(typemap[key], key) for key in typemap])
     idmap = {"properties":"mapping",
              "items":"sequence"}
@@ -29,7 +30,8 @@ class schemaformat_v2:
                "number":"number",
                "integer":"integer",
                "any":"any",
-               "null":"null"}
+               "null":"null",
+               "idref":"$ref"}
     typemap_rev = dict([(typemap[key], key) for key in typemap])
     idmap = {"properties":"properties",
              "items":"items"}
