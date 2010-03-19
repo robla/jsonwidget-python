@@ -5,6 +5,8 @@ python-jsonwidget (0.1.5) karmic; urgency=low
   * New 'jwc' command line utility
   * Adding csvedit to manifest
 
+ -- Rob Lanphier <robla@robla.net>  Fri, 19 Mar 2010 10:54:40 -0700
+ 
 python-jsonwidget (0.1.4) karmic; urgency=low
 
   * csvedit now can read and write files
