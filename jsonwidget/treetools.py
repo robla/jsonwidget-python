@@ -227,15 +227,21 @@ class ParentWidget(TreeWidget):
         if not self.expanded: 
             return None
         else:
-            firstnode = self._node.get_first_child()
-            return firstnode.get_widget()
+            if self._node.has_children():
+                firstnode = self._node.get_first_child()
+                return firstnode.get_widget()
+            else:
+                return None
 
     def last_child(self):
         """Return last child if expanded."""
         if not self.expanded:
             return None
         else:
-            lastchild = self._node.get_last_child().get_widget()
+            if self._node.has_children():
+                lastchild = self._node.get_last_child().get_widget()
+            else:
+                return None
             # recursively search down for the last descendant
             lastdescendant = lastchild.last_child()
             if lastdescendant is None:
@@ -415,7 +421,10 @@ class ParentNode(TreeNode):
         """Return the last TreeNode in the directory."""
         child_keys = self.get_child_keys()
         return self.get_child_node(child_keys[-1])
-
+        
+    def has_children(self):
+        """Does this node have any children?"""
+        return len(self.get_child_keys())>0
 
 class TreeWalker(urwid.ListWalker):
     """ListWalker-compatible class for browsing directories.
