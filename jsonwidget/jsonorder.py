@@ -80,10 +80,11 @@ class JsonOrderMap(object):
         for childtuple in results:
             type, start, end, child = childtuple
             if type == 'member':
-                keytuple = child[0][3][0][3][0]
+                keytuple = child[0][3][0]
                 keystart = keytuple[1]
                 keyend = keytuple[2]
-                newkey = self._buffer[keystart:keyend]
+                # use json parser to deal with backslash escapes, etc.
+                newkey = json.loads(self._buffer[keystart:keyend])
                 ordermap['keys'].append(newkey)
                 valuestart = child[1][1]
                 valueend = child[1][2]
