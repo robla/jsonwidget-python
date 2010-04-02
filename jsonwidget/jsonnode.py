@@ -124,18 +124,26 @@ class JsonNode(JsonBaseNode):
                 try:
                     subschemanode = self.schemanode.get_child(subkey)
                 except KeyError:
-                    idstring = self.get_id_string()
-                    validkeys = self.schemanode.get_child_keys()
-                    validkeystring = ", ".join(validkeys)
-                    filename = self.get_filename()
-                    raise JsonNodeError(
-                        "Invalid key: \"%s\" in %s%s.  Valid keys: %s" % 
-                        (subkey, filename, idstring, validkeystring))
+                    if self.schemanode.allow_additional_properties():
+                        subschemanode = self.schemanode.get_additional_props_node()
+                    else:
+                        idstring = self.get_id_string()
+                        validkeys = self.schemanode.get_child_keys()
+                        validkeystring = ", ".join(validkeys)
+                        filename = self.get_filename()
+                        raise JsonNodeError(
+                            "Invalid key: \"%s\" in %s%s.  Valid keys: %s" % 
+                            (subkey, filename, idstring, validkeystring))
                 if subschemanode is None:
                     raise JsonNodeError(
                         "Validation error: %s not a valid key in %s" %
                         (subkey, self.schemanode.get_key()))
-                schemakeys.remove(subkey)
+                if subkey in schemakeys:
+                    schemakeys.remove(subkey)
+                elif not self.schemanode.allow_additional_properties():
+                    raise JsonNodeError(
+                        "Invalid key: \"%s\" in %s%s.  Valid keys: %s" % 
+                        (subkey, filename, idstring, validkeystring))
                 try:
                     ordermap = self.ordermap['children'][subkey]
                 except AttributeError:

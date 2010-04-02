@@ -16,15 +16,6 @@ class JsonSchemaError(RuntimeError):
 
 
 
-class AdditionalPropertiesKey(object):
-    """
-    Dummy class used as a key for additionalProperties nodes.  This library 
-    uses an object instance rather than a string as a key to prevent collisions
-    with valid JSON keys.
-    """
-    pass
-
-
 class SchemaNode(JsonBaseNode):
     """
     Each SchemaNode instance represents one node in the data tree.  Each
@@ -33,7 +24,7 @@ class SchemaNode(JsonBaseNode):
     """
 
     def __init__(self, key=None, data=None, filename=None, parent=None, 
-                 ordermap=None, fmt=None):
+                 ordermap=None, fmt=None, isaddedprop=False):
 
         if filename is not None:
             self.filename = filename
@@ -56,6 +47,8 @@ class SchemaNode(JsonBaseNode):
         fmt = self.schemaformat
         properties_id = fmt.idmap['properties']
         items_id = fmt.idmap['items']
+
+        self.is_added_prop = isaddedprop
 
         # object ref for the parent
         self.parent = parent
@@ -146,7 +139,13 @@ class SchemaNode(JsonBaseNode):
 
     def get_child(self, key):
         if(self.is_type('object')):
-            return self.children[key]
+            try:
+                return self.children[key]
+            except KeyError:
+                if(self.allow_additional_properties()):
+                    return self.get_additional_props_node()
+                else:
+                    raise
         elif(self.is_type('array')):
             return self.children[0]
         else:
@@ -184,7 +183,14 @@ class SchemaNode(JsonBaseNode):
         if self.allow_additional_properties():
             if self.schemaformat.version == 1:
                 userkey = self.data['user_key']
-                return self.data['mapping'][userkey]
+                propdata = self.data['mapping'][userkey]
+                ordermap = \
+                    self.ordermap['children']['mapping']['children'][userkey]
+                self.additional_props = SchemaNode(data=propdata, parent=self, 
+                                                   ordermap=ordermap, 
+                                                   key=userkey,
+                                                   isaddedprop=True)
+                return self.additional_props
             elif self.schemaformat.version == 2:
                 return self.get_additional_props_node_v2()
             else:
@@ -200,13 +206,13 @@ class SchemaNode(JsonBaseNode):
             else:
                 propdata = {}
                 ordermap = {'keys':[], 'children':{}}
-            key = AdditionalPropertiesKey()
             self.additional_props = SchemaNode(data=propdata, parent=self, 
-                                               ordermap=ordermap, key=key)
+                                               ordermap=ordermap,
+                                               isaddedprop=True)
         return self.additional_props
         
     def is_additional_props_node(self):
-        return isinstance(self.key, AdditionalPropertiesKey)
+        return self.is_added_prop
 
     def enum_options(self):
         return self.data['enum']
