@@ -71,8 +71,8 @@ class CsvPinotFile(jsonwidget.termedit.JsonPinotFile):
 
 
 if __name__ == "__main__":
-    '''urwid-based image metadata editor'''
-    usage = "usage: %prog [options] image"
+    '''urwid-based .csv/.tsv file editor'''
+    usage = "usage: %prog [options] file"
     parser = optparse.OptionParser(usage)
     (options, args) = parser.parse_args()
 
