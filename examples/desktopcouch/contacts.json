@@ -1,0 +1,177 @@
+{
+    "optional": true, 
+    "type": "array", 
+    "items": [
+        {
+            "optional": true, 
+            "type": "object", 
+            "properties": {
+                "first_name": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "middle_name": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "last_name": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "title": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "suffix": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "birth_date": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "nick_name": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "spouse_name": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "wedding_date": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "company": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "department": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "job_title": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "manager_name": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "assistant_name": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "office": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "_rev": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "record_type": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "urls": {
+                    "optional": true, 
+                    "type": "object", 
+                    "properties": {}, 
+                    "additionalProperties": {
+                        "optional": true, 
+                        "type": "object", 
+                        "properties": {
+                            "description": {
+                                "optional": true, 
+                                "type": "string"
+                            }, 
+                            "address": {
+                                "optional": true, 
+                                "type": "string"
+                            }
+                        }, 
+                        "additionalProperties": false
+                    }
+                }, 
+                "phone_numbers": {
+                    "optional": true, 
+                    "type": "object", 
+                    "properties": {}, 
+                    "additionalProperties": {
+                        "optional": true, 
+                        "type": "object", 
+                        "properties": {
+                            "priority": {
+                                "optional": true, 
+                                "type": "integer"
+                            }, 
+                            "description": {
+                                "optional": true, 
+                                "type": "string"
+                            }, 
+                            "number": {
+                                "optional": true, 
+                                "type": "string"
+                            }
+                        }, 
+                        "additionalProperties": false
+                    }
+                }, 
+                "_id": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "notes": {
+                    "optional": true, 
+                    "type": "string"
+                }, 
+                "email_addresses": {
+                    "optional": true, 
+                    "type": "object", 
+                    "properties": {}, 
+                    "additionalProperties": {
+                        "optional": true, 
+                        "type": "object", 
+                        "properties": {
+                            "description": {
+                                "optional": true, 
+                                "type": "string"
+                            }, 
+                            "address": {
+                                "optional": true, 
+                                "type": "string"
+                            }
+                        }, 
+                        "additionalProperties": false
+                    }
+                }, 
+                "im_addresses": {
+                    "optional": true, 
+                    "type": "object", 
+                    "properties": {}, 
+                    "additionalProperties": {
+                        "optional": true, 
+                        "type": "object", 
+                        "properties": {
+                            "protocol": {
+                                "optional": true, 
+                                "type": "string"
+                            }, 
+                            "description": {
+                                "optional": true, 
+                                "type": "string"
+                            }, 
+                            "address": {
+                                "optional": true, 
+                                "type": "string"
+                            }
+                        }, 
+                        "additionalProperties": false
+                    }
+                }
+            }, 
+            "additionalProperties": false
+        }
+    ]
+}
