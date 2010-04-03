@@ -18,7 +18,6 @@ class schemaformat_v1:
     idmap = {"properties":"mapping",
              "items":"sequence"}
 
-# Version 2 support is still incomplete, so it's not the default yet
 # v2 is defined by the IETF Internet Draft specification at:
 # http://json-schema.org
 class schemaformat_v2:
@@ -36,7 +35,8 @@ class schemaformat_v2:
     idmap = {"properties":"properties",
              "items":"items"}
 
-schemaformat = schemaformat_v1
+# default: version 2
+schemaformat = schemaformat_v2
 
 
 def get_json_type(data, fmt=schemaformat):
