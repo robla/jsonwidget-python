@@ -59,7 +59,10 @@ class JsonBaseNode:
                 bi = ordermap.index(b)
             except:
                 bi = len(keys)
-            return cmp(ai, bi)
+            if ai == bi == len(keys):
+                return cmp(a, b)
+            else:
+                return cmp(ai, bi)
         return sorted(keys, cmp=keycmp)
 
     def get_child_keys(self):
