@@ -362,4 +362,22 @@ class JsonNode(JsonBaseNode):
             idchain.insert(0, str(node.get_key()))
             node = node.parent
         return "[" + "][".join(idchain) + "]"
+        
+    def is_additional_props_node(self):
+        return self.schemanode.is_additional_props_node()
+
+    def change_key(self, key):
+        self.get_parent().change_child_key(self.get_key(), key)
+
+    def change_child_key(self, oldkey, newkey):
+        schemakeys = self.schemanode.get_child_keys()
+        if newkey in self.children or newkey in schemakeys:
+            raise JsonNodeError("%s is already in use" % newkey)
+        if oldkey != newkey:
+            self.root.editcount += 1
+            node = self.children.pop(oldkey)
+            self.children[newkey] = node
+            node.set_key(newkey)
+            data = self.data.pop(oldkey)
+            self.data[newkey] = data
 

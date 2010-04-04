@@ -293,6 +293,12 @@ class TreeNode(object):
     def get_key(self):
         return self._key
 
+    def set_key(self, key):
+        self._key = key
+
+    def change_key(self, key):
+        self.get_parent().change_child_key(self._key, key)
+
     def get_parent(self):
         if self._parent == None and self.get_depth() > 0:
             self._parent = self.load_parent()
@@ -371,6 +377,12 @@ class ParentNode(TreeNode):
         """Set the child node for a given key.  Useful for bottom-up, lazy 
         population of a tree.."""
         self._children[key]=node
+    
+    def change_child_key(self, oldkey, newkey):
+        if newkey in self._children:
+            raise TreeWidgetError("%s is already in use" % newkey)
+        self._children[newkey] = self._children.pop(oldkey)
+        self._children[newkey].set_key(newkey)
 
     def get_child_index(self, key):
         try:

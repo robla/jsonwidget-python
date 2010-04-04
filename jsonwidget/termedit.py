@@ -59,9 +59,13 @@ class ArrayEditWidget(ParentWidget):
     """ Map and Seq edit widget and container"""
     def get_json_node(self):
         return self.get_node().get_value()
-        
+
     def get_display_text(self):
-        return self.get_json_node().get_title() + ": "
+        jsonnode = self.get_json_node()
+        title = jsonnode.get_title()
+        if jsonnode.is_additional_props_node():
+            title = "%s (%s)" % (title, jsonnode.get_key())
+        return title + ": "
 
     def unhandled_keys(self, size, key):
         """Overriding default selection behavior"""
@@ -202,6 +206,51 @@ class EnumEditWidget(GenericEditWidget):
         return urwid.GridFlow(options, maxlen+6, 2, 0, 'left')
 
 
+class KeyEditWidget(GenericEditWidget):
+    """ Edit the key associated with this node """
+
+    def load_inner_widget(self):
+        editcaption = urwid.Text("(key) -> ")
+        editfield = self.get_edit_field_widget()
+        editpair = urwid.Columns([('fixed', 9, editcaption), editfield])
+        if self.is_selected():
+            editpair = urwid.AttrWrap(editpair, 'selected', 
+                                      focus_attr='selected focus')
+        else:
+            editpair = urwid.AttrWrap(editpair, 'body', 
+                                      focus_attr='focus')
+        return editpair
+
+    def store_text_as_data(self, text):
+        treenode = self.get_node().get_parent()
+        key = treenode.get_key()
+        if text != key:
+            treenode.change_key(text)
+
+    def get_value_text(self):
+        return self.get_node().get_parent().get_value().get_key()
+
+
+class KeyEditKey(object):
+    """
+    Dummy class used as a key for KeyEditWidget.  This library uses an object
+    instance rather than a string as a key to prevent collisions with valid 
+    JSON keys.
+    """
+    pass
+
+
+class KeyEditNode(TreeNode):
+    def __init__(self, jsonnode, parent=None, key=None, depth=None):
+        TreeNode.__init__(self, jsonnode, key=key, parent=parent, depth=depth)        
+
+    def load_widget(self):
+        return KeyEditWidget(self)
+
+    def is_deletable(self):
+        return False
+
+
 class FieldAddButtons(BaseJsonEditWidget):
     """ Add a button"""
 
@@ -294,6 +343,8 @@ class JsonWidgetParent(ParentNode):
         key = jsonnode.get_key()
         depth = jsonnode.get_depth()
         self._fieldaddkey = FieldAddKey()
+        if jsonnode.is_additional_props_node():
+            self._keyeditkey = KeyEditKey()
         self._listbox = listbox
         ParentNode.__init__(self, jsonnode, key=key, parent=parent, 
                             depth=depth)
@@ -303,7 +354,10 @@ class JsonWidgetParent(ParentNode):
 
     def load_child_keys(self):
         jsonnode = self.get_value()
-        keys = jsonnode.get_child_keys()
+        keys = []
+        if jsonnode.is_additional_props_node():
+            keys.append(self._keyeditkey)
+        keys.extend(jsonnode.get_child_keys())
         if len(jsonnode.get_available_keys()) > 0:
             fieldaddkey = self._fieldaddkey
             keys.append(fieldaddkey)
@@ -313,6 +367,8 @@ class JsonWidgetParent(ParentNode):
         depth = self.get_depth() + 1
         if isinstance(key, FieldAddKey):
             return FieldAddNode(None, parent=self, depth=depth, key=key)
+        elif isinstance(key, KeyEditKey):
+            return KeyEditNode(None, parent=self, depth=depth, key=key)
         else:
             jsonnode = self.get_value().get_child(key)
             schemanode = jsonnode.get_schema_node()
@@ -399,6 +455,12 @@ class JsonWidgetParent(ParentNode):
             if not child.is_type('array') and not child.is_type('object'):
                 maxlen = max(maxlen, len(child.get_title())+addspace)
         return maxlen
+    
+    def change_child_key(self, oldkey, newkey):
+        ParentNode.change_child_key(self, oldkey, newkey)
+        jsonnode = self.get_value().change_child_key(oldkey, newkey)
+        self.get_child_keys(reload=True)
+        self.get_widget(reload=True)
 
 
 class JsonPinotFile(PinotFile):
