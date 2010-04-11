@@ -6,6 +6,8 @@
 # Licensed under BSD-style license.  See LICENSE.txt for details.
 
 import json
+import uuid
+import base64
 
 from jsonwidget.schema import *
 from jsonwidget.jsonbase import *
@@ -238,6 +240,15 @@ class JsonNode(JsonBaseNode):
             schemakeys = set(self.schemanode.get_child_keys())
             jsonkeys = set(self.get_child_keys())
             unusedkeys = schemakeys.difference(jsonkeys)
+            if (self.schemanode.schemaformat.version == 1 and
+                self.schemanode.allow_additional_properties()):
+                # remove the additional props key if there is one
+                propkey = self.schemanode.get_additional_props_node().get_key()
+                unusedkeys.remove(propkey)
+            if self.schemanode.allow_additional_properties():
+                nextkey = \
+                    base64.urlsafe_b64encode(uuid.uuid4().bytes).rstrip('=')
+                unusedkeys.add(nextkey)
             sortedkeys = self.sort_keys(list(unusedkeys))
             return sortedkeys
         elif(self.schemanode.is_type('array')):
