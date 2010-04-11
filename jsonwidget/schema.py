@@ -69,9 +69,18 @@ class SchemaNode(JsonBaseNode):
             for subkey, subdata in self.data[properties_id].items():
                 ordermap = \
                     self.ordermap['children'][properties_id]['children'][subkey]
+
+                if (self.schemaformat.version == 1 and 
+                    'user_key' in self.data and
+                    subkey == self.data['user_key']):
+                    isaddedprop = True
+                else:
+                    isaddedprop = False
+
                 self.children[subkey] = SchemaNode(key=subkey, data=subdata,
                                                    parent=self, 
-                                                   ordermap=ordermap)
+                                                   ordermap=ordermap,
+                                                   isaddedprop=isaddedprop)
         elif(self.data['type'] == fmt.typemap['array']):
             if fmt.version == 1:
                 ordermap = self.ordermap['children'][items_id]['children'][0]
