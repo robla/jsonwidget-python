@@ -64,6 +64,9 @@ class JsonNode(JsonBaseNode):
             self.depth = self.parent.get_depth() + 1
             self.root = self.parent.get_root()
 
+        if schemanode.is_type('idref'):
+            schemanode = schemanode.resolve_fragment_id()
+
         if not self.is_type_match(schemanode):
             idstring = self.get_id_string()
             filename = self.get_filename()

@@ -60,6 +60,9 @@ class SchemaNode(JsonBaseNode):
         else:
             self.depth = self.parent.get_depth() + 1
             self.rootschema = self.parent.get_root_schema()
+
+        self._register_fragment_id()
+
         if(self.data['type'] == fmt.typemap['object']):
             self.children = {}
             
@@ -78,6 +81,35 @@ class SchemaNode(JsonBaseNode):
                 ordermap = self.ordermap['children'][items_id]['children'][0]
                 self.children = [SchemaNode(key=0, data=self.data[items_id][0],
                                             parent=self, ordermap=ordermap)]
+
+    def _register_fragment_id(self):
+        """
+        If this schema node has a globally addressable id, then register 
+        it with the root schema.  This probably only makes sense with v1 
+        schemas.
+        """
+        if self.schemaformat.version == 1 and 'id' in self.data:
+            root = self.get_root_schema()
+            root._store_node_as_id(self, self.data['id'])
+
+    def _store_node_as_id(self, node, id):
+        """
+        Add node to global id index
+        """
+        try:
+            self._node_index[id]=node
+        except AttributeError:
+            self._node_index={id:node}
+
+    def _get_node_by_id(self, id):
+        try:
+            return self._node_index[id]
+        except KeyError, AttributeError:
+            return None
+    
+    def resolve_fragment_id(self):
+        """ if this is a fragment ref/idref, return the target schema node """
+        return self.get_root_schema()._get_node_by_id(self.data['idref'])
 
     def get_depth(self):
         return self.depth
