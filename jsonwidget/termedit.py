@@ -222,14 +222,17 @@ class KeyEditWidget(GenericEditWidget):
         return editpair
 
     def store_text_as_data(self, text):
+        """Change the key for the node"""
         treenode = self.get_node().get_parent()
         key = treenode.get_key()
         if text != key:
             try:
                 treenode.change_key(text)
             except TreeWidgetError as inst:
+                # probably a duplicate key
                 self.set_edit_text(key)
                 raise PinotAlert(str(inst))
+        # update the key text in the parent widget
         parentwidget = treenode.get_widget()
         parentwidget.update_widget()
 
