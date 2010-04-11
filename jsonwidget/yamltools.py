@@ -38,58 +38,36 @@ def jsonnode_to_yaml(jsonnode, indentlevel=None, firstindent=True):
     if indentlevel is None:
         indentlevel = jsonnode.get_depth()
 
-    if jsonnode.is_type('object'):
-        childkeys = jsonnode.get_child_keys()
-        firstkey = True
-        for key in childkeys:
-            child = jsonnode.get_child(key)
-            if firstindent or not firstkey:
-                #retval += indent * indentlevel
-                comment_initial = (indent * indentlevel) + "# "
-                comment_subsequent = (indent * indentlevel) + "#   "
-            else:
-                comment_initial = "# "
-                comment_subsequent = (indent * indentlevel) + "#   "
-            retval += jsonnode_get_comment(child, 
-                initial_indent=comment_initial, 
-                subsequent_indent=comment_subsequent)
-            retval += indent * indentlevel
-            firstkey = False
-            retval += yaml.safe_dump(key)[:-5]
-            retval += ": "
-            if child.is_type('object') or child.is_type('array'):
-                retval += "\n"
-                retval += indent * indentlevel
-                retval += jsonnode_to_yaml(child)
-            else:
-                retval += jsonnode_to_yaml(child, firstindent=False)
-    elif jsonnode.is_type('array'):
-        def render_array_item(item, firstindent=indentlevel):
-            array_yaml = indent * firstindent
-            comment_initial = "# "
-            comment_subsequent = (indent * indentlevel) + "#   "
-            array_yaml += jsonnode_get_comment(item, 
-                initial_indent=comment_initial, 
-                subsequent_indent=comment_subsequent)
-
-            array_yaml += indent * indentlevel
-            array_yaml += "- "
-            array_yaml += jsonnode_to_yaml(item, firstindent=False)
-            return array_yaml
-
-        childkeys = copy.copy(jsonnode.get_child_keys())
-        if firstindent:
-            child = jsonnode.get_child(childkeys.pop(0))
-            retval += render_array_item(child, firstindent=indentlevel-1)
-        for key in childkeys:
-            child = jsonnode.get_child(key)
-            retval += render_array_item(child)
-
+    if jsonnode.get_depth() > 0 and jsonnode.parent.is_type('array'):
+        comment_initial = (indent * (indentlevel - 1)) + "- # "
     else:
-        if firstindent:
+        comment_initial = (indent * indentlevel) + "# "
+    comment_subsequent = (indent * indentlevel) + "#   "
+
+    retval += jsonnode_get_comment(jsonnode, 
+        initial_indent=comment_initial, 
+        subsequent_indent=comment_subsequent)
+
+    if jsonnode.get_depth() > 0:
+        if jsonnode.parent.is_type('object'):
             retval += indent * indentlevel
-        data = yaml.safe_dump(jsonnode.get_data())
+            ykey = yaml.safe_dump(jsonnode.get_key())
+            enckey = re.sub(r'[\r\n]+\.\.\.[\r\n]+$', '', ykey)
+            enckey = re.sub(r'[\r\n]+$', '', enckey)
+            retval += enckey
+            retval += ": "
+            if jsonnode.is_type('object'):
+                retval += "\n"
+
+    if jsonnode.is_type('object') or jsonnode.is_type('array'):
+        childkeys = jsonnode.get_child_keys()
+        for key in childkeys:
+            child = jsonnode.get_child(key)
+            retval += jsonnode_to_yaml(child)
+    else:
+        data = yaml.safe_dump(jsonnode.get_data(), indent=(indentlevel+1)*2)
         retval += re.sub(r'[\r\n]+\.\.\.[\r\n]+$', '\n\n', data)
+    
     return retval
 
 
