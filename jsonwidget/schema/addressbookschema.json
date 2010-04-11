@@ -1,13 +1,11 @@
 {
   "type":"seq",
   "title":"Address Book",
-  "description":"Simple example of an array of address book entries.",
   "sequence":
   [
     {
       "type":"map",
       "title":"Address Book Entry",
-      "description":"all of the address information for a person.",
       "mapping":
       {
         "firstName":
