@@ -211,8 +211,8 @@ class KeyEditWidget(GenericEditWidget):
 
     def load_inner_widget(self):
         editcaption = urwid.Text("(key) -> ")
-        editfield = self.get_edit_field_widget()
-        editpair = urwid.Columns([('fixed', 9, editcaption), editfield])
+        self._editfield = self.get_edit_field_widget()
+        editpair = urwid.Columns([('fixed', 9, editcaption), self._editfield])
         if self.is_selected():
             editpair = urwid.AttrWrap(editpair, 'selected', 
                                       focus_attr='selected focus')
@@ -225,10 +225,18 @@ class KeyEditWidget(GenericEditWidget):
         treenode = self.get_node().get_parent()
         key = treenode.get_key()
         if text != key:
-            treenode.change_key(text)
+            try:
+                treenode.change_key(text)
+            except TreeWidgetError as inst:
+                self.set_edit_text(key)
+                raise PinotAlert(inst.message)
 
     def get_value_text(self):
         return self.get_node().get_parent().get_value().get_key()
+
+    def set_edit_text(self, text):
+        """Pass keystrokes through to child widget"""
+        return self._editfield.set_edit_text(text)
 
 
 class KeyEditKey(object):
