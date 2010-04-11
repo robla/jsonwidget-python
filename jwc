@@ -13,7 +13,9 @@ if __name__ == "__main__":
 usage: %prog command filename
   Valid commands:
     upgradeschema: create a version 2 schema from a version 1 schema
-    schemagen: create a schema from an example json file\
+    schemagen: create a schema from an example json file
+    json2yaml: convert a json file to yaml with comments pulled from schema
+    yaml2json: convert a yaml file to json\
 """
     cmdparser = optparse.OptionParser(usage)
     cmdparser.disable_interspersed_args()
@@ -86,6 +88,22 @@ one is provided.
             subparser.error("jsonfile required")
         else:
             subparser.error("only one file at a time")
+    elif args[0] == 'yaml2json':
+        import json
+        import yaml
+
+        usage = """\
+Convert a file from yaml to json.
+  usage: %prog json2yaml [options] jsonfile\
+"""
+        subparser = optparse.OptionParser(usage=usage)
+        (options, subargs) = subparser.parse_args(args[1:])
+
+        fp = open(subargs[0])
+        foo = yaml.load(fp)
+        fp.close()
+        print json.dumps(foo, indent=4, sort_keys=True)
+
     else:
         cmdparser.error(args[0] + ' is not a valid command.')
     
