@@ -291,10 +291,10 @@ class JsonNode(JsonBaseNode):
             self.parent.set_child_data(self.key, self.data)
 
     def is_enum(self):
-        return ('enum' in self.data)
+        return self.schemanode.is_enum()
 
     def enum_options(self):
-        return self.data['enum']
+        return self.schemanode.enum_options()
 
     def get_depth(self):
         """How deep is this node in the tree?"""
@@ -316,6 +316,10 @@ class JsonNode(JsonBaseNode):
         else:
             title = schematitle
         return title
+
+
+    def get_description(self):
+        return self.schemanode.get_description()
 
     def get_child_title(self, key):
         childschema = self.schemanode.get_child(key)

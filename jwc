@@ -57,6 +57,35 @@ Create a schema from an example json file
             subparser.error("jsonfile required")
         else:
             subparser.error("only one file at a time")
+    elif args[0] == 'json2yaml':
+        import jsonwidget.yamltools
+        usage = """\
+Convert a file from json to yaml, pulling in comments from the given schema if
+one is provided.
+  usage: %prog json2yaml [options] jsonfile\
+"""
+        subparser = optparse.OptionParser(usage=usage)
+        schemahelp = "schema format version to use.  Default: None"
+        subparser.add_option("-s", "--schema", dest="schema", type="str",
+                             default=None,
+                             help=schemahelp)
+        (options, subargs) = subparser.parse_args(args[1:])
+
+        if len(subargs)==1:
+            schemafile = options.schema
+            schemaobj = None
+
+            if schemafile is None:
+                schemaobj = jsonwidget.generate_schema(subargs[0])
+            jsonobj = jsonwidget.jsonnode.JsonNode(filename=subargs[0], 
+                                                   schemafile=schemafile,
+                                                   schemanode=schemaobj)
+            print jsonwidget.yamltools.jsonnode_to_yaml(jsonobj)
+            sys.exit(0)
+        elif len(subargs)<1:
+            subparser.error("jsonfile required")
+        else:
+            subparser.error("only one file at a time")
     else:
         cmdparser.error(args[0] + ' is not a valid command.')
     

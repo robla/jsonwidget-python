@@ -101,6 +101,12 @@ class SchemaNode(JsonBaseNode):
     def set_title(self, title):
         self.data['title'] = title
 
+    def get_description(self):
+        if 'description' in self.data:
+            return self.data['description']
+        else:
+            return ''
+
     def get_type(self):
         return self.data['type']
     
