@@ -24,6 +24,7 @@ class PinotError(RuntimeError):
 class PinotExit(Exception):
     pass
 
+
 class PinotAlert(Exception):
     pass
 
@@ -123,7 +124,7 @@ class RetroMainLoop(object):
                         try:
                             self.view.keypress(size, key)
                         except PinotAlert as inst:
-                            self.display_notification(inst.message)
+                            self.display_notification(str(inst))
 
     def on_init(self):
         pass
