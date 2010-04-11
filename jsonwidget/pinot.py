@@ -24,6 +24,9 @@ class PinotError(RuntimeError):
 class PinotExit(Exception):
     pass
 
+class PinotAlert(Exception):
+    pass
+
 
 import urwid.curses_display
 import urwid
@@ -117,7 +120,10 @@ class RetroMainLoop(object):
                     if self._unhandled_input is not None:
                         key = self._unhandled_input(key)
                     if key is not None:
-                        self.view.keypress(size, key)
+                        try:
+                            self.view.keypress(size, key)
+                        except PinotAlert as inst:
+                            self.display_notification(inst.message)
 
     def on_init(self):
         pass
