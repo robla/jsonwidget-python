@@ -380,7 +380,7 @@ class ParentNode(TreeNode):
     
     def change_child_key(self, oldkey, newkey):
         if newkey in self._children:
-            raise TreeWidgetError("%s is already in use" % newkey)
+            raise TreeWidgetError("Key '%s' is already in use" % newkey)
         self._children[newkey] = self._children.pop(oldkey)
         self._children[newkey].set_key(newkey)
 
