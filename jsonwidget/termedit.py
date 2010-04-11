@@ -230,6 +230,8 @@ class KeyEditWidget(GenericEditWidget):
             except TreeWidgetError as inst:
                 self.set_edit_text(key)
                 raise PinotAlert(str(inst))
+        parentwidget = treenode.get_widget()
+        parentwidget.update_widget()
 
     def get_value_text(self):
         return self.get_node().get_parent().get_value().get_key()
