@@ -235,7 +235,7 @@ class KeyEditWidget(GenericEditWidget):
         return self.get_node().get_parent().get_value().get_key()
 
     def set_edit_text(self, text):
-        """Pass keystrokes through to child widget"""
+        """Set the text in the editing field."""
         return self._editfield.set_edit_text(text)
 
 
