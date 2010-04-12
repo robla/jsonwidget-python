@@ -3,9 +3,11 @@
 from wsgiref.simple_server import make_server
 
 import jsonwidget
+import json
 import os
 import sys
 import string
+import cgi
 
 class WebResponse(object):
     def __init__(self, content_directory=None, start_response=None):
@@ -32,7 +34,51 @@ class WebResponse(object):
         self.start_response(status, headers)
         return "File not found"
 
-def get_server_func(content_directory=None, jsonschema=None, jsonfile=None):
+    def handle_post_response(self, environment=None, jsonfile=None, 
+                             schemafile=None):
+        form = cgi.FieldStorage(fp=environment['wsgi.input'], 
+                                environ=environment)
+        
+        jsonbuffer = form.getfirst('sourcearea')
+        
+        success = True
+        servererror = ''
+        try:
+            jsondata = json.loads(jsonbuffer)
+        except ValueError as inst:    
+            success = False
+            servererror = str(inst)
+        if success:
+            try:
+                jsonnode = jsonwidget.jsonnode.JsonNode(data=jsondata, 
+                                                        schemafile=schemafile)
+            except jsonwidget.jsonnode.JsonNodeError as inst:
+                servererror = "Invalid JSON.  Schema: " + schemafile + "\n"
+                servererror += str(inst) + "\n"
+                success = False
+        if success:
+            try:
+                jsonnode.save_to_file(jsonfile)
+            except Exception as inst:
+                servererror = str(inst) + "\n"
+                success = False
+        schemabuffer = open(schemafile).read()
+        # TODO: figure out right way to sanitize jsonbuffer before sending it
+        # back out.  DANGER -- this is possible source of XSS and maybe worse
+        vars = {'schema':schemabuffer, 
+                'json':jsonbuffer,
+                'servererror':servererror}
+        return self.serve_template('index.tpl', vars=vars)
+
+        #status = '200 OK'
+        #headers = [('Content-type', 'text/plain')]
+        #self.start_response(status, headers)
+        #return json.dumps(jsondata, indent=4)
+
+
+def get_server_func(content_directory=None, schemafile=None, jsonfile=None):
+    jsonbuffer = open(jsonfile).read()
+    schemabuffer = open(schemafile).read()
     javascript = ['json.js', 'jsonedit.js']
     css = ['jsonwidget.css']
     def start_server(environ, start_response):
@@ -40,8 +86,14 @@ def get_server_func(content_directory=None, jsonschema=None, jsonfile=None):
 
         response = WebResponse(content_directory=content_directory,
                                start_response=start_response)
-        if path == '':
-            vars = {'jsonschema':jsonschema, 'jsonfile':jsonfile}
+        if environ['REQUEST_METHOD'] == 'POST':
+            return response.handle_post_response(environment=environ,
+                                                 jsonfile=jsonfile,
+                                                 schemafile=schemafile)
+        elif path == '':
+            vars = {'schema':schemabuffer, 
+                    'json':jsonbuffer,
+                    'servererror':''}
             return response.serve_template('index.tpl', vars=vars)
         elif path in javascript:
             return response.serve_file(path, 'text/plain')
@@ -51,10 +103,11 @@ def get_server_func(content_directory=None, jsonschema=None, jsonfile=None):
             return response.serve_404()
     return start_server
 
-jsonfile = open(sys.argv[1]).read()
-jsonschema = open(sys.argv[2]).read()
+jsonfile = sys.argv[1]
+schemafile = sys.argv[2]
+
 server_func = get_server_func(content_directory=sys.path[0],
-                              jsonschema=jsonschema,
+                              schemafile=schemafile,
                               jsonfile=jsonfile)
 
 httpd = make_server('', 8000, server_func)

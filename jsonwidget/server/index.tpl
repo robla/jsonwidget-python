@@ -28,6 +28,7 @@ function sample_init() {
  
 <body onload="sample_init();">
 
+<div id="je_servererror">${servererror}</div>
 <div id="je_warningdiv">
 </div>
 
@@ -46,12 +47,12 @@ function sample_init() {
 </div>
 
 <textarea id="je_schematextarea" style="display: none" rows="30" cols="80">
-${jsonschema}
+${schema}
 </textarea>
 
 <form method='POST' id="je_sourcetextform">
 <textarea id="je_sourcetextarea" rows="30" cols="80" name="sourcearea">
-${jsonfile}
+${json}
 </textarea>
 <p>
 <input type="hidden" name="jsonsubmit" value="true"/>
