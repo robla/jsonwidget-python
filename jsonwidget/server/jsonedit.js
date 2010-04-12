@@ -1081,8 +1081,13 @@ jsonwidget.editor.setView = function setView (viewtoset) {
 
     switch (viewtoset) {
     case "source":
+        // sometimes we set currentView to 'source' before calling setView to 
+        // bypass updateJSON, so that it won't smash the source field contents
+        var tryUpdateJSON = (this.currentView != 'source')
         setTimeout(function () {
-            je.updateJSON();
+            if(tryUpdateJSON) {
+                je.updateJSON();
+            }
             document.getElementById(je.htmlids.sourcetextarea).style.display="inline";
             je.clearStatusLight();
         },this.getStatusLightDelay(null));
@@ -1191,8 +1196,15 @@ jsonwidget.editor.toggleToFormActual = function () {
             errorstring += error.text.substr(error.at,1);
             errorstring += "</span>";
             errorstring += error.text.substr(error.at+1,39);
-                
-            this.warningOut("JSON Parse error at char "+error.at+" near <pre>"+errorstring+"</pre>  Full error: "+error.toSource());            
+            
+            try {
+                this.warningOut("JSON Parse error at char "+error.at+" near <pre>"+errorstring+"</pre>  Full error: "+error.toSource());
+            }
+            catch (error2) {
+                this.warningOut("JSON Parse error at char "+error.at+" near <pre>"+errorstring+"</pre>");
+            }
+            this.currentView = 'source';
+            this.setView('source');
             return;
         }
     }
@@ -1370,6 +1382,8 @@ jsonwidget.editor.setFormOnSubmit = function () {
     var je = this;
     var sourcetextform = document.getElementById(this.htmlids.sourcetextform);
     sourcetextform.onsubmit = function () {
-        je.updateJSON();
+        if(je.currentView != 'source') {
+            je.updateJSON();
+        }
     }
 }
