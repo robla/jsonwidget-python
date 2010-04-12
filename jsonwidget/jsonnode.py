@@ -244,7 +244,10 @@ class JsonNode(JsonBaseNode):
                 self.schemanode.allow_additional_properties()):
                 # remove the additional props key if there is one
                 propkey = self.schemanode.get_additional_props_node().get_key()
-                unusedkeys.remove(propkey)
+                try:
+                    unusedkeys.remove(propkey)
+                except:
+                    pass
             if self.schemanode.allow_additional_properties():
                 nextkey = \
                     base64.urlsafe_b64encode(uuid.uuid4().bytes).rstrip('=')
