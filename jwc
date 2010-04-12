@@ -12,10 +12,11 @@ if __name__ == "__main__":
     usage = """\
 usage: %prog command filename
   Valid commands:
+    json2yaml:     convert a json file to yaml with comments pulled from schema
+    schemagen:     create a schema from an example json file
     upgradeschema: create a version 2 schema from a version 1 schema
-    schemagen: create a schema from an example json file
-    json2yaml: convert a json file to yaml with comments pulled from schema
-    yaml2json: convert a yaml file to json\
+    validate:      validate a schema
+    yaml2json:     convert a yaml file to json\
 """
     cmdparser = optparse.OptionParser(usage)
     cmdparser.disable_interspersed_args()
@@ -103,6 +104,35 @@ Convert a file from yaml to json.
         foo = yaml.load(fp)
         fp.close()
         print json.dumps(foo, indent=4, sort_keys=True)
+
+    elif args[0] == 'validate':
+        import json
+        import sys
+
+        usage = """\
+Validate a JSON file against a schema.
+  usage: %prog validate jsonfile schema\
+"""
+        subparser = optparse.OptionParser(usage=usage)
+        (options, subargs) = subparser.parse_args(args[1:])
+        if len(subargs)==2:
+            try:
+                jsonwidget.jsonnode.JsonNode(filename=subargs[0], 
+                                             schemafile=subargs[1])
+                print "Valid file!  " + subargs[0] + \
+                    " validates against " + subargs[1]
+            except jsonwidget.jsonnode.JsonNodeError as inst:
+                print "Invalid file: " + subargs[0]
+                print "Schema: " + subargs[1]
+                print str(inst)
+                sys.exit(1)
+        elif len(subargs)==1:
+            subparser.error("schema required as second argument")
+        elif len(subargs)==0:
+            subparser.error("json file and schema required")
+        else:
+            subparser.error("too many arguments")
+            
 
     else:
         cmdparser.error(args[0] + ' is not a valid command.')
