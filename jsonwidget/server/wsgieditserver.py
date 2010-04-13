@@ -103,15 +103,22 @@ def get_server_func(content_directory=None, schemafile=None, jsonfile=None):
             return response.serve_404()
     return start_server
 
-jsonfile = sys.argv[1]
-schemafile = sys.argv[2]
 
-server_func = get_server_func(content_directory=sys.path[0],
-                              schemafile=schemafile,
-                              jsonfile=jsonfile)
+def start_server(jsonfile=None, schemafile=None, port=8000, noisy=True):
+    server_func = get_server_func(content_directory=sys.path[0],
+                                  schemafile=schemafile,
+                                  jsonfile=jsonfile)
 
-httpd = make_server('', 8000, server_func)
-print "Serving on port 8000..."
+    httpd = make_server('', port, server_func)
+    if noisy:
+        print "Serving on port %i.  See http://localhost:%i/" % (port, port)
 
-httpd.serve_forever()
+    httpd.serve_forever()
+
+
+if __name__ == "__main__":
+    jsonfile = sys.argv[1]
+    schemafile = sys.argv[2]
+
+    start_server(jsonfile=jsonfile, schemafile=schemafile)
 
