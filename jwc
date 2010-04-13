@@ -133,7 +133,31 @@ Validate a JSON file against a schema.
         else:
             subparser.error("too many arguments")
             
+    elif args[0] == 'editserver':
+        import json
+        import sys
+        from jsonwidget.server.wsgieditserver import start_server
 
+        usage = """\
+Launch a web server which serves a Javascript-based JSON editor for a single \
+file.
+  usage: %prog editserver jsonfile schema\
+"""
+
+        schemafile = jsonwidget.find_system_schema("openschema.json")
+        subparser = optparse.OptionParser(usage=usage)
+        schemahelp = "schema format version to use.  Default: None"
+        subparser.add_option("-s", "--schema", dest="schema", type="str",
+                             default=schemafile,
+                             help=schemahelp)
+        (options, subargs) = subparser.parse_args(args[1:])
+
+        if len(subargs)==1:
+            start_server(jsonfile=subargs[0], schemafile=options.schema)
+        elif len(subargs)<1:
+            subparser.error("jsonfile required")
+        else:
+            subparser.error("only one file at a time")
     else:
         cmdparser.error(args[0] + ' is not a valid command.')
     
