@@ -1,0 +1,57 @@
+{
+    "optional": true, 
+    "type": "object", 
+    "properties": {
+        "project_name": {
+            "optional": true, 
+            "type": "string", 
+            "title": "Project name"
+        }, 
+        "version": {
+            "optional": true, 
+            "type": "string", 
+            "title": "Version"
+        }, 
+        "description": {
+            "optional": true, 
+            "type": "string", 
+            "title": "Description (one liner)"
+        }, 
+        "long_description": {
+            "optional": true, 
+            "type": "string", 
+            "title": "Long description (multiline reStructuredText)"
+        }, 
+        "keywords": {
+            "optional": true, 
+            "type": "string", 
+            "title": "Keywords (space separated)"
+        }, 
+        "author": {
+            "optional": true, 
+            "type": "string", 
+            "title": "Author"
+        }, 
+        "author_email": {
+            "optional": true, 
+            "type": "string", 
+            "title": "Author email"
+        }, 
+        "url": {
+            "optional": true, 
+            "type": "string", 
+            "title": "URL to project page"
+        }, 
+        "license_name": {
+            "optional": true, 
+            "type": "string", 
+            "title": "License name"
+        }, 
+        "zip_safe": {
+            "optional": true, 
+            "type": "boolean", 
+            "title": "Zip safe?"
+        }
+    }, 
+    "additionalProperties": false
+}
