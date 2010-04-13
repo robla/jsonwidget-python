@@ -1,7 +1,15 @@
-== uploading to pypi
+== bumping the version ==
+
+*  jsonwidget/__init__.py
+*  setup.py
+
+
+== uploading to pypi ==
 
 # Have a clean checkout so that the manifest wildcards don't pick up anything
 # screwy
+python setup.py sdist
+# if all looks good, then upload:
 python setup.py sdist upload -s
 
 
