@@ -56,6 +56,10 @@ class WebResponse(object):
                 servererror = "Invalid JSON.  Schema: " + schemafile + "\n"
                 servererror += str(inst) + "\n"
                 success = False
+            except Exception as inst:
+                servererror = "Unknown error.  Schema: " + schemafile + "\n"
+                servererror += str(inst) + "\n"
+                success = False
         if success:
             try:
                 jsonnode.save_to_file(jsonfile)
