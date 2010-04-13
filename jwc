@@ -12,6 +12,7 @@ if __name__ == "__main__":
     usage = """\
 usage: %prog command filename
   Valid commands:
+    editserver:    launch a web server to edit a json file from a browser
     json2yaml:     convert a json file to yaml with comments pulled from schema
     schemagen:     create a schema from an example json file
     upgradeschema: create a version 2 schema from a version 1 schema
@@ -111,27 +112,28 @@ Convert a file from yaml to json.
 
         usage = """\
 Validate a JSON file against a schema.
-  usage: %prog validate jsonfile schema\
+  usage: %prog validate [options] jsonfile\
 """
+        schemafile = jsonwidget.find_system_schema("openschema.json")
         subparser = optparse.OptionParser(usage=usage)
+        schemahelp = "schema format version to use.  Default: %s" % schemafile
+        subparser.add_option("-s", "--schema", dest="schema", type="str",
+                             default=schemafile,
+                             help=schemahelp)
         (options, subargs) = subparser.parse_args(args[1:])
-        if len(subargs)==2:
+        if len(subargs)==1:
             try:
                 jsonwidget.jsonnode.JsonNode(filename=subargs[0], 
-                                             schemafile=subargs[1])
+                                             schemafile=options.schema)
                 print "Valid file!  " + subargs[0] + \
-                    " validates against " + subargs[1]
+                    " validates against " + options.schema
             except jsonwidget.jsonnode.JsonNodeError as inst:
-                print "Invalid file: " + subargs[0]
-                print "Schema: " + subargs[1]
                 print str(inst)
                 sys.exit(1)
-        elif len(subargs)==1:
-            subparser.error("schema required as second argument")
-        elif len(subargs)==0:
-            subparser.error("json file and schema required")
+        elif len(subargs)<1:
+            subparser.error("jsonfile required")
         else:
-            subparser.error("too many arguments")
+            subparser.error("only one file at a time")
             
     elif args[0] == 'editserver':
         import json
@@ -141,12 +143,12 @@ Validate a JSON file against a schema.
         usage = """\
 Launch a web server which serves a Javascript-based JSON editor for a single \
 file.
-  usage: %prog editserver jsonfile schema\
+  usage: %prog editserver [options] jsonfile\
 """
 
         schemafile = jsonwidget.find_system_schema("openschema.json")
         subparser = optparse.OptionParser(usage=usage)
-        schemahelp = "schema format version to use.  Default: None"
+        schemahelp = "schema format version to use.  Default: %s" % schemafile
         subparser.add_option("-s", "--schema", dest="schema", type="str",
                              default=schemafile,
                              help=schemahelp)
