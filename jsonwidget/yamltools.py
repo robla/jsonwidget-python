@@ -56,7 +56,7 @@ def jsonnode_to_yaml(jsonnode, indentlevel=None, firstindent=True):
             enckey = re.sub(r'[\r\n]+$', '', enckey)
             retval += enckey
             retval += ": "
-            if jsonnode.is_type('object'):
+            if jsonnode.is_type('object') or jsonnode.is_type('array'):
                 retval += "\n"
 
     if jsonnode.is_type('object') or jsonnode.is_type('array'):
