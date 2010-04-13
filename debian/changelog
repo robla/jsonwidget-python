@@ -1,3 +1,17 @@
+python-jsonwidget (0.1.6) karmic; urgency=low
+
+  * Several new commands:
+  * New 'jwc editserver' command that runs a small webserver for editing files
+  * New 'jwc validate' command to validate a json file against a schema
+  * New 'jwc json2yaml' that provides commented yaml counterpart to json file
+  * New 'jwc yaml2json' counterpart
+  * Support for editing keys in json files when the schema allows for it
+  * A couple of addressbook schema fixes
+  * Adding desktopcouch schema examples (in preparation for future work)
+  * Many bugfixes
+
+ -- Rob Lanphier <robla@robla.net>  Tue, 13 Apr 2010 16:15:26 -0700
+
 python-jsonwidget (0.1.5) karmic; urgency=low
 
   * Now generates schemas and uses generated schema as default for jsonedit
