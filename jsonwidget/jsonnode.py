@@ -113,14 +113,28 @@ class JsonNode(JsonBaseNode):
         '''Pair this data node to the corresponding part of the schema'''
         self.schemanode = schemanode
 
-        if schemanode.is_type('object'):
+        def init_object():
             self.children = {}
             if self.is_type('null'):
                 self.set_data({})
                 self.set_type('object')
+        if schemanode.is_type('object'):
+            init_object()
         elif schemanode.is_type('array'):
             self.children = []
-        if self.is_type('object'):
+        if self.schemanode.is_type('any') and self.is_type('object'):
+            init_object()
+            for subkey, subdata in self.data.items():
+                self.children[subkey] = JsonNode(key=subkey, data=subdata,
+                    parent=self, schemanode=self.schemanode)
+        elif self.schemanode.is_type('any') and self.is_type('array'):
+            self.children = []
+            i = 0
+            for subdata in self.data:
+                self.children.append(JsonNode(key=i, data=subdata, parent=self,
+                    schemanode=self.schemanode))
+                i += 1
+        elif self.is_type('object'):
             schemakeys = self.schemanode.get_child_keys()
             # first add all nodes for which there is JSON data, removing them
             # from our local schemakeys array so that we can iterate through 
