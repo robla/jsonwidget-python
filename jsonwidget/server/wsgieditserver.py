@@ -68,11 +68,6 @@ class WebResponse(object):
         vars = {'schema':schemabuffer, 
                 'json':jsonbuffer,
                 'servererror':servererror}
-
-        #status = '200 OK'
-        #headers = [('Content-type', 'text/plain')]
-        #self.start_response(status, headers)
-        #return json.dumps(jsondata, indent=4)
         index = find_server_file('index.tpl')
         return self.serve_template(index, vars=vars)
 
