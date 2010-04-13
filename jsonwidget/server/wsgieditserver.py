@@ -68,12 +68,13 @@ class WebResponse(object):
         vars = {'schema':schemabuffer, 
                 'json':jsonbuffer,
                 'servererror':servererror}
-        return self.serve_template('index.tpl', vars=vars)
 
         #status = '200 OK'
         #headers = [('Content-type', 'text/plain')]
         #self.start_response(status, headers)
         #return json.dumps(jsondata, indent=4)
+        index = find_server_file('index.tpl')
+        return self.serve_template(index, vars=vars)
 
 
 def get_server_func(content_directory=None, schemafile=None, jsonfile=None):
@@ -94,11 +95,14 @@ def get_server_func(content_directory=None, schemafile=None, jsonfile=None):
             vars = {'schema':schemabuffer, 
                     'json':jsonbuffer,
                     'servererror':''}
-            return response.serve_template('index.tpl', vars=vars)
+            index = find_server_file('index.tpl')
+            return response.serve_template(index, vars=vars)
         elif path in javascript:
-            return response.serve_file(path, 'text/plain')
+            filename = find_server_file(path)
+            return response.serve_file(filename, 'text/javascript')
         elif path in css:
-            return response.serve_file(path, 'text/plain')
+            filename = find_server_file(path)
+            return response.serve_file(filename, 'text/css')
         else:
             return response.serve_404()
     return start_server
@@ -114,6 +118,21 @@ def start_server(jsonfile=None, schemafile=None, port=8000, noisy=True):
         print "Serving on port %i.  See http://localhost:%i/" % (port, port)
 
     httpd.serve_forever()
+
+
+def find_server_file(filename):
+    """
+    Resolve filename to a full path.
+    """
+    try:
+        import pkg_resources
+    except ImportError:
+        filename = os.path.join("jsonwidget", "server", filename)
+    else:
+        filename = os.path.join("server", filename)
+        filename = pkg_resources.resource_filename("jsonwidget", 
+            filename)
+    return filename
 
 
 if __name__ == "__main__":
