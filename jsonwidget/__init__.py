@@ -30,7 +30,7 @@ import os
 
 from jsontypes import schemaformat
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 def run_editor(jsonfile, schemafile=None, schemaobj=None, 
                program_name="jsonwidget " + __version__):
