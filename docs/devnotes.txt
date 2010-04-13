@@ -3,14 +3,16 @@
 *  jsonwidget/__init__.py
 *  setup.py
 
+== Generating a changelog ==
 
-== uploading to pypi ==
+export VERSION=(version you are packaging)
+export LASTVERSION=(previous version)
 
-# Have a clean checkout so that the manifest wildcards don't pick up anything
-# screwy
-python setup.py sdist
-# if all looks good, then upload:
-python setup.py sdist upload -s
+echo "python-jsonwidget (${VERSION}) karmic; urgency=low" > /tmp/changelog
+echo >> /tmp/changelog
+hg log -rtip:${LASTVERSION} --template '  * {desc}\n' >> /tmp/changelog
+echo >> /tmp/changelog
+echo " -- Rob Lanphier <robla@robla.net>  `date -R`" >> /tmp/changelog
 
 
 == Creating a .deb package ==
@@ -26,17 +28,21 @@ cd python-jsonwidget-${VERSION}
 # -S is "source only"
 dpkg-buildpackage -rfakeroot -S
 
+
+== uploading to pypi ==
+
+# Have a clean checkout so that the manifest wildcards don't pick up anything
+# screwy
+python setup.py sdist
+# if all looks good, then upload:
+python setup.py sdist upload -s
+
+
+
 == Uploading to the PPA ==
 
 dput ppa:robla/ppa python-jsonwidget_${VERSION}_source.changes
 
 
 
-== Generating a changelog ==
-
-echo "python-jsonwidget (${VERSION}) karmic; urgency=low" > /tmp/changelog
-echo >> /tmp/changelog
-hg log -rtip:${LASTVERSION} --template '  * {desc}\n' >> /tmp/changelog
-echo >> /tmp/changelog
-echo " -- Rob Lanphier <robla@robla.net>  `date -R`" >> /tmp/changelog
 
