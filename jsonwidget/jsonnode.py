@@ -117,7 +117,6 @@ class JsonNode(JsonBaseNode):
             self.children = {}
             if self.is_type('null'):
                 self.set_data({})
-                self.set_type('object')
         if schemanode.is_type('object'):
             init_object()
         elif schemanode.is_type('array'):
