@@ -315,8 +315,11 @@ class PinotFileEditor(PinotUserInterface):
                     try:
                         entryform.handle_save()
                         msg = "Saved " + entryform.file.get_filename()
-                    except:
-                        msg = "FAILED TO WRITE " + entryform.file.get_filename()
+                    except Exception as inst:
+                        msg = "FAILED TO WRITE %s - %s: %s" % (
+                            entryform.file.get_filename(),
+                            inst.__class__.__name__,
+                            str(inst))
                         entryform.file.set_filename(currentfilename)
                     else:
                         if exit_on_save:
