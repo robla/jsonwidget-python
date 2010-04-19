@@ -265,6 +265,8 @@ class SchemaNode(JsonBaseNode):
         return self.data['enum']
 
     def get_blank_value(self):
+        if self.is_enum():
+            return self.enum_options()[0]
         type = self.get_type()
         if(self.is_type('object')):
             retval = {}
