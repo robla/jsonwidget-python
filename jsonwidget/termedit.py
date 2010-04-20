@@ -8,6 +8,10 @@
 # This file contains the chrome and file handling capability for urwid-specific
 # file editors.
 
+# TODO: Refactoring needed:
+#   *  TreeFileWrapper should replace JsonPinotFile
+#   *  JsonFileEditor and JsonDataEditor should be merged
+
 
 class JsonEditorError(RuntimeError):
     pass
@@ -18,6 +22,7 @@ import sys
 import os
 import re
 import json
+import shutil
 
 try:
     import urwid.curses_display
@@ -47,6 +52,34 @@ from jsonwidget.treetools import *
 from jsonwidget.termwidgets import *
 
 
+class TreeFileDatatype(object):
+    """ 
+    Either inherit from this class, or implement all of the required properties
+    and methods, then pass to TreeFileWrapper.
+    """
+    def __init__():
+        # Required property: valid values: 'file' (TODO: implement 'string', 
+        #   'data', 'object')
+        self.schemavaluetype = 'file'
+        # Required property: value matching the schematype
+        self.schemavalue = 'example.schema.json'
+
+    def save_data_to_file(data, filename=None):
+        """ 
+        Required method: use this to save data in your file format.  Data
+        passed in will conform to the schema defined in self.schemavalue
+        """
+        pass
+
+    def load_data_from_file(filename=None):
+        """ 
+        Required method: use this to load data in your file format.  Data
+        passed in will conform to the schema defined in self.schemavalue
+        """
+        return None
+
+
+#TODO: merge this into TreeFileWrapper
 class JsonPinotFile(PinotFile):
     '''Glue to between PinotFile and underlying JSON object'''
 
@@ -91,6 +124,78 @@ class JsonPinotFile(PinotFile):
             return "(auto-generated schema)"
         else:
             return "schema: " + os.path.basename(filename)
+
+
+
+class TreeFileWrapper(JsonPinotFile):
+    """
+    Glue between UI layer and underlying data store.  This wrapper handles
+    typical ways of interacting with a single data file.  If your needs are
+    simple/common enough, you can use this to wrap a TreeFileDatatype object,
+    pass in a file name, and interact with the file via your TreeFileDatatype
+    derivative. 
+    """
+    def __init__(self, datatype, filename=None):
+        self._datatype = datatype
+        if (filename is not None and os.access(filename, os.R_OK)):
+            # file exists, and we can read it (or we're just passing "None")
+            self._load_data_from_file(filename)
+        elif filename is not None and os.access(filename, os.F_OK):
+            # file exists, but can't read it
+            sys.stderr.write("Cannot access file \"%s\" (check permissions)\n" %
+                             filename)
+            sys.exit(os.EX_NOINPUT)
+        else:
+            # must be a new file
+            self.json = JsonNode(filename=None, 
+                schemafile=self.get_schema_file())
+            self.schema = self.json.get_schema_node()
+            self.set_filename(filename)
+
+    def _load_data_from_file(self, filename):
+        data = self._datatype.load_data_from_file(filename)
+        self.json = JsonNode(data=data, 
+            schemafile=self.get_schema_file())
+        self.set_filename(filename)
+
+    def save_to_file(self, keep_old=False):
+        data = self.json.get_data()
+        filename = self.get_filename()
+        backupname = filename + "~"
+        try:
+            os.rename(filename, backupname)
+        except:
+            # damn the torpedos...
+            backupname = None
+        try:
+            self._datatype.save_data_to_file(data, filename)
+        except:
+            if backupname is not None:
+                os.rename(backupname, filename)
+            raise
+        if backupname is not None:
+            shutil.copymode(backupname, filename)
+            if not keep_old:
+                os.unlink(backupname)
+        self.json.set_saved()
+
+    def get_filename(self):
+        return self._filename
+
+    def set_filename(self, name):
+        self._filename = name
+
+    def get_filename_text(self):
+        if self._filename is None:
+            return "(new file)"
+        else:
+            return self._filename
+
+    def get_schema_display_text(self):
+        return ""
+    
+    def get_schema_file(self):
+        return self._datatype.schemavalue
 
 
 class JsonFileEditor(PinotFileEditor):
