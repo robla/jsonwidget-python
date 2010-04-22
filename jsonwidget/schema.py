@@ -24,12 +24,20 @@ class SchemaNode(JsonBaseNode):
     """
 
     def __init__(self, key=None, data=None, filename=None, parent=None, 
-                 ordermap=None, fmt=None, isaddedprop=False):
+                 ordermap=None, fmt=None, isaddedprop=False, string=None):
 
+        # TODO: clean this logic up once unit tests are in place
         if filename is not None:
             self.filename = filename
             if data is None:
                 self.load_from_file()
+        elif string is not None:
+            self.data = data
+            self.ordermap = ordermap
+            if data is None:
+                self.data = json.loads(string)
+            if ordermap is None:
+                self.ordermap = JsonOrderMap(string).get_order_map()
         else:
             self.data = data
             self.ordermap = ordermap
