@@ -1,6 +1,9 @@
 #!/usr/bin/python
 """Schema format definitions and other json type functions"""
 
+class JsonTypeError(RuntimeError):
+    pass
+
 # Version 1 is the version supported by jsonwidget-javascript
 # Specification: http://robla.net/jsonwidget/jsonschema/
 class schemaformat_v1:
@@ -57,7 +60,7 @@ def get_json_type(data, fmt=schemaformat):
     elif(data is None):
         return fmt.typemap['null']
     else:
-        raise JsonNodeError("unknown type: %s" % type(data).__name__)
+        raise JsonTypeError("unknown type: %s" % type(data).__name__)
 
 
 def convert_type(oldtype=None, oldfmt=schemaformat_v1, newfmt=schemaformat_v2):
