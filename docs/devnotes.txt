@@ -17,6 +17,12 @@ echo " -- Rob Lanphier <robla@robla.net>  `date -R`" >> /tmp/changelog
 
 == Creating a .deb package ==
 
+# Have a clean checkout so that the manifest wildcards don't pick up anything
+# screwy
+cd tmp
+hg clone .. jsonwidget-python
+cd jsonwidget-python
+python setup.py sdist
 # Run the following commands:
 export VERSION=(version you are packaging)
 python setup.py sdist
@@ -27,7 +33,10 @@ cd python-jsonwidget-${VERSION}
 # use "-uc -us" to skip signing
 # -S is "source only"
 dpkg-buildpackage -rfakeroot -S
-
+# build a binary
+dpkg-buildpackage -rfakeroot
+# Test the binary
+sudo dpkg -i ....
 
 == uploading to pypi ==
 
