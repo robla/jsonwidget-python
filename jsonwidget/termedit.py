@@ -64,19 +64,29 @@ class TreeFileDatatype(object):
         # Required property: value matching the schematype
         self.schemavalue = 'example.schema.json'
 
-    def save_data_to_file(data, filename=None):
-        """ 
-        Required method: use this to save data in your file format.  Data
-        passed in will conform to the schema defined in self.schemavalue
-        """
-        pass
-
     def load_data_from_file(filename=None):
         """ 
-        Required method: use this to load data in your file format.  Data
-        passed in will conform to the schema defined in self.schemavalue
+        Required method: use this to load data in your file format.
+        
+        This gets called by the editor on startup.  It needs to return a 
+        JSON-compatible datastructure that matches the schema in 
+        self.schemavalue (or else an exception will be raised).
         """
+
         return None
+
+    def save_data_to_file(data, filename=None):
+        """ 
+        Required method: use this to save data in your file format.  
+
+        This gets called by the editor when the user chooses to save a
+        file.  "data" holds the data, and "filename" is the file name.  Note, 
+        that the filename may be different than what you passed in if the user 
+        chooses to "save as/write to" instead of "save" 
+
+        Data passed in will conform to the schema defined in self.schemavalue
+        """
+        pass
 
 
 #TODO: merge this into TreeFileWrapper
