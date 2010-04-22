@@ -3,19 +3,21 @@
 #
 # Copyright (c) 2010, Rob Lanphier
 # All rights reserved.
-# Licensed under BSD-style license.  See LICENSE.txt for details.
+# Licensed under 3-clause BSD license.  See LICENSE.txt for details.
 
 import optparse
+import os
 import sys
 import jsonwidget
 
 from jsonwidget.jsonnode import JsonNodeError
+from jsontypes import schemaformat
 
 def jsonedit():
     '''urwid-based JSON editor'''
     usage = "usage: %prog [options] arg"
     parser = optparse.OptionParser(usage)
-    defschema = jsonwidget.find_system_schema("datatype-example-schema.json")
+    defschema = find_system_schema("datatype-example-schema.json")
  
     parser.add_option("-s", "--schema", dest="schema",
                       default=None,
@@ -97,6 +99,58 @@ def upgrade_schema(filename):
     schemanode = jsonwidget.schema.SchemaNode(filename=filename)
     schemanode.convert(jsonwidget.jsontypes.schemaformat_v2)
     print schemanode.dumps()
+
+
+def run_editor(jsonfile, schemafile=None, schemaobj=None, 
+               program_name="jsonwidget " + jsonwidget.__version__):
+    """ 
+    Run a simple editor with a given jsonfile and corresponding schema file.
+    """
+    
+    form = jsonwidget.termedit.JsonFileEditor(jsonfile=jsonfile, 
+                                              schemafile=schemafile,
+                                              schemaobj=schemaobj,
+                                              program_name=program_name)
+    if schemafile is None:
+        form.set_startup_notification(
+            'Using schema derived from json file.  Use "--schema" at startup to provide custom schema')
+    form.run()
+
+
+def find_system_schema(schemaname):
+    """
+    Resolve schemaname to a full path.  This allows referencing
+    one of the bundled schemas without spelling out the full path.
+    """
+    # TODO: implement schemapath config variable.
+    try:
+        import pkg_resources
+    except ImportError:
+        filename = os.path.join("jsonwidget", "schema", schemaname)
+    else:
+        filename = os.path.join("schema", schemaname)
+        filename = pkg_resources.resource_filename("jsonwidget", 
+            filename)
+    return filename
+
+
+def generate_schema(filename=None, data=None, jsonstring=None, 
+                    version=schemaformat.version):
+    """
+    Generate a schema from a JSON example.
+    """
+    import json
+    import jsonwidget.jsonorder
+    if filename is not None:
+        with open(filename, 'r') as f:
+            jsonbuffer = f.read()
+        jsondata = json.loads(jsonbuffer)
+        jsonordermap = \
+            jsonwidget.jsonorder.JsonOrderMap(jsonbuffer).get_order_map()
+        return jsonwidget.schema.generate_schema_from_data(jsondata, 
+            jsonordermap=jsonordermap, version=version)
+    else:
+        raise RuntimeError("only filename-based generation is supported")
 
 if __name__ == "__main__":
     jsonedit()
