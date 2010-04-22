@@ -5,25 +5,37 @@ version = '0.1.7'
 
 setup(name='jsonwidget',
       version=version,
-      description="Dynamic terminal window form creation for JSON data \
-structures from JSON schema files",
+      description="jsonwidget is a general-purpose JSON validation and \
+manipulation, and form-building library for terminal windows and web pages",
       long_description="""\
-This library allows an application developer to provide a curses-based user 
-interface for an application using not much more than a JSON schema.  The 
-JSON schema language is described here:
-http://robla.net/jsonwidget/jsonschema/
+jsonwidget is a general-purpose JSON validation and manipulation library.  This 
+library provides the following functions for applications:
 
-However, most people will find it much simpler to use a tool to generate a 
-schema for tweaking.  The tool available here will generate a schema from an
-example piece of JSON, and allow editing the resulting file:
-http://robla.net/jsonwidget/example.php?sample=byexample&user=normal
+*  Validation of JSON-compatible data against a schema
+*  Automatic generation of a schema from JSON-compatible data
+*  Construction of a curses-based tree data editing user interface from a schema
+*  Construction of a Javascript-based web tree data editing user interface 
+   from a schema
+*  Simple WSGI server to serve the web user interface, and validate and store 
+   result of editing with the web user interface
 
-This library currently only operates on a subset of JSON files, but a near-term
-goal is to allow editing of any arbitrary JSON file.
+Though jsonwidget is optimized for working with JSON, it is useful for 
+providing editing capability for any JSON-compatible data structure.
 
 The following utilities are included with jsonwidget:
-jsonedit - a general purpose json editing program
-jsonaddress - an example JSON address book editor
+
+* jsonedit - A terminal-based application (like you would use via SSH or 
+  local terminal on Linux and Mac). It's based on urwid, an excellent 
+  Python-based library for building terminal-based user interfaces.
+* csvedit - A variation on jsonedit that allows editing of .csv/tsv files.
+* jsonaddress - an example JSON address book editor
+* jwc - a command line utility with the following functions:
+
+  * editserver - launch a web server to edit a json file from a browser
+  * json2yaml - convert a json file to yaml with comments pulled from schema 
+    (also yaml2json to go back)
+  * schemagen - create a schema from an example json file
+  * validate - validate a JSON file against a schema
 
 Website: http://robla.net/jsonwidget""",
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers

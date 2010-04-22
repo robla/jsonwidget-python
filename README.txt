@@ -18,21 +18,6 @@ library provides the following functions for applications:
 Though jsonwidget is optimized for working with JSON, it is useful for 
 providing editing capability for any JSON-compatible data structure.
 
-Schema language
----------------
-There are two JSON schema languages that are supported by jsonwidget:
-
-*  Version 1 is broadly supported by the library, and is documented here:
-   `Version 1 JSON Schema documentation`__
-__ http://robla.net/jsonwidget/jsonschema/
-   
-*  Version 2 is a subset of the JSON schema format documented here:
-   http://json-schema.org/
-   
-   Version 2 is not fully supported by jsonwidget at this time.  The Python 
-   portions of the library support v1 and v2 equally well (more or less), but 
-   the Javascript portion only supports v1.
-
 Included utilities
 ------------------
 
@@ -53,10 +38,24 @@ The following utilities are included with jsonwidget:
 
 Using the jsonwidget library
 ----------------------------
-
 A good example (as of this writing) of how to use jsonwidget as a library is 
 "yamledit" in the examples directory, which demonstrates where to hook in file
 parsers for formats other than JSON.
+
+Schema language
+---------------
+There are two JSON schema languages that are supported by jsonwidget:
+
+*  Version 1 is broadly supported by the library, and is documented here:
+   `Version 1 JSON Schema documentation`__
+__ http://robla.net/jsonwidget/jsonschema/
+   
+*  Version 2 is a subset of the JSON schema format documented here:
+   http://json-schema.org/
+   
+   Version 2 is not fully supported by jsonwidget at this time.  The Python 
+   portions of the library support v1 and v2 equally well (more or less), but 
+   the Javascript portion only supports v1.
 
 License
 -------
