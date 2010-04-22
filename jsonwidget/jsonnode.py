@@ -320,6 +320,19 @@ class JsonNode(JsonBaseNode):
         if(self.depth > 0):
             self.parent.set_child_data(self.key, self.data)
 
+    def insert_child(self, key=None):
+        self.root.editcount += 1
+        schemanode = self.schemanode.get_child(key)
+        newnode = JsonNode(key=key, data=schemanode.get_blank_value(),
+                           parent=self, schemanode=schemanode)
+        self.data.insert(key, newnode.get_data())
+        self.children.insert(key, newnode)
+
+        # since children keep track of their own keys, we have to refresh
+        # them
+        for i in range(len(self.children)):
+             self.children[i].set_key(i)
+
     def is_enum(self):
         return self.schemanode.is_enum()
 
@@ -388,6 +401,13 @@ class JsonNode(JsonBaseNode):
                 return not self.schemanode.is_required()
         else:
             return not self.schemanode.is_required()
+
+    def is_insertable(self):
+        parent = self.parent
+        if parent is not None and parent.is_type('array'):
+            return True
+        else:
+            return False
 
     def get_id_string(self):
         idchain = []

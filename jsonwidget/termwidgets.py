@@ -246,6 +246,10 @@ class KeyEditNode(TreeNode):
     def is_deletable(self):
         return False
 
+    def is_insertable(self):
+        """ Can a node be inserted at this point in the tree? """
+        return self.get_value().is_insertable()
+
 
 class FieldAddButtons(BaseJsonEditWidget):
     """ Add a button"""
@@ -294,6 +298,11 @@ class FieldAddNode(TreeNode):
 
     def is_deletable(self):
         return False
+        
+    def is_insertable(self):
+        """ Can a node be inserted at this point in the tree? """
+        return self.get_value().is_insertable()
+
 
 class JsonWidgetNode(TreeNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None):
@@ -332,6 +341,15 @@ class JsonWidgetNode(TreeNode):
             
     def is_deletable(self):
         return self.get_value().is_deletable()
+
+    def insert_node(self):
+        """ Insert a node before this one """
+        parent = self.get_parent()
+        parent.insert_child_node(self.get_key())
+
+    def is_insertable(self):
+        """ Can a node be inserted at this point in the tree? """
+        return self.get_value().is_insertable()
 
 class JsonWidgetParent(ParentNode):
     def __init__(self, jsonnode, parent=None, key=None, depth=None, 
@@ -436,6 +454,36 @@ class JsonWidgetParent(ParentNode):
 
     def is_deletable(self):
         return self.get_value().is_deletable()
+
+    def insert_child_node(self, key):
+        """insert a node just prior to the given key"""
+        # update the json first
+        jsonnode = self.get_value()
+        jsonnode.insert_child(key)
+        # refresh the child key cache
+        keys = self.get_child_keys(reload=True)
+        for k in keys:
+            self.get_child_node(k, reload=True)
+        # change the focus to the new field.
+        newnode = self.get_child_node(key)
+        size = self._listbox._size
+        offset, inset = self._listbox.get_focus_offset_inset(size)
+        self._listbox.change_focus(size, newnode, coming_from='below',
+                                   offset_inset = offset)
+        # refresh the field add buttons, since the list of available keys has
+        # changed
+        if len(jsonnode.get_available_keys()) > 0:
+            fieldaddnode = self.get_child_node(self._fieldaddkey)
+            fieldaddnode.get_widget(reload=True)
+
+    def insert_node(self):
+        """ Insert a node before this one """
+        parent = self.get_parent()
+        parent.insert_child_node(self.get_key())
+
+    def is_insertable(self):
+        """ Can a node be inserted at this point in the tree? """
+        return self.get_value().is_insertable()
 
     def get_title_max_length(self):
         """Get max length of child titles (not counting maps and seqs)"""

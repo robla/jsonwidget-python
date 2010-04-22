@@ -229,6 +229,7 @@ class JsonFileEditor(PinotFileEditor):
                                  unhandled_input=self.unhandled_input)
         self.set_default_footer_helpitems([("^W", "Write/Save"), 
                                            ("^X", "Exit"),
+                                           ("^N", "Insert New Item"),
                                            ("^D", "Delete Item")])
         if monochrome:
             urwid.curses_display.curses.has_colors = lambda: False
@@ -278,6 +279,18 @@ class JsonFileEditor(PinotFileEditor):
         node.delete_node()
         self.cleanup_delete_request()        
 
+    def handle_insert_node_request(self):
+        """Handle ctrl n - "insert item"."""
+        editor = self
+        widget, node = self.listbox.get_focus()
+
+        if node.is_insertable():
+            widget.set_selected()
+            widget.update_w()
+            node.insert_node()
+        else:
+            self.display_notification("Cannot insert a node here")
+
     def cleanup_delete_request(self):
         self.json.set_cursor(None)
         self.set_body()
@@ -304,6 +317,9 @@ class JsonFileEditor(PinotFileEditor):
             return None
         elif input == 'ctrl d':
             self.handle_delete_node_request()
+            return None
+        elif input == 'ctrl n':
+            self.handle_insert_node_request()
             return None
         else:
             return input
