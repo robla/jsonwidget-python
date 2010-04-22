@@ -1,9 +1,12 @@
 Roadmap for future versions
 
-On deck:
+There's no firm roadmap for features right now.
 
-0.1.5:
-*  Put "Add field" over in the data area
+On deck:
+0.1.7
+*  Consolidate several modules into jsonwidget/__init__.py
+
+next version (e.g. 0.1.x):
 *  "Space" and "enter" should toggle expand/collapse on parent nodes
 *  Implement ability to edit arbitrary JSON
 *  Highlight all children when deleting
@@ -11,12 +14,10 @@ On deck:
 *  Add a schema selection menu
 *  Add support for configuration files (look into ConfigObj)
 *  Only highlight the "Add Field" buttons rather than the whole row
-*  Make ordermaps optional
 *  Add ability to load schema from string buffer (so that an ordermap can be 
    generated)
-*  Add schemagen tool
 
-0.2.0:
+next major version (e.g. 0.2.x):
 *  Update to urwid 0.9.9 mainloop
 *  Remap ctrl-s, ctrl-q, ctrl-c, etc
 *  Look at SitePen internet draft to see if compatibility is feasible
@@ -28,5 +29,6 @@ Someday maybe:
 *  Implement "File exists.  Overwrite?"
 *  Implement immediate filename prompt when write fails
 *  Implement read-only flag
+*  Put "Add field" over in the data area
 
 
