@@ -2,6 +2,7 @@ include *.txt
 include debian/*
 include docs/*
 include examples/*
+include examples/data/*
 include jsonwidget/schema/*.json
 include jsonwidget/schema/v2/*.json
 include jsonwidget/schema/desktopcouch/*.json
