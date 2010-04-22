@@ -1,0 +1,155 @@
+<Project
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns="http://usefulinc.com/ns/doap#"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/"
+  xmlns:admin="http://webns.net/mvcb/">
+ <name>jsonwidget</name>
+ <shortname>jsonwidget</shortname>
+ <homepage rdf:resource="http://jsonwidget.org" />
+ <created>2005-12-01</created>
+ <shortdesc xml:lang="en">jsonwidget is a general-purpose JSON validation and manipulation, and form-building library for terminal windows and web pages</shortdesc>
+ <description xml:lang="en">jsonwidget is a general-purpose JSON validation and manipulation library.  This library provides the following functions for applications: validation of JSON-compatible data against a schema, automatic generation of a schema from JSON-compatible data, construction of a curses-based tree data editing user interface from a schema, construction of a Javascript-based web tree data editing user interface from a schema, Simple WSGI server to serve the web user interface, and validate and store result of editing with the web user interface.  Though jsonwidget is optimized for working with JSON, it is useful for providing editing capability for any JSON-compatible data structure.The following utilities are included with jsonwidget:* jsonedit - A terminal-based application (like you would use via SSH or   local terminal on Linux and Mac). It's based on urwid, an excellent   Python-based library for building terminal-based user interfaces.* csvedit - A variation on jsonedit that allows editing of .csv/tsv files.* jsonaddress - an example JSON address book editor* jwc - a command line utility with the following functions:  * editserver - launch a web server to edit a json file from a browser  * json2yaml - convert a json file to yaml with comments pulled from schema</description>
+ <category></category>
+ <wiki rdf:resource="http://bitbucket.org/robla/jsonwidget-python/wiki/Home" />
+ <bug-database rdf:resource="http://bitbucket.org/robla/jsonwidget-python/issues" />
+ <screenshots></screenshots>
+ <mailing-list rdf:resource="http://lists.robla.net/listinfo.cgi/jsonwidget-robla.net" />
+ <programming-language>python</programming-language>
+ <license rdf:resource="http://usefulinc.com/doap/licenses/bsd" />
+ <download-page rdf:resource="http://pypi.python.org/pypi/jsonwidget/" />
+
+ <repository>
+   <HgRepository>
+     <location rdf:resource="http://bitbucket.org/robla/jsonwidget-python/" />
+     <browse rdf:resource="http://bitbucket.org/robla/jsonwidget-python/" />
+   </HgRepository>
+ </repository>
+ <maintainer>
+  <foaf:Person>
+     <foaf:name>Rob Lanphier</foaf:name>
+  </foaf:Person>
+ </maintainer>
+ <release>
+  <Version>
+   <revision>0.1.7</revision>
+   <branch>jsonwidget-python</branch>
+   <name></name>
+   <created>2010-04-21</created>
+   <dc:description>
+  * Added new insert item command in jsonedit
+  * New TreeFileDatatype and TreeFileWrapper classes, which make it easier 
+    to create new editors
+  * New yamledit example
+  * Better documentation
+  * Some initial unit tests
+  * Other minor improvements and bugfixes
+</dc:description>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.1.6</revision>
+   <branch>jsonwidget-python</branch>
+   <name></name>
+   <created>2010-04-13</created>
+   <dc:description>
+  * Several new commands:
+  * New 'jwc editserver' command that runs a small webserver for editing files
+  * New 'jwc validate' command to validate a json file against a schema
+  * New 'jwc json2yaml' that provides commented yaml counterpart to json file
+  * New 'jwc yaml2json' counterpart
+  * Support for editing keys in json files when the schema allows for it
+  * A couple of addressbook schema fixes
+  * Adding desktopcouch schema examples (in preparation for future work)
+  * Many bugfixes
+</dc:description>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.1.5</revision>
+   <branch>jsonwidget-python</branch>
+   <name></name>
+   <created>2010-03-19</created>
+   <dc:description>
+  * Now generates schemas and uses generated schema as default for jsonedit
+  * Preliminary support for json-schema.org format schemas 
+  * New 'jwc' command line utility
+  * New 'csvedit' editor, a general-purpose editor for .csv files
+</dc:description>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.1.4</revision>
+   <branch>jsonwidget-python</branch>
+   <name></name>
+   <created></created>
+   <dc:description>
+  * Made commandline mode for jsonorder.py a little more useful
+  * New schema functions: set_title, generate_schema_from_data, get_order_map, 
+    get_json_type
+  * Split JsonEditor into JsonFileEditor and JsonDataEditor
+</dc:description>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.1.3</revision>
+   <branch>jsonwidget-python</branch>
+   <name></name>
+   <created>2010-03-09</created>
+   <dc:description>
+  * Initial .deb package.  Source package created by stdeb 0.5.1+git, then
+    tweaked.
+</dc:description>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.1.2</revision>
+   <branch>jsonwidget-python</branch>
+   <name></name>
+   <created>2010-03-04</created>
+   <dc:description>First version uploaded to PyPI</dc:description>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.1.1</revision>
+   <branch>jsonwidget-python</branch>
+   <name></name>
+   <created>2010-03-04</created>
+   <dc:description>(botched release)</dc:description>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.1.0</revision>
+   <branch>jsonwidget-python</branch>
+   <name></name>
+   <created>2010-02-25</created>
+   <dc:description>Initial Python release</dc:description>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.1.0</revision>
+   <branch>jsonwidget-javascript</branch>
+   <name></name>
+   <created>2005-12-01</created>
+   <dc:description></dc:description>
+  </Version>
+ </release>
+
+</Project>

@@ -1,3 +1,16 @@
+python-jsonwidget (0.1.7) karmic; urgency=low
+
+  * Added new insert item command in jsonedit
+  * New TreeFileDatatype and TreeFileWrapper classes, which make it easier 
+    to create new editors
+  * New yamledit example
+  * Better documentation
+  * Some initial unit tests
+  * Other minor improvements and bugfixes
+
+ -- Rob Lanphier <robla@robla.net>  Wed, 21 Apr 2010 20:35:55 -0700
+
+
 python-jsonwidget (0.1.6) karmic; urgency=low
 
   * Several new commands:

@@ -11,9 +11,10 @@ include jsonwidget/server/*.css
 include jsonwidget/server/*.js
 include jsonwidget/server/*.py
 include jsonwidget/server/*.tpl
+include tests/*
 include csvedit
 include jsonedit
 include jsonaddress
 include jwc
 include stdeb.cfg
-
+include *.doap
