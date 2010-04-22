@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
+# Public domain source file.  Feel free to use the following example code 
+# without copyright notice, or incorporate it into your own code.
+
+import optparse
+import os
+import sys
+
+import yaml
+import jsonwidget.termedit as jwt
+
+
+# If you're creating software that edits a file format other than JSON or YAML,
+# you'll need to define a class like this
+class YamlDatatype(jwt.TreeFileDatatype):
+    """ Object to present a YAML file as a TreeFileDatatype """
+    def __init__(self, schemafile=None):
+        self.schemavaluetype = 'file'
+        self.schemavalue = schemafile
+
+    def load_data_from_file(self, filename):
+        """ 
+        This gets called by the editor on startup.  It needs to return a 
+        JSON-compatible datastructure that matches the schema in 
+        self.schemavalue (or else an exception will be raised).
+        """
+        fd = open(filename)
+        retval = yaml.load(stream=fd)
+        fd.close()
+        return retval
+
+    def save_data_to_file(self, data, filename):
+        """ 
+        This gets called by the editor when the user chooses to save a
+        file.  "data" holds the data, and "filename" is the file name.  Note, 
+        that the filename may be different than what you passed in if the user 
+        chooses to "save as/write to" instead of "save" 
+        """
+
+        # We could do this all fancy like "jwc json2yaml" does (which would 
+        # give us comments pulled from the schema), but instead we'll just use
+        # the stock PyYAML dump function, since that simplifies this example.
+        fd = open(filename, "w+")
+        yaml.dump(data, stream=fd)
+        fd.close()
+
+
+def main():
+    """Simple urwid-based YAML file editor"""
+    usage = "usage: %prog [options] file."
+    parser = optparse.OptionParser(usage)
+
+    parser.add_option("-s", "--schema", dest="schema", type="str",
+                      default=None, help="schema file")                      
+    (options, args) = parser.parse_args()
+
+    if options.schema is None:
+        parser.error("Schema required.  Try addressbookschema.json included " +
+            "in this distribution")
+
+    if len(args) > 1:
+        parser.error("Too many arguments.")
+    if len(args) == 1:
+        yamlfile = args[0]
+    else:
+        parser.error("YAML file required.  Try address.yml included in the " +
+            "examples/data directory")
+
+    fileobj = jwt.TreeFileWrapper(YamlDatatype(schemafile=options.schema), 
+                                  filename=yamlfile)
+
+    form = jwt.JsonFileEditor(fileobj=fileobj, program_name="yamledit")
+    form.set_startup_notification(
+        'Note: YAML comments are not preserved by this editor')
+    form.run()
+
+
+if __name__ == "__main__":
+    main()
+
