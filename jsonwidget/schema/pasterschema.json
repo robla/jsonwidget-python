@@ -1,56 +1,67 @@
 {
   "type":"map",
+  "required":true,
   "mapping":
   {
     "project_name":
     {
       "type":"str",
-      "title":"Project name"
+      "title":"Project name",
+      "required":true
     },
     "version":
     {
       "type":"str",
-      "title":"Version"
+      "title":"Version",
+      "required":true
     },
     "description":
     {
       "type":"str",
-      "title":"Description (one liner)"
+      "title":"Description (one liner)",
+      "required":true
     },
     "long_description":
     {
       "type":"str",
-      "title":"Long description (multiline reStructuredText)"
+      "title":"Long description (multiline reStructuredText)",
+      "required":true
     },
     "keywords":
     {
       "type":"str",
-      "title":"Keywords (space separated)"
+      "title":"Keywords (space separated)",
+      "required":true
     },
     "author":
     {
       "type":"str",
-      "title":"Author"
+      "title":"Author",
+      "required":true
     },
     "author_email":
     {
       "type":"str",
-      "title":"Author email"
+      "title":"Author email",
+      "required":true
     },
     "url":
     {
       "type":"str",
-      "title":"URL to project page"
+      "title":"URL to project page",
+      "required":true
     },
     "license_name":
     {
       "type":"str",
-      "title":"License name"
+      "title":"License name",
+      "required":true
     },
     "zip_safe":
     {
       "type":"bool",
-      "title":"Zip safe?"
+      "title":"Zip safe?",
+      "required":true
     }
   }
 }
