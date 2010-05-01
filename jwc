@@ -125,6 +125,25 @@ Convert a file from json to plist.
         
         print plistlib.writePlistToString(jsondata)
 
+
+    elif args[0] == 'json2xmlrpc':
+        import json
+        import xmlrpclib
+        import xml.dom.minidom
+
+        usage = """\
+Convert a file from json to xmlrpc.
+  usage: %prog json2plist [options] jsonfile\
+"""
+        subparser = optparse.OptionParser(usage=usage)
+        (options, subargs) = subparser.parse_args(args[1:])
+
+        fp = open(subargs[0])
+        jsondata = json.load(fp)
+        fp.close()
+        print xmlrpclib.dumps(('data',jsondata))
+        #print xml.dom.minidom.parseString(text).toprettyxml(indent='  ')
+
     elif args[0] == 'plist2json':
         import json
         import plistlib
