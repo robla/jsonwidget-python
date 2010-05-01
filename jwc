@@ -106,6 +106,38 @@ Convert a file from yaml to json.
         fp.close()
         print json.dumps(foo, indent=4, sort_keys=True)
 
+    elif args[0] == 'json2plist':
+        import json
+        import plistlib
+
+        usage = """\
+Convert a file from json to plist.
+  usage: %prog json2plist [options] jsonfile\
+"""
+        subparser = optparse.OptionParser(usage=usage)
+        (options, subargs) = subparser.parse_args(args[1:])
+
+        fp = open(subargs[0])
+        jsondata = json.load(fp)
+        fp.close()
+        
+        print plistlib.writePlistToString(jsondata)
+
+    elif args[0] == 'plist2json':
+        import json
+        import plistlib
+
+        usage = """\
+Convert a file from json to plist.
+  usage: %prog plist2json [options] plistfile\
+"""
+        subparser = optparse.OptionParser(usage=usage)
+        (options, subargs) = subparser.parse_args(args[1:])
+
+        plistdata = plistlib.readPlist(subargs[0])
+        print json.dumps(plistdata, indent=4, sort_keys=True)
+
+
     elif args[0] == 'validate':
         import json
         import sys
