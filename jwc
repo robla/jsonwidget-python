@@ -13,7 +13,9 @@ if __name__ == "__main__":
 usage: %prog command filename
   Valid commands:
     editserver:    launch a web server to edit a json file from a browser
+    json2plist:    convert a json file to an XML-formatted plist
     json2yaml:     convert a json file to yaml with comments pulled from schema
+    plist2json:    convert a XML-formatted plist file to json
     schemagen:     create a schema from an example json file
     upgradeschema: create a version 2 schema from a version 1 schema
     validate:      validate a schema
@@ -96,7 +98,7 @@ one is provided.
 
         usage = """\
 Convert a file from yaml to json.
-  usage: %prog json2yaml [options] jsonfile\
+  usage: %prog yaml2json [options] yamlfile\
 """
         subparser = optparse.OptionParser(usage=usage)
         (options, subargs) = subparser.parse_args(args[1:])
@@ -194,9 +196,4 @@ file.
             subparser.error("only one file at a time")
     else:
         cmdparser.error(args[0] + ' is not a valid command.')
-    
-    
-
-
-
 
