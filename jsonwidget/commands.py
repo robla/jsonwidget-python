@@ -92,6 +92,7 @@ def jsonaddress():
         sys.stderr.writelines(str(inst) + "\n\n")
         sys.exit(2)
 
+
 def upgrade_schema(filename):
     import jsonwidget.schema
     import jsonwidget.jsontypes
@@ -151,6 +152,203 @@ def generate_schema(filename=None, data=None, jsonstring=None,
             jsonordermap=jsonordermap, version=version)
     else:
         raise RuntimeError("only filename-based generation is supported")
+
+
+def upgradeschema(args):
+    usage = """\
+Create a version 2 schema from a version 1 schema
+usage: %prog upgradeschema oldschema\
+"""
+    subparser = optparse.OptionParser(usage=usage)
+    (options, subargs) = subparser.parse_args(args[1:])
+    if len(subargs)==1:
+        upgrade_schema(subargs[0])
+        sys.exit(0)
+    elif len(subargs)<1:
+        subparser.error("old schema file required")
+    else:
+        subparser.error("only one file at a time")
+
+
+def schemagen(args):
+    usage = """\
+Create a schema from an example json file
+usage: %prog schemagen [options] jsonfile\
+"""
+    subparser = optparse.OptionParser(usage=usage)
+    versionhelp = "schema format version to use.  Default: %i" % \
+                    schemaformat.version
+    subparser.add_option("-v", "--version", dest="version", type="int",
+                            default=schemaformat.version,
+                            help=versionhelp)
+    (options, subargs) = subparser.parse_args(args[1:])
+    if len(subargs)==1:
+        schemaobj = jsonwidget.generate_schema(subargs[0], 
+                                                version=options.version)
+        print schemaobj.dumps()
+        sys.exit(0)
+    elif len(subargs)<1:
+        subparser.error("jsonfile required")
+    else:
+        subparser.error("only one file at a time")
+
+
+def json2yaml(args):
+    import jsonwidget.yamltools
+    usage = """\
+Convert a file from json to yaml, pulling in comments from the given schema if
+one is provided.
+usage: %prog json2yaml [options] jsonfile\
+"""
+    subparser = optparse.OptionParser(usage=usage)
+    schemahelp = "schema format version to use.  Default: None"
+    subparser.add_option("-s", "--schema", dest="schema", type="str",
+                            default=None,
+                            help=schemahelp)
+    (options, subargs) = subparser.parse_args(args[1:])
+
+    if len(subargs)==1:
+        schemafile = options.schema
+        schemaobj = None
+
+        if schemafile is None:
+            schemaobj = jsonwidget.generate_schema(subargs[0])
+        jsonobj = jsonwidget.jsonnode.JsonNode(filename=subargs[0], 
+                                                schemafile=schemafile,
+                                                schemanode=schemaobj)
+        print jsonwidget.yamltools.jsonnode_to_yaml(jsonobj)
+        sys.exit(0)
+    elif len(subargs)<1:
+        subparser.error("jsonfile required")
+    else:
+        subparser.error("only one file at a time")
+
+
+def yaml2json(args):
+    import json
+    import yaml
+
+    usage = """\
+Convert a file from yaml to json.
+usage: %prog yaml2json [options] yamlfile\
+"""
+    subparser = optparse.OptionParser(usage=usage)
+    (options, subargs) = subparser.parse_args(args[1:])
+
+    fp = open(subargs[0])
+    foo = yaml.load(fp)
+    fp.close()
+    print json.dumps(foo, indent=4, sort_keys=True)
+
+
+def json2plist(args):
+    import json
+    import plistlib
+
+    usage = """\
+Convert a file from json to plist.
+usage: %prog json2plist [options] jsonfile\
+"""
+    subparser = optparse.OptionParser(usage=usage)
+    (options, subargs) = subparser.parse_args(args[1:])
+
+    fp = open(subargs[0])
+    jsondata = json.load(fp)
+    fp.close()
+    
+    print plistlib.writePlistToString(jsondata)
+
+
+def json2xmlrpc(args):
+    import json
+    import xmlrpclib
+    import xml.dom.minidom
+
+    usage = """\
+Convert a file from json to xmlrpc.
+usage: %prog json2plist [options] jsonfile\
+"""
+    subparser = optparse.OptionParser(usage=usage)
+    (options, subargs) = subparser.parse_args(args[1:])
+
+    fp = open(subargs[0])
+    jsondata = json.load(fp)
+    fp.close()
+    print xmlrpclib.dumps(('data',jsondata))
+    #print xml.dom.minidom.parseString(text).toprettyxml(indent='  ')
+
+
+def plist2json(args):
+    import json
+    import plistlib
+
+    usage = """\
+Convert a file from json to plist.
+usage: %prog plist2json [options] plistfile\
+"""
+    subparser = optparse.OptionParser(usage=usage)
+    (options, subargs) = subparser.parse_args(args[1:])
+
+    plistdata = plistlib.readPlist(subargs[0])
+    print json.dumps(plistdata, indent=4, sort_keys=True)
+
+
+def validate(args):
+    import json
+    import sys
+
+    usage = """\
+Validate a JSON file against a schema.
+usage: %prog validate [options] jsonfile\
+"""
+    schemafile = jsonwidget.find_system_schema("openschema.json")
+    subparser = optparse.OptionParser(usage=usage)
+    schemahelp = "schema format version to use.  Default: %s" % schemafile
+    subparser.add_option("-s", "--schema", dest="schema", type="str",
+                            default=schemafile,
+                            help=schemahelp)
+    (options, subargs) = subparser.parse_args(args[1:])
+    if len(subargs)==1:
+        try:
+            jsonwidget.jsonnode.JsonNode(filename=subargs[0], 
+                                            schemafile=options.schema)
+            print "Valid file!  " + subargs[0] + \
+                " validates against " + options.schema
+        except jsonwidget.jsonnode.JsonNodeError as inst:
+            print str(inst)
+            sys.exit(1)
+    elif len(subargs)<1:
+        subparser.error("jsonfile required")
+    else:
+        subparser.error("only one file at a time")
+
+
+def editserver(args):
+    import json
+    import sys
+    from jsonwidget.server.wsgieditserver import start_server
+
+    usage = """\
+Launch a web server which serves a Javascript-based JSON editor for a single \
+file.
+usage: %prog editserver [options] jsonfile\
+"""
+
+    schemafile = jsonwidget.find_system_schema("openschema.json")
+    subparser = optparse.OptionParser(usage=usage)
+    schemahelp = "schema format version to use.  Default: %s" % schemafile
+    subparser.add_option("-s", "--schema", dest="schema", type="str",
+                            default=schemafile,
+                            help=schemahelp)
+    (options, subargs) = subparser.parse_args(args[1:])
+
+    if len(subargs)==1:
+        start_server(jsonfile=subargs[0], schemafile=options.schema)
+    elif len(subargs)<1:
+        subparser.error("jsonfile required")
+    else:
+        subparser.error("only one file at a time")
+
 
 if __name__ == "__main__":
     jsonedit()
