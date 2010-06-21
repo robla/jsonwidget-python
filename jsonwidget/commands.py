@@ -93,15 +93,6 @@ def jsonaddress():
         sys.exit(2)
 
 
-def upgrade_schema(filename):
-    import jsonwidget.schema
-    import jsonwidget.jsontypes
-    
-    schemanode = jsonwidget.schema.SchemaNode(filename=filename)
-    schemanode.convert(jsonwidget.jsontypes.schemaformat_v2)
-    print schemanode.dumps()
-
-
 def run_editor(jsonfile, schemafile=None, schemaobj=None, 
                program_name="jsonwidget " + jsonwidget.__version__):
     """ 
@@ -162,7 +153,12 @@ usage: %prog upgradeschema oldschema\
     subparser = optparse.OptionParser(usage=usage)
     (options, subargs) = subparser.parse_args(args[1:])
     if len(subargs)==1:
-        upgrade_schema(subargs[0])
+        import jsonwidget.schema
+        import jsonwidget.jsontypes
+    
+        schemanode = jsonwidget.schema.SchemaNode(filename=subargs[0])
+        schemanode.convert(jsonwidget.jsontypes.schemaformat_v2)
+        print schemanode.dumps()
         sys.exit(0)
     elif len(subargs)<1:
         subparser.error("old schema file required")

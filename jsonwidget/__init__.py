@@ -43,7 +43,7 @@ from jsontypes import schemaformat
 
 from jsonnode import JsonNodeError
 
-from commands import jsonedit, upgrade_schema, run_editor, find_system_schema,\
+from commands import jsonedit, run_editor, find_system_schema,\
     generate_schema
 
 
