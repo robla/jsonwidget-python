@@ -7,7 +7,6 @@
 
 
 import json
-from jsonwidget.jsontypes import get_json_type
 
 try:
     import simpleparse
@@ -23,11 +22,12 @@ except ImportError:
 
   ...or in easy_install as "simpleparse"
 
-  On Debian and Ubuntu, simply install 'python-simpleparse'.
+  On Debian and Ubuntu, simply install 'python-simpleparse' and
+  'python-simpleparse-mxtexttools'
 
 """
     sys.stderr.writelines(msg)
-    sys.exit(2)
+    raise
 
 class JsonOrderMapError(RuntimeError):
     pass
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     if len(args) == 1:
         foo = open(args[0]).read()
     else:
-        foo = "{'a':1,'b':1,'c':{'c1':1,'c2':1},'d':['e','f','g']}"
+        foo = '{"a":1,"b":1,"c":{"c1":1,"c2":1},"d":["e","f","g"]}'
 
     foomap = JsonOrderMap(foo).get_order_map()
     print "Original JSON: ", foo
